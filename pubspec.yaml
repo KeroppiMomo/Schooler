@@ -25,6 +25,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   table_calendar: ^2.0.2
   spinner_input: ^0.1.2
+  uuid: ^2.0.4
 
 dev_dependencies:
   flutter_test:

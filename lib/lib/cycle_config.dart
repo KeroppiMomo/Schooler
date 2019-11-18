@@ -3,7 +3,7 @@ enum DayInfoType {
   endSchoolYear,
   cycleDay,
   holiday,
-  occassions,
+  occasions,
 }
 
 DateTime removeTimeFrom(DateTime dateTime) {
@@ -11,16 +11,18 @@ DateTime removeTimeFrom(DateTime dateTime) {
 }
 
 class Event {
+  String id;
   String name;
   DateTime startDate;
   DateTime endDate;
-  bool isSkipDay;
+  bool skipDay;
 
   Event({
+    this.id,
     this.name,
     this.startDate,
     this.endDate,
-    this.isSkipDay,
+    this.skipDay,
   });
 }
 
@@ -31,7 +33,7 @@ class CycleConfig {
   bool isSaturdayHoliday;
   bool isSundayHoliday;
   List<Event> holidays;
-  List<Event> occassions;
+  List<Event> occasions;
 
   CycleConfig({
     this.startSchoolYear,
@@ -40,7 +42,7 @@ class CycleConfig {
     this.isSaturdayHoliday,
     this.isSundayHoliday,
     this.holidays,
-    this.occassions,
+    this.occasions,
   });
 
   Map<DateTime, Map<DayInfoType, Object>> getCalendar() {
@@ -59,12 +61,26 @@ class CycleConfig {
         isSkipDay = true;
       }
 
-      List<Event> curHolidays = holidays
-          .where((event) => removeTimeFrom(event.startDate).compareTo(curDate) <= 0 && removeTimeFrom(event.endDate).compareTo(curDate) >= 0)
+      List<Event> getCurrentEvents(List<Event> events) => events
+          .where((event) =>
+              removeTimeFrom(event.startDate).compareTo(curDate) <= 0 &&
+              removeTimeFrom(event.endDate).compareTo(curDate) >= 0)
           .toList();
+
+      List<Event> curHolidays = getCurrentEvents(holidays);
       if (curHolidays != null && curHolidays.length != 0) {
-        results[curDate][DayInfoType.holiday] = curHolidays.map((event) => event.name).join(', ');
-        if (curHolidays.any((event) => event.isSkipDay)) {
+        results[curDate][DayInfoType.holiday] =
+            curHolidays.map((event) => event.name).join(', ');
+        if (curHolidays.any((event) => event.skipDay)) {
+          isSkipDay = true;
+        }
+      }
+
+      List<Event> curOccasions = getCurrentEvents(occasions);
+      if (curOccasions != null && curOccasions.length != 0) {
+        results[curDate][DayInfoType.occasions] =
+            curOccasions.map((event) => event.name).join(', ');
+        if (curOccasions.any((event) => event.skipDay)) {
           isSkipDay = true;
         }
       }

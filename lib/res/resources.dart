@@ -8,7 +8,8 @@ class Resources {
 }
 
 class CyclesEditorResources {
-  final dateFormat = DateFormat('dd MMMM yyyy');
+  final detailDateFormat = DateFormat('dd MMMM yyyy');
+  final eventTitleDateFormat = DateFormat('dd MMM');
   final outsideMonthColor = Color(0x44000000);
 }
 

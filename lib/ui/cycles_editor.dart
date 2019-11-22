@@ -104,33 +104,63 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       final calendarInfo = _curCalendarInfo[removeTimeFrom(dateTime)] ?? {};
       final contentWidget = () {
         if (calendarInfo[DayInfoType.holiday] != null) {
-          return Column(
-            children: <Widget>[
-              Spacer(),
-              Text(
-                dateTime.day.toString(),
-                style: Theme.of(context)
-                    .textTheme
-                    .body1
-                    .copyWith(color: Colors.red)
-                    .copyWith(
-                        decoration: calendarInfo[DayInfoType.occasions] == null
-                            ? null
-                            : TextDecoration.underline),
-              ),
-              Text(
-                calendarInfo[DayInfoType.holiday].toString(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .caption
-                    .copyWith(color: Colors.red),
-              ),
-              Spacer(),
-            ],
-          );
+          if ((calendarInfo[DayInfoType.holiday] ?? '') != '') {
+            return Column(
+              children: <Widget>[
+                Spacer(),
+                Text(
+                  dateTime.day.toString(),
+                  style: Theme.of(context)
+                      .textTheme
+                      .body1
+                      .copyWith(color: Colors.red)
+                      .copyWith(
+                          decoration:
+                              calendarInfo[DayInfoType.occasions] == null
+                                  ? null
+                                  : TextDecoration.underline),
+                ),
+                Text(
+                  calendarInfo[DayInfoType.holiday].toString(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context)
+                      .textTheme
+                      .caption
+                      .copyWith(color: Colors.red),
+                ),
+                Spacer(),
+              ],
+            );
+          } else {
+            return Column(
+              children: <Widget>[
+                Spacer(),
+                Text(
+                  dateTime.day.toString(),
+                  style: Theme.of(context)
+                      .textTheme
+                      .body1
+                      .copyWith(color: Colors.red)
+                      .copyWith(
+                          decoration:
+                              calendarInfo[DayInfoType.occasions] == null
+                                  ? null
+                                  : TextDecoration.underline),
+                ),
+                Text(
+                  (calendarInfo[DayInfoType.occasions] ?? '').toString(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style:
+                      changeColorIfOutside(Theme.of(context).textTheme.caption),
+                ),
+                Spacer(),
+              ],
+            );
+          }
         } else if (calendarInfo[DayInfoType.occasions] != null) {
           return Column(
             children: <Widget>[
@@ -253,7 +283,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       return ListTile(
         leading: Icon(Icons.date_range),
         title: Text(name),
-        subtitle: Text(_R.dateFormat.format(dateTime)),
+        subtitle: Text(_R.detailDateFormat.format(dateTime)),
         trailing: Icon(Icons.edit),
         onTap: () {
           setState(() {
@@ -378,7 +408,9 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         children: <Widget>[
           ...events.map(
             (event) => ExpansionTile(
-              title: Text(event.name),
+              title: Text(event.startDate == event.endDate
+                  ? '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)})'
+                  : '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)} – ${_R.eventTitleDateFormat.format(event.endDate)})'),
               leading: Icon(Icons.event),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -558,7 +590,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
           _cycleConfig.occasions.add(Event(
             id: Uuid().v1(),
             name: "New Occasion",
-            skipDay: true,
+            skipDay: false,
             startDate: eventDate,
             endDate: eventDate,
           ));

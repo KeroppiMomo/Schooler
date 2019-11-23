@@ -103,8 +103,8 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
 
       final calendarInfo = _curCalendarInfo[removeTimeFrom(dateTime)] ?? {};
       final contentWidget = () {
-        if (calendarInfo[DayInfoType.holiday] != null) {
-          if ((calendarInfo[DayInfoType.holiday] ?? '') != '') {
+        if (calendarInfo[DayInfoType.holidays] != null) {
+          if ((calendarInfo[DayInfoType.holidays] ?? '') != '') {
             return Column(
               children: <Widget>[
                 Spacer(),
@@ -121,7 +121,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                                   : TextDecoration.underline),
                 ),
                 Text(
-                  calendarInfo[DayInfoType.holiday].toString(),
+                  calendarInfo[DayInfoType.holidays].toString(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -190,7 +190,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 style: changeColorIfOutside(Theme.of(context).textTheme.body1),
               ),
               Text(
-                (calendarInfo[DayInfoType.cycleDay] ?? '').toString(),
+                (calendarInfo[DayInfoType.cycleDay] == '1' ? '[${calendarInfo[DayInfoType.cycle]}] ' : '') + (calendarInfo[DayInfoType.cycleDay] ?? '').toString(),
                 textAlign: TextAlign.center,
                 style:
                     changeColorIfOutside(Theme.of(context).textTheme.caption),

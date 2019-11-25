@@ -11,10 +11,10 @@ class EditTextScreen extends StatefulWidget {
   final void Function() onCancelled;
 
   EditTextScreen({
-    this.title,
-    this.value,
-    this.onDone,
-    this.onCancelled,
+    @required this.title,
+    @required this.value,
+    @required this.onDone,
+    @required this.onCancelled,
   });
 
   @override
@@ -38,12 +38,12 @@ class EditTextScreenState extends State<EditTextScreen> {
       appBar: AppBar(
         title: Text(widget.title),
         leading: IconButton(
-          icon: Icon(Icons.clear),
+          icon: Icon(_R.cancelIcon),
           onPressed: cancelPressed,
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.done),
+            icon: Icon(_R.doneIcon),
             onPressed: donePressed,
           )
         ],
@@ -53,16 +53,16 @@ class EditTextScreenState extends State<EditTextScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: _R.textFieldPadding,
               child: TextField(
                 controller: _controller,
                 autofocus: true,
                 decoration: InputDecoration(
                   labelText: widget.title,
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
+                    icon: Icon(_R.clearButtonIcon),
                     onPressed: () => _controller.clear(),
-                    tooltip: "Clear",
+                    tooltip: _R.clearButtonTooltip,
                   ),
                 ),
                 onSubmitted: (_) => donePressed(),
@@ -71,14 +71,14 @@ class EditTextScreenState extends State<EditTextScreen> {
             Expanded(child: Container()),
             Divider(),
             FlatButton.icon(
-              icon: Icon(Icons.clear),
-              label: Text("Cancel"),
+              icon: Icon(_R.cancelIcon),
+              label: Text(_R.cancelText),
               onPressed: cancelPressed,
             ),
             Divider(),
             FlatButton.icon(
-              icon: Icon(Icons.done),
-              label: Text("Done"),
+              icon: Icon(_R.doneIcon),
+              label: Text(_R.doneText),
               onPressed: donePressed,
             ),
           ],

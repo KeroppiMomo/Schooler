@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 /// The information in a calendar for a day. Used in the key of the `Map` in `CycleConfig.getCalendar`.
 enum DayInfoType {
   /// Indicate whether the day is the start of school year. Value should be of type `bool`.
@@ -38,6 +40,8 @@ class Event {
     this.endDate,
     this.skipDay,
   });
+
+  static String generateID() => Uuid().v1();
 }
 
 class CycleConfig {

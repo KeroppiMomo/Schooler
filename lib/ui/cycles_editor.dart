@@ -53,16 +53,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     super.initState();
 
     _calendarController = CalendarController();
-    // Default value for `_cycleConfig`
-    _cycleConfig = CycleConfig(
-      startSchoolYear: DateTime.utc(2019, 9, 2),
-      endSchoolYear: DateTime.utc(2020, 7, 15),
-      noOfDaysInCycle: 6,
-      isSaturdayHoliday: true,
-      isSundayHoliday: true,
-      holidays: [],
-      occasions: [],
-    );
+    _cycleConfig = _R.defaultCycleConfig;
     _curCalendarInfo = _cycleConfig.getCalendar();
   }
 
@@ -79,7 +70,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
 
     // `AnimatedSwitcher` provides a fade transition when the `child` property is changed.
     return AnimatedSwitcher(
-      duration: Duration(milliseconds: 250),
+      duration: _R.fadeDuration,
       child: _currentView,
     );
   }
@@ -110,25 +101,21 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 Spacer(),
                 Text(
                   dateTime.day.toString(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .body1
-                      .copyWith(color: Colors.red)
-                      .copyWith(
-                          decoration:
-                              calendarInfo[DayInfoType.occasions] == null
-                                  ? null
-                                  : TextDecoration.underline),
+                  style: _R.getCalendarDayTextTheme(context).copyWith(
+                        color: _R.calendarHolidayColor,
+                        decoration: calendarInfo[DayInfoType.occasions] == null
+                            ? null
+                            : TextDecoration.underline,
+                      ),
                 ),
                 Text(
                   calendarInfo[DayInfoType.holidays].toString(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .caption
-                      .copyWith(color: Colors.red),
+                  style: _R
+                      .getCalendarDayInfoTextTheme(context)
+                      .copyWith(color: _R.calendarHolidayColor),
                 ),
                 Spacer(),
               ],
@@ -139,23 +126,20 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 Spacer(),
                 Text(
                   dateTime.day.toString(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .body1
-                      .copyWith(color: Colors.red)
-                      .copyWith(
-                          decoration:
-                              calendarInfo[DayInfoType.occasions] == null
-                                  ? null
-                                  : TextDecoration.underline),
+                  style: _R.getCalendarDayTextTheme(context).copyWith(
+                        color: _R.calendarHolidayColor,
+                        decoration: calendarInfo[DayInfoType.occasions] == null
+                            ? null
+                            : TextDecoration.underline,
+                      ),
                 ),
                 Text(
                   (calendarInfo[DayInfoType.occasions] ?? '').toString(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style:
-                      changeColorIfOutside(Theme.of(context).textTheme.caption),
+                  style: changeColorIfOutside(
+                      _R.getCalendarDayInfoTextTheme(context)),
                 ),
                 Spacer(),
               ],
@@ -167,7 +151,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
               Spacer(),
               Text(
                 dateTime.day.toString(),
-                style: changeColorIfOutside(Theme.of(context).textTheme.body1)
+                style: changeColorIfOutside(_R.getCalendarDayTextTheme(context))
                     .copyWith(decoration: TextDecoration.underline),
               ),
               Text(
@@ -175,8 +159,8 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style:
-                    changeColorIfOutside(Theme.of(context).textTheme.caption),
+                style: changeColorIfOutside(
+                    _R.getCalendarDayInfoTextTheme(context)),
               ),
               Spacer(),
             ],
@@ -190,10 +174,13 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 style: changeColorIfOutside(Theme.of(context).textTheme.body1),
               ),
               Text(
-                (calendarInfo[DayInfoType.cycleDay] == '1' ? '[${calendarInfo[DayInfoType.cycle]}] ' : '') + (calendarInfo[DayInfoType.cycleDay] ?? '').toString(),
+                (calendarInfo[DayInfoType.cycleDay] == '1'
+                        ? '[${calendarInfo[DayInfoType.cycle]}] '
+                        : '') +
+                    (calendarInfo[DayInfoType.cycleDay] ?? '').toString(),
                 textAlign: TextAlign.center,
-                style:
-                    changeColorIfOutside(Theme.of(context).textTheme.caption),
+                style: changeColorIfOutside(
+                    _R.getCalendarDayInfoTextTheme(context)),
               ),
               Spacer(),
             ],
@@ -209,8 +196,8 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
             Container(
               decoration: BoxDecoration(
                 color: calendarInfo[DayInfoType.startSchoolYear] == true
-                    ? Color(0xFFB5F0A5)
-                    : Color(0xFFF0A5A5),
+                    ? _R.calendarStartColor
+                    : _R.calendarEndColor,
                 shape: BoxShape.circle,
               ),
             ),
@@ -224,9 +211,13 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
 
     return TableCalendar(
       initialSelectedDay: _calendarController.focusedDay,
+      initialCalendarFormat: CalendarFormat.month,
       availableCalendarFormats: {
-        CalendarFormat.month: 'Month'
-      }, // The format option will be not shown
+        // There is a bug in the package
+        CalendarFormat.month: 'Week',
+        CalendarFormat.twoWeeks: 'Month',
+        CalendarFormat.week: '2 Weeks',
+      },
       calendarController: _calendarController,
       builders: CalendarBuilders(
         dayBuilder: (BuildContext context, DateTime dateTime, List events) =>
@@ -249,7 +240,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     return Scaffold(
       key: UniqueKey(),
       appBar: AppBar(
-        title: Text('Cycles Editor'),
+        title: Text(_R.appBarTitle),
       ),
       body: SafeArea(
         child: Column(
@@ -260,7 +251,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
             Expanded(child: _buildOptions()),
             Divider(),
             FlatButton(
-              child: Text('Done'),
+              child: Text(_R.doneButtonText),
               onPressed: () {},
             ),
           ],
@@ -281,10 +272,10 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       @required bool Function(DateTime) onSelected,
     }) {
       return ListTile(
-        leading: Icon(Icons.date_range),
+        leading: Icon(_R.dateOptionIcon),
         title: Text(name),
-        subtitle: Text(_R.detailDateFormat.format(dateTime)),
-        trailing: Icon(Icons.edit),
+        subtitle: Text(_R.dateOptionDateFormat.format(dateTime)),
+        trailing: Icon(_R.dateOptionEditIcon),
         onTap: () {
           setState(() {
             _currentView = _buildSelectionView(name, dateTime, onSelected);
@@ -360,10 +351,10 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       @required void Function(String) onChanged,
     }) {
       return ListTile(
-        leading: Icon(Icons.text_fields),
+        leading: Icon(_R.textOptionIcon),
         title: Text(name),
         subtitle: Text(value),
-        trailing: Icon(Icons.edit),
+        trailing: Icon(_R.textOptionEditIcon),
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => EditTextScreen(
@@ -401,7 +392,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
               onEventIDExpansionChanged,
     }) {
       return ExpansionTile(
-        leading: Icon(Icons.date_range),
+        leading: Icon(_R.eventTitleIcon),
         title: Text(name),
         initiallyExpanded: isTitleExpanded,
         onExpansionChanged: onTitleExpansionChanged,
@@ -411,13 +402,13 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
               title: Text(event.startDate == event.endDate
                   ? '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)})'
                   : '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)} – ${_R.eventTitleDateFormat.format(event.endDate)})'),
-              leading: Icon(Icons.event),
+              leading: Icon(_R.eventIcon),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Icon(Icons.edit),
+                  Icon(_R.eventEditIcon),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: Icon(_R.eventDeleteIcon),
                     onPressed: () {
                       setState(() {
                         onEventDeleted(event);
@@ -433,14 +424,14 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   onEventIDExpansionChanged(event.id, isExpanded),
               children: <Widget>[
                 buildTextOption(
-                  name: "Name",
+                  name: _R.eventNameText,
                   value: event.name,
                   onChanged: (changed) {
                     event.name = changed;
                   },
                 ),
                 buildDateOption(
-                  name: "From",
+                  name: _R.eventStartText,
                   dateTime: event.startDate,
                   onSelected: (selected) {
                     if (!selected.isBefore(_cycleConfig.startSchoolYear) &&
@@ -453,7 +444,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   },
                 ),
                 buildDateOption(
-                  name: "To",
+                  name: _R.eventEndText,
                   dateTime: event.endDate,
                   onSelected: (selected) {
                     if (!selected.isAfter(_cycleConfig.endSchoolYear) &&
@@ -466,7 +457,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   },
                 ),
                 buildCheckboxOption(
-                  name: "Skip Day",
+                  name: _R.eventSkipDayText,
                   value: event.skipDay,
                   onChanged: (changed) => event.skipDay = changed,
                 ),
@@ -474,7 +465,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
             ),
           ),
           FlatButton.icon(
-            icon: Icon(Icons.add),
+            icon: Icon(_R.addEventIcon),
             label: Text(addNewText),
             onPressed: () {
               setState(() {
@@ -509,7 +500,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
 
     return ListView(controller: scrollController, children: <Widget>[
       buildDateOption(
-        name: 'Start of School Year',
+        name: _R.startSchoolYearOptionText,
         dateTime: _cycleConfig.startSchoolYear,
         onSelected: (selected) {
           if (selected.isBefore(_cycleConfig.endSchoolYear)) {
@@ -521,7 +512,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         },
       ),
       buildDateOption(
-        name: 'End of School Year',
+        name: _R.endSchoolYearOptionText,
         dateTime: _cycleConfig.endSchoolYear,
         onSelected: (selected) {
           if (selected.isAfter(_cycleConfig.startSchoolYear)) {
@@ -533,35 +524,35 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         },
       ),
       buildCheckboxOption(
-        name: 'Is Saturday Holiday',
+        name: _R.saturdayHolidayOptionText,
         value: _cycleConfig.isSaturdayHoliday,
         onChanged: (value) {
           _cycleConfig.isSaturdayHoliday = value;
         },
       ),
       buildCheckboxOption(
-        name: 'Is Sunday Holiday',
+        name: _R.sundayHolidayOptionText,
         value: _cycleConfig.isSundayHoliday,
         onChanged: (value) {
           _cycleConfig.isSundayHoliday = value;
         },
       ),
       buildSpinnerOption(
-        name: 'Number of Days in a Cycle',
+        name: _R.noOfDaysInCycleOptionText,
         value: _cycleConfig.noOfDaysInCycle,
         onChanged: (value) {
           _cycleConfig.noOfDaysInCycle = value;
         },
       ),
       buildEventsOption(
-        name: "Holiday",
+        name: _R.holidaysOptionText,
         events: _cycleConfig.holidays,
-        addNewText: "Add Holiday",
+        addNewText: _R.addHolidayText,
         onAddNewPressed: (eventDate) {
           _cycleConfig.holidays.add(Event(
-            id: Uuid().v1(),
-            name: "New Holiday",
-            skipDay: true,
+            id: Event.generateID(),
+            name: _R.newHolidayName,
+            skipDay: _R.newHolidaySkipDay,
             startDate: eventDate,
             endDate: eventDate,
           ));
@@ -583,14 +574,14 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         },
       ),
       buildEventsOption(
-        name: "Occasions",
+        name: _R.occasionsOptionText,
         events: _cycleConfig.occasions,
-        addNewText: "Add Occasion",
+        addNewText: _R.addOccasionText,
         onAddNewPressed: (eventDate) {
           _cycleConfig.occasions.add(Event(
-            id: Uuid().v1(),
-            name: "New Occasion",
-            skipDay: false,
+            id: Event.generateID(),
+            name: _R.newOccasionName,
+            skipDay: _R.newOccasionSkipDay,
             startDate: eventDate,
             endDate: eventDate,
           ));
@@ -623,9 +614,9 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     return Scaffold(
       key: UniqueKey(),
       appBar: AppBar(
-        title: Text('Cycles Editor'),
+        title: Text(_R.appBarTitle),
         leading: IconButton(
-          icon: Icon(Icons.close),
+          icon: Icon(_R.selectionCloseIcon),
           onPressed: _closeSelection,
         ),
       ),
@@ -644,16 +635,16 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
             Divider(),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: _R.selectionMessagePadding,
                 child: Text(
-                  'Select "$fieldName" on the calendar.',
+                  _R.getSelectionMessage(fieldName),
                   textAlign: TextAlign.center,
                 ),
               ),
             ),
             Divider(),
             FlatButton(
-              child: Text('Cancel'),
+              child: Text(_R.selectionCancelText),
               onPressed: _closeSelection,
             ),
           ],

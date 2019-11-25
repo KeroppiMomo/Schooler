@@ -11,10 +11,10 @@ class EditTextScreen extends StatefulWidget {
   final void Function() onCancelled;
 
   EditTextScreen({
-    @required this.title,
-    @required this.value,
-    @required this.onDone,
-    @required this.onCancelled,
+    this.title,
+    this.value,
+    this.onDone,
+    this.onCancelled,
   });
 
   @override

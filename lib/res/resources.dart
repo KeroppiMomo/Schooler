@@ -20,7 +20,7 @@ class CyclesEditorResources {
     occasions: [],
   );
   final fadeDuration = const Duration(milliseconds: 250);
-  
+
   final getCalendarDayTextTheme =
       (BuildContext context) => Theme.of(context).textTheme.body1;
   final calendarHolidayColor = Colors.red;
@@ -29,7 +29,7 @@ class CyclesEditorResources {
   final calendarStartColor = const Color(0xFFB5F0A5);
   final calendarEndColor = const Color(0xFFF0A5A5);
   final outsideMonthColor = const Color(0x44000000);
-  
+
   final appBarTitle = 'Cycles Editor';
 
   final doneButtonText = 'Done';
@@ -64,7 +64,8 @@ class CyclesEditorResources {
 
   final selectionCloseIcon = Icons.close;
   final selectionMessagePadding = const EdgeInsets.all(16.0);
-  final getSelectionMessage = (String fieldName) => 'Select "$fieldName" on the calendar.';
+  final getSelectionMessage =
+      (String fieldName) => 'Select "$fieldName" on the calendar.';
   final selectionCancelText = 'Cancel';
 }
 
@@ -73,7 +74,8 @@ class EditTextResources {
   final cancelText = 'Clear';
   final doneIcon = Icons.done;
   final doneText = 'Done';
-  final textFieldPadding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+  final textFieldPadding =
+      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   final clearButtonIcon = Icons.clear;
   final clearButtonTooltip = 'Clear';
 }

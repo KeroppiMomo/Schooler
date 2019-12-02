@@ -4,7 +4,6 @@ import 'package:schooler/ui/edit_text_screen.dart';
 import 'package:spinner_input/spinner_input.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:schooler/lib/cycle_config.dart';
-import 'package:uuid/uuid.dart';
 
 /// Local resources.
 final CyclesEditorResources _R = R.cyclesEditor;
@@ -39,7 +38,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
   CycleConfig _cycleConfig;
 
   /// Calendar info for the current cycle config `_cycleConfig`.
-  Map<DateTime, Map<DayInfoType, Object>> _curCalendarInfo;
+  Map<DateTime, CalendarDayInfo> _curCalendarInfo;
 
   /// This screen has two "views": option view and selection view.
   /// The option view shows all available settings for the cycle config,
@@ -92,10 +91,11 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
             : textStyle;
       }
 
-      final calendarInfo = _curCalendarInfo[removeTimeFrom(dateTime)] ?? {};
+      final calendarInfo =
+          _curCalendarInfo[removeTimeFrom(dateTime)] ?? CalendarDayInfo();
       final contentWidget = () {
-        if (calendarInfo[DayInfoType.holidays] != null) {
-          if ((calendarInfo[DayInfoType.holidays] ?? '') != '') {
+        if (calendarInfo.holidays != null) {
+          if ((calendarInfo.holidays ?? '') != '') {
             return Column(
               children: <Widget>[
                 Spacer(),
@@ -103,13 +103,13 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   dateTime.day.toString(),
                   style: _R.getCalendarDayTextTheme(context).copyWith(
                         color: _R.calendarHolidayColor,
-                        decoration: calendarInfo[DayInfoType.occasions] == null
+                        decoration: calendarInfo.occasions == null
                             ? null
                             : TextDecoration.underline,
                       ),
                 ),
                 Text(
-                  calendarInfo[DayInfoType.holidays].toString(),
+                  calendarInfo.holidays,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -128,13 +128,13 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   dateTime.day.toString(),
                   style: _R.getCalendarDayTextTheme(context).copyWith(
                         color: _R.calendarHolidayColor,
-                        decoration: calendarInfo[DayInfoType.occasions] == null
+                        decoration: calendarInfo.occasions == null
                             ? null
                             : TextDecoration.underline,
                       ),
                 ),
                 Text(
-                  (calendarInfo[DayInfoType.occasions] ?? '').toString(),
+                  (calendarInfo.occasions ?? '').toString(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -145,7 +145,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
               ],
             );
           }
-        } else if (calendarInfo[DayInfoType.occasions] != null) {
+        } else if (calendarInfo.occasions != null) {
           return Column(
             children: <Widget>[
               Spacer(),
@@ -155,7 +155,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                     .copyWith(decoration: TextDecoration.underline),
               ),
               Text(
-                (calendarInfo[DayInfoType.occasions] ?? '').toString(),
+                (calendarInfo.occasions ?? '').toString(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -174,10 +174,10 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 style: changeColorIfOutside(Theme.of(context).textTheme.body1),
               ),
               Text(
-                (calendarInfo[DayInfoType.cycleDay] == '1'
-                        ? '[${calendarInfo[DayInfoType.cycle]}] '
+                (calendarInfo.cycleDay == '1'
+                        ? '[${calendarInfo.cycle}] '
                         : '') +
-                    (calendarInfo[DayInfoType.cycleDay] ?? '').toString(),
+                    (calendarInfo.cycleDay ?? '').toString(),
                 textAlign: TextAlign.center,
                 style: changeColorIfOutside(
                     _R.getCalendarDayInfoTextTheme(context)),
@@ -188,14 +188,13 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         }
       }();
 
-      if (calendarInfo[DayInfoType.startSchoolYear] == true ||
-          calendarInfo[DayInfoType.endSchoolYear] == true) {
+      if (calendarInfo.isStartSchoolYear || calendarInfo.isEndSchoolYear) {
         return Stack(
           alignment: Alignment.center,
           children: <Widget>[
             Container(
               decoration: BoxDecoration(
-                color: calendarInfo[DayInfoType.startSchoolYear] == true
+                color: calendarInfo.isStartSchoolYear
                     ? _R.calendarStartColor
                     : _R.calendarEndColor,
                 shape: BoxShape.circle,

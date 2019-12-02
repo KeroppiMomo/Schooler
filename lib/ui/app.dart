@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:schooler/ui/cycles_editor.dart';
+import 'package:schooler/ui/calendar_type_screen.dart';
 
 class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Hello',
-      home: CyclesEditorScreen(),
+      home: CalendarTypeScreen(),
     );
   }
 }

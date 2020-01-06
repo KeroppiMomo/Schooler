@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:schooler/lib/cycle_config.dart';
+import 'package:schooler/lib/settings.dart';
 
 final R = Resources();
 
 class Resources {
+  final calendarType = CalendarTypeScreenResources();
   final cyclesEditor = CyclesEditorResources();
   final editText = EditTextResources();
+}
+
+class CalendarTypeScreenResources {
+  final appBarTitle = 'Calendar Type';
+  final padding = const EdgeInsets.all(16.0);
+  final buttonTextForTypes = {
+    CalendarType.week: 'By Weeks',
+    CalendarType.cycle: 'By Cycles',
+  };
 }
 
 class CyclesEditorResources {

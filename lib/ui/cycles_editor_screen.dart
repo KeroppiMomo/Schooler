@@ -10,6 +10,10 @@ final CyclesEditorResources _R = R.cyclesEditor;
 
 /// Screen for editing cycle configuration.
 class CyclesEditorScreen extends StatefulWidget {
+  void Function() onPop;
+
+  CyclesEditorScreen({this.onPop});
+
   @override
   CyclesEditorScreenState createState() => CyclesEditorScreenState();
 }
@@ -240,6 +244,12 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       key: UniqueKey(),
       appBar: AppBar(
         title: Text(_R.appBarTitle),
+        leading: BackButton(
+          onPressed: () {
+            if (widget.onPop != null) widget.onPop();
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: SafeArea(
         child: Column(

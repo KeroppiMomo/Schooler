@@ -1,9 +1,18 @@
+import 'package:quiver/core.dart';
+import 'package:schooler/lib/settings.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter/foundation.dart';
 
 /// Convert a `DateTime` into UTC using its `year`, `month`, and `day`. Used
 DateTime removeTimeFrom(DateTime dateTime) {
   return DateTime.utc(dateTime.year, dateTime.month, dateTime.day);
 }
+
+/// Convert a number of millisecond since epoch to DateTime.
+/// If `msSinceEpoch` is `null`, returns `null`.
+DateTime nullableUnixEpochToDateTime(int msSinceEpoch) => msSinceEpoch == null
+    ? null
+    : DateTime.fromMillisecondsSinceEpoch(msSinceEpoch);
 
 class Event {
   String id;
@@ -21,6 +30,61 @@ class Event {
   });
 
   static String generateID() => Uuid().v1();
+
+  // Serilization --------------------------------------------------------------
+  Map<String, Object> toJSON() {
+    return {
+      'id': id,
+      'name': name,
+      'start_date_epoch_ms': startDate?.millisecondsSinceEpoch,
+      'end_date_epoch_ms': endDate?.millisecondsSinceEpoch,
+      'skip_day': skipDay,
+    };
+  }
+
+  static Event fromJSON(Map<String, Object> json) {
+    final id = json['id'];
+    final name = json['name'];
+    final startDateEpochMS = json['start_date_epoch_ms'];
+    final endDateEpochMS = json['end_date_epoch_ms'];
+    final skipDay = json['skip_day'];
+    if ((id is String || id == null) &&
+        (name is String || name == null) &&
+        (startDateEpochMS is int || startDateEpochMS == null) &&
+        (endDateEpochMS is int || endDateEpochMS == null) &&
+        (skipDay is bool || skipDay == null)) {
+      return Event(
+        id: id,
+        name: name,
+        startDate: nullableUnixEpochToDateTime(startDateEpochMS),
+        endDate: nullableUnixEpochToDateTime(endDateEpochMS),
+        skipDay: skipDay,
+      );
+    } else {
+      final curTypeMessage = [
+        'id',
+        'name',
+        'start_date_epoch_ms',
+        'end_date_epoch_ms',
+        'skip_day'
+      ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
+      throw ParseJSONException(
+          message:
+              'Event type mismatch: $curTypeMessage found; String, String, int, int, bool expected');
+    }
+  }
+
+  // Identity -------------------------------------------------------
+  bool operator ==(other) {
+    return other is Event &&
+        other.id == this.id &&
+        other.name == this.name &&
+        other.startDate == this.startDate &&
+        other.endDate == this.endDate &&
+        other.skipDay == this.skipDay;
+  }
+
+  int get hashCode => hashObjects([id, name, startDate, endDate, skipDay]);
 }
 
 /// Information in a calendar for a day.
@@ -132,4 +196,89 @@ class CycleConfig {
 
     return results;
   }
+
+  // Serilization -----------------------------------------------------------
+  Map<String, Object> toJSON() {
+    return {
+      'start_school_year_epoch_ms': startSchoolYear == null
+          ? null
+          : startSchoolYear.millisecondsSinceEpoch,
+      'end_school_year_epoch_ms':
+          endSchoolYear == null ? null : endSchoolYear.millisecondsSinceEpoch,
+      'days_in_cycle': noOfDaysInCycle,
+      'is_sat_holiday': isSaturdayHoliday,
+      'is_sun_holiday': isSundayHoliday,
+      'holidays': (holidays ?? []).map((event) => event.toJSON()),
+      'occasions': (occasions ?? []).map((event) => event.toJSON()),
+    };
+  }
+
+  static CycleConfig fromJSON(Map<String, Object> json) {
+    final dynamic startSchoolYearEpochMS = json['start_school_year_epoch_ms'];
+    final dynamic endSchoolYearEpochMS = json['end_school_year_epoch_ms'];
+    final dynamic daysInCycle = json['days_in_cycle'];
+    final dynamic isSatHoliday = json['is_sat_holiday'];
+    final dynamic isSunHoliday = json['is_sun_holiday'];
+    final dynamic holidays = json['holidays'];
+    final dynamic occasions = json['occasions'];
+
+    if ((startSchoolYearEpochMS is int || startSchoolYearEpochMS == null) &&
+        (endSchoolYearEpochMS is int || endSchoolYearEpochMS == null) &&
+        (daysInCycle is int || daysInCycle == null) &&
+        (isSatHoliday is bool || isSatHoliday == null) &&
+        (isSunHoliday is bool || isSunHoliday == null) &&
+        (holidays is Iterable<Map<String, Object>> || holidays == null) &&
+        (occasions is Iterable<Map<String, Object>> || occasions == null)) {
+      return CycleConfig(
+        startSchoolYear: nullableUnixEpochToDateTime(startSchoolYearEpochMS),
+        endSchoolYear: nullableUnixEpochToDateTime(endSchoolYearEpochMS),
+        noOfDaysInCycle: daysInCycle,
+        isSaturdayHoliday: isSatHoliday,
+        isSundayHoliday: isSunHoliday,
+        holidays: holidays
+            .map((event) => Event.fromJSON(event))
+            .toList()
+            .cast<Event>(),
+        occasions: occasions
+            .map((event) => Event.fromJSON(event))
+            .toList()
+            .cast<Event>(),
+      );
+    } else {
+      final curTypeMessage = [
+        'start_school_year_epoch_ms',
+        'end_school_year_epoch_ms',
+        'days_in_cycle',
+        'is_sat_holiday',
+        'is_sun_holiday',
+        'holidays',
+        'occasions',
+      ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
+      throw ParseJSONException(
+          message:
+              'CycleConfig type mismatch: $curTypeMessage found; int, int, int, bool, bool, List<Map<String, Object>>, List<Map<String, Object>> expected');
+    }
+  }
+
+  // Identity -------------------------------------------------------
+  bool operator ==(other) {
+    return other is CycleConfig &&
+        other.startSchoolYear == this.startSchoolYear &&
+        other.endSchoolYear == this.endSchoolYear &&
+        other.noOfDaysInCycle == this.noOfDaysInCycle &&
+        other.isSaturdayHoliday == this.isSaturdayHoliday &&
+        other.isSundayHoliday == this.isSundayHoliday &&
+        listEquals(other.holidays, this.holidays) &&
+        listEquals(other.occasions, this.occasions);
+  }
+
+  int get hashCode => hashObjects([
+        startSchoolYear,
+        endSchoolYear,
+        noOfDaysInCycle,
+        isSaturdayHoliday,
+        isSundayHoliday,
+        holidays,
+        occasions
+      ]);
 }

@@ -19,6 +19,8 @@ class Event {
   String name;
   DateTime startDate;
   DateTime endDate;
+
+  /// For `CalendarType.week`, this value should be `false`.
   bool skipDay;
 
   Event({
@@ -208,12 +210,14 @@ class CycleConfig {
       'days_in_cycle': noOfDaysInCycle,
       'is_sat_holiday': isSaturdayHoliday,
       'is_sun_holiday': isSundayHoliday,
-      'holidays': (holidays ?? []).map((event) => event.toJSON()),
-      'occasions': (occasions ?? []).map((event) => event.toJSON()),
+      'holidays': (holidays ?? []).map((event) => event.toJSON()).toList(),
+      'occasions': (occasions ?? []).map((event) => event.toJSON()).toList(),
     };
   }
 
   static CycleConfig fromJSON(Map<String, Object> json) {
+    if (json == null) return null;
+
     final dynamic startSchoolYearEpochMS = json['start_school_year_epoch_ms'];
     final dynamic endSchoolYearEpochMS = json['end_school_year_epoch_ms'];
     final dynamic daysInCycle = json['days_in_cycle'];
@@ -222,13 +226,23 @@ class CycleConfig {
     final dynamic holidays = json['holidays'];
     final dynamic occasions = json['occasions'];
 
+    bool isStringObjectMapList(dynamic obj) {
+      if (obj is! List) return false;
+      try {
+        obj.cast<Map<String, Object>>();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
     if ((startSchoolYearEpochMS is int || startSchoolYearEpochMS == null) &&
         (endSchoolYearEpochMS is int || endSchoolYearEpochMS == null) &&
         (daysInCycle is int || daysInCycle == null) &&
         (isSatHoliday is bool || isSatHoliday == null) &&
         (isSunHoliday is bool || isSunHoliday == null) &&
-        (holidays is Iterable<Map<String, Object>> || holidays == null) &&
-        (occasions is Iterable<Map<String, Object>> || occasions == null)) {
+        (isStringObjectMapList(holidays) || holidays == null) &&
+        (isStringObjectMapList(occasions) || occasions == null)) {
       return CycleConfig(
         startSchoolYear: nullableUnixEpochToDateTime(startSchoolYearEpochMS),
         endSchoolYear: nullableUnixEpochToDateTime(endSchoolYearEpochMS),
@@ -276,6 +290,152 @@ class CycleConfig {
         startSchoolYear,
         endSchoolYear,
         noOfDaysInCycle,
+        isSaturdayHoliday,
+        isSundayHoliday,
+        holidays,
+        occasions
+      ]);
+}
+
+class WeekConfig {
+  DateTime startSchoolYear;
+  DateTime endSchoolYear;
+  bool isSaturdayHoliday;
+  bool isSundayHoliday;
+  List<Event> holidays;
+  List<Event> occasions;
+
+  WeekConfig({
+    this.startSchoolYear,
+    this.endSchoolYear,
+    this.isSaturdayHoliday,
+    this.isSundayHoliday,
+    this.holidays,
+    this.occasions,
+  });
+
+  Map<DateTime, CalendarDayInfo> getCalendar() {
+    final results = Map<DateTime, CalendarDayInfo>();
+
+    DateTime curDate = removeTimeFrom(startSchoolYear);
+    while (!curDate.isAfter(removeTimeFrom(endSchoolYear))) {
+      results[curDate] = CalendarDayInfo();
+
+      if ((isSaturdayHoliday && curDate.weekday == DateTime.saturday) ||
+          (isSundayHoliday && curDate.weekday == DateTime.sunday)) {
+        results[curDate].holidays = '';
+      }
+
+      List<Event> getCurrentEvents(List<Event> events) => events
+          .where((event) =>
+              removeTimeFrom(event.startDate).compareTo(curDate) <= 0 &&
+              removeTimeFrom(event.endDate).compareTo(curDate) >= 0)
+          .toList();
+
+      List<Event> curHolidays = getCurrentEvents(holidays);
+      if (curHolidays != null && curHolidays.length != 0) {
+        results[curDate].holidays =
+            curHolidays.map((event) => event.name).join(', ');
+      }
+
+      List<Event> curOccasions = getCurrentEvents(occasions);
+      if (curOccasions != null && curOccasions.length != 0) {
+        results[curDate].occasions =
+            curOccasions.map((event) => event.name).join(', ');
+      }
+
+      results[curDate].cycleDay = curDate.weekday.toString();
+
+      curDate = curDate.add(Duration(days: 1));
+    }
+    results[removeTimeFrom(startSchoolYear)].isStartSchoolYear = true;
+    results[removeTimeFrom(endSchoolYear)].isEndSchoolYear = true;
+
+    return results;
+  }
+
+  // Serilization -----------------------------------------------------------
+  Map<String, Object> toJSON() {
+    return {
+      'start_school_year_epoch_ms': startSchoolYear == null
+          ? null
+          : startSchoolYear.millisecondsSinceEpoch,
+      'end_school_year_epoch_ms':
+          endSchoolYear == null ? null : endSchoolYear.millisecondsSinceEpoch,
+      'is_sat_holiday': isSaturdayHoliday,
+      'is_sun_holiday': isSundayHoliday,
+      'holidays': (holidays ?? []).map((event) => event.toJSON()).toList(),
+      'occasions': (occasions ?? []).map((event) => event.toJSON()).toList(),
+    };
+  }
+
+  static WeekConfig fromJSON(Map<String, Object> json) {
+    final dynamic startSchoolYearEpochMS = json['start_school_year_epoch_ms'];
+    final dynamic endSchoolYearEpochMS = json['end_school_year_epoch_ms'];
+    final dynamic isSatHoliday = json['is_sat_holiday'];
+    final dynamic isSunHoliday = json['is_sun_holiday'];
+    final dynamic holidays = json['holidays'];
+    final dynamic occasions = json['occasions'];
+
+    bool isStringObjectMapList(dynamic obj) {
+      if (obj is! List) return false;
+      try {
+        obj.cast<Map<String, Object>>();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if ((startSchoolYearEpochMS is int || startSchoolYearEpochMS == null) &&
+        (endSchoolYearEpochMS is int || endSchoolYearEpochMS == null) &&
+        (isSatHoliday is bool || isSatHoliday == null) &&
+        (isSunHoliday is bool || isSunHoliday == null) &&
+        (isStringObjectMapList(holidays) || holidays == null) &&
+        (isStringObjectMapList(occasions) || occasions == null)) {
+      return WeekConfig(
+        startSchoolYear: nullableUnixEpochToDateTime(startSchoolYearEpochMS),
+        endSchoolYear: nullableUnixEpochToDateTime(endSchoolYearEpochMS),
+        isSaturdayHoliday: isSatHoliday,
+        isSundayHoliday: isSunHoliday,
+        holidays: holidays
+            .map((event) => Event.fromJSON(event))
+            .toList()
+            .cast<Event>(),
+        occasions: occasions
+            .map((event) => Event.fromJSON(event))
+            .toList()
+            .cast<Event>(),
+      );
+    } else {
+      final curTypeMessage = [
+        'start_school_year_epoch_ms',
+        'end_school_year_epoch_ms',
+        'is_sat_holiday',
+        'is_sun_holiday',
+        'holidays',
+        'occasions',
+      ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
+      throw ParseJSONException(
+          message:
+              'WeekConfig type mismatch: $curTypeMessage found; int, int, bool, bool, List<Map<String, Object>>, List<Map<String, Object>> expected');
+    }
+  }
+
+  // Identity -------------------------------------------------------
+  bool operator ==(other) {
+    return other is WeekConfig &&
+        other.startSchoolYear == this.startSchoolYear &&
+        other.endSchoolYear == this.endSchoolYear &&
+        other.isSaturdayHoliday == this.isSaturdayHoliday &&
+        other.isSundayHoliday == this.isSundayHoliday &&
+        listEquals(other.holidays, this.holidays) &&
+        listEquals(other.occasions, this.occasions);
+  }
+
+  int get hashCode => hashObjects([
+        startSchoolYear,
+        endSchoolYear,
         isSaturdayHoliday,
         isSundayHoliday,
         holidays,

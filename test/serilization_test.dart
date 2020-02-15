@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:schooler/lib/cycle_config.dart';
+import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
+import 'package:schooler/lib/timetable.dart';
+import 'package:collection/collection.dart';
 
 void main() {
   group('(serilization)', () {
@@ -91,6 +93,143 @@ void main() {
             occasions: [],
           ),
         );
+      });
+    });
+
+    group('(TimetableDay)', () {
+      group('(TimetableWeekDay)', () {
+        test(
+            '[toJSON then fromJSON, weekDay non-null] {return original object}',
+            () {
+          final day = TimetableWeekDay(3);
+          final type = day.jsonType();
+          final value = day.jsonValue();
+
+          expect(TimetableDay.fromJSON(type, value), day);
+        });
+        test('[toJSON then fromJSON, weekDay null] {return original object}',
+            () {
+          final day = TimetableWeekDay(null);
+          final type = day.jsonType();
+          final value = day.jsonValue();
+
+          expect(TimetableDay.fromJSON(type, value), day);
+        });
+      });
+      group('(TimetableCycleDay)', () {
+        test(
+            '[toJSON then fromJSON, cycleDay non-null] {return original object}',
+            () {
+          final day = TimetableCycleDay(3);
+          final type = day.jsonType();
+          final value = day.jsonValue();
+
+          expect(TimetableDay.fromJSON(type, value), day);
+        });
+        test('[toJSON then fromJSON, cycleDay null] {return original object}',
+            () {
+          final day = TimetableCycleDay(null);
+          final type = day.jsonType();
+          final value = day.jsonValue();
+
+          expect(TimetableDay.fromJSON(type, value), day);
+        });
+      });
+      group('(TimetableOccasionDay)', () {
+        test(
+            '[toJSON then fromJSON, occasionName non-null] {return original object}',
+            () {
+          final day = TimetableOccasionDay('N');
+          final type = day.jsonType();
+          final value = day.jsonValue();
+
+          expect(TimetableDay.fromJSON(type, value), day);
+        });
+        test(
+            '[toJSON then fromJSON, occasionName null] {return original object}',
+            () {
+          final day = TimetableOccasionDay(null);
+          final type = day.jsonType();
+          final value = day.jsonValue();
+
+          expect(TimetableDay.fromJSON(type, value), day);
+        });
+      });
+
+      test('[fromJSON, non-matching type and value] {throw ParseJSONException}',
+          () {
+        expect(() => TimetableDay.fromJSON('holiday', 'value'),
+            throwsA(isA<ParseJSONException>()));
+      });
+    });
+
+    group('(TimetableSession)', () {
+      test(
+          '[toJSON then fromJSON, all fields non-null] {return original object}',
+          () {
+        final session = TimetableSession(
+          startTime: DateTime(1970, 1, 1, 8, 25),
+          endTime: DateTime(1970, 1, 1, 13, 5),
+          name: 'S',
+        );
+        final toJSONed = session.toJSON();
+        final fromJSONed = TimetableSession.fromJSON(toJSONed);
+        expect(fromJSONed, session);
+      });
+      test('[toJSON then fromJSON, all fields null] {return original object}',
+          () {
+        final session = TimetableSession(
+          startTime: null,
+          endTime: null,
+          name: null,
+        );
+        final toJSONed = session.toJSON();
+        final fromJSONed = TimetableSession.fromJSON(toJSONed);
+        expect(fromJSONed, session);
+      });
+    });
+
+    group('(Timetable)', () {
+      test('[toJSON then fromJSON] {return original object}', () {
+        final timetable = Timetable({
+          TimetableWeekDay(1): [
+            TimetableSession(
+              startTime: DateTime(1970, 1, 1, 8, 20),
+              endTime: DateTime(1970, 1, 1, 12, 25),
+              name: 'S11',
+            ),
+            TimetableSession(
+              startTime: DateTime(1970, 1, 1, 15, 0),
+              endTime: DateTime(1970, 1, 1, 18, 55),
+              name: 'S12',
+            ),
+          ],
+          TimetableWeekDay(2): [],
+          TimetableCycleDay(5): [
+            TimetableSession(
+              startTime: DateTime(1970, 1, 1, 9, 30),
+              endTime: DateTime(1970, 1, 1, 10, 5),
+              name: 'S31',
+            ),
+          ],
+          TimetableOccasionDay('O4'): [
+            TimetableSession(
+              startTime: DateTime(1970, 1, 1, 9, 30),
+              endTime: DateTime(1970, 1, 1, 10, 5),
+              name: 'S41',
+            ),
+            TimetableSession(
+              startTime: DateTime(1970, 1, 1, 12, 30),
+              endTime: DateTime(1970, 1, 1, 14, 50),
+              name: 'S42',
+            ),
+          ],
+          TimetableOccasionDay('O5'): [],
+        });
+
+        final toJSONed = timetable.toJSON();
+        final fromJSONed = Timetable.fromJSON(toJSONed);
+        expect(fromJSONed, timetable);
       });
     });
   });

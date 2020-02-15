@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/cycles_editor_screen.dart';
+import 'package:schooler/ui/weeks_editor_screen.dart';
 
 final CalendarTypeScreenResources _R = R.calendarType;
 
@@ -39,10 +40,21 @@ class CalendarTypeScreen extends StatelessWidget {
       {@required CalendarType selectedType}) {
     Settings().calendarType = selectedType;
     Settings().saveSettings();
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => CyclesEditorScreen(onPop: () {
-              Settings().calendarType = null;
-              Settings().saveSettings();
-            })));
+    final onPop = () {
+      Settings().calendarType = null;
+      Settings().saveSettings();
+    };
+
+    void push(Widget screen) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+    }
+
+    if (selectedType == CalendarType.week) {
+      push(WeeksEditorScreen(onPop: onPop));
+    } else if (selectedType == CalendarType.cycle) {
+      push(CyclesEditorScreen(onPop: onPop));
+    } else {
+      assert(false, 'Unexpected CalendarType value');
+    }
   }
 }

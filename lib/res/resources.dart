@@ -1,14 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:schooler/lib/cycle_config.dart';
+import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
+import 'package:schooler/lib/timetable.dart';
 
 final R = Resources();
 
 class Resources {
+  final sessionTextStyle = TextStyle(fontWeight: FontWeight.bold);
+  final placeholderTextStyle = TextStyle(color: Colors.grey);
+
+  final timetableEditor = TimetableEditorResources();
+
   final calendarType = CalendarTypeScreenResources();
-  final cyclesEditor = CyclesEditorResources();
+  final calendarEditor = CalendarEditorResources();
   final editText = EditTextResources();
+  final timetableEditorScreen = TimetableEditorScreenResources();
+}
+
+class TimetableEditorResources {
+  String Function(TimetableDay) get dayTabName =>
+      R.timetableEditorScreen.dayTabName;
+
+  final listItemsSizeTransitionCurve = Curves.easeInOut;
+
+  final sessionEditIcon = Icons.edit;
+  final sessionEditIconSize = 16.0;
+  final sessionEditIconColor = Colors.grey;
+
+  final sessionDeleteIcon = Icons.delete;
+  final sessionDeleteIconSize = 16.0;
+  final sessionDeleteIconColor = Colors.grey;
+
+  final sessionEditRegionPadding = const EdgeInsets.all(8.0);
+  final sessionEditRegionWidgetsSpacing = 4.0;
+
+  final sessionPadding = const EdgeInsets.symmetric(vertical: 4.0);
+  final sessionTimeFormat = DateFormat('HH:mm');
+  final sessionTimeWidth = 40.0;
+  final sessionTimeTo = '–'; // Text between the start time and end time
+
+  final sessionNoNameText = 'No Name';
+
+  final suggestionMinItemForListView = 4;
+  final suggestionListViewHeight = 195.0;
 }
 
 class CalendarTypeScreenResources {
@@ -20,7 +55,7 @@ class CalendarTypeScreenResources {
   };
 }
 
-class CyclesEditorResources {
+class CalendarEditorResources {
   final defaultCycleConfig = CycleConfig(
     startSchoolYear: DateTime.utc(DateTime.now().year, 9, 1),
     endSchoolYear: DateTime.utc(DateTime.now().year + 1, 7, 31),
@@ -30,6 +65,15 @@ class CyclesEditorResources {
     holidays: [],
     occasions: [],
   );
+  final defaultWeekConfig = WeekConfig(
+    startSchoolYear: DateTime.utc(DateTime.now().year, 9, 1),
+    endSchoolYear: DateTime.utc(DateTime.now().year + 1, 7, 31),
+    isSaturdayHoliday: true,
+    isSundayHoliday: true,
+    holidays: [],
+    occasions: [],
+  );
+
   final fadeDuration = const Duration(milliseconds: 250);
 
   final getCalendarDayTextTheme =
@@ -41,7 +85,8 @@ class CyclesEditorResources {
   final calendarEndColor = const Color(0xFFF0A5A5);
   final outsideMonthColor = const Color(0x44000000);
 
-  final appBarTitle = 'Cycles Editor';
+  final cyclesAppBarTitle = 'Cycles Editor';
+  final weeksAppBarTitle = 'Weeks Editor';
 
   final doneButtonText = 'Done';
   final dateOptionIcon = Icons.date_range;
@@ -82,11 +127,72 @@ class CyclesEditorResources {
 
 class EditTextResources {
   final cancelIcon = Icons.clear;
-  final cancelText = 'Clear';
+  final cancelText = 'Cancel';
   final doneIcon = Icons.done;
   final doneText = 'Done';
   final textFieldPadding =
       const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   final clearButtonIcon = Icons.clear;
   final clearButtonTooltip = 'Clear';
+}
+
+class TimetableEditorScreenResources {
+  final appBarTitle = 'Timetable';
+
+  String weekDayTabName(int weekDay) => {
+        1: 'Mon',
+        2: 'Tue',
+        3: 'Wed',
+        4: 'Thu',
+        5: 'Fri',
+        6: 'Sat',
+        7: 'Sun',
+      }[weekDay];
+  String cycleDayTabName(int cycleDay) => 'Day $cycleDay';
+
+  String dayTabName(TimetableDay day) {
+    // Also used in R.timetableEditor.dayTabName
+    if (day is TimetableWeekDay)
+      return weekDayTabName(day.dayOfWeek);
+    else if (day is TimetableCycleDay)
+      return cycleDayTabName(day.dayOfCycle);
+    else if (day is TimetableOccasionDay)
+      return day.occasionName;
+    else {
+      assert(false, 'Unexpected TimetableDay subtype');
+      return day.toString();
+    }
+  }
+
+  final addTabIcon = Icons.add;
+
+  final doneButtonText = 'Done';
+
+  final sessionDefaultStartTime = DateTime(1970, 1, 1, 08, 00);
+  final sessionDefaultDuration = Duration(minutes: 35);
+
+  final addTabButtonsCardPadding = EdgeInsets.only(top: 8.0);
+  TextStyle getAddTabButtonsCardTitleStyle(BuildContext context) =>
+      Theme.of(context).textTheme.body1.copyWith(color: Colors.grey);
+  final addTabButtonsIcon = Icons.add;
+
+  final addTabNoEventMessage =
+      'No available events. All holidays and occasions are with a timetable.';
+  TextStyle getAddTabNoEventTextStyle(BuildContext context) => Theme.of(context)
+      .textTheme
+      .body1
+      .copyWith(color: Colors.grey, fontStyle: FontStyle.italic);
+
+  final addTabWidgetSpacing = 16.0; // Spacing between each widgets in ListView
+
+  final addTabButtonsText = 'Add a timetable for any of the following events.';
+  final addTabOccasionButtonsTitle = 'Occasions';
+  final addTabHolidaysButtonsTitle = 'Holidays';
+  final addTabInputNameText =
+      'Or add a timetable with a name. \nThe timetable will apply to holidays or occasions with matching name.';
+  final addTabInputNameTextFieldLabel = 'Name';
+  final addTabInputNameButtonIcon = Icons.add;
+
+  String getAddTabInputNameExistMessage(String name) =>
+      'Timetable with name "$name" already exists.';
 }

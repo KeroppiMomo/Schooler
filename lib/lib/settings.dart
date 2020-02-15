@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:schooler/lib/cycle_config.dart';
+import 'package:schooler/lib/cycle_week_config.dart';
+import 'package:schooler/lib/timetable.dart';
 
 enum CalendarType { week, cycle }
 
@@ -28,6 +29,8 @@ class Settings {
   // Fields ------------------------------------------------------------------
   CalendarType calendarType;
   CycleConfig cycleConfig;
+  WeekConfig weekConfig;
+  Timetable timetable;
 
   // Serilization & File -----------------------------------------------------
 
@@ -36,6 +39,8 @@ class Settings {
     return jsonEncode({
       'calendar_type': calendarType?.toString(),
       'cycle_config': cycleConfig?.toJSON(),
+      'week_config': weekConfig?.toJSON(),
+      'timetable': timetable?.toJSON(),
     });
   }
 
@@ -51,6 +56,9 @@ class Settings {
     Settings().calendarType = CalendarType.values
         .where((value) => value.toString() == decoded['calendar_type'])
         .firstWhere((_) => true, orElse: () => null); // .first or null
+    Settings().cycleConfig = CycleConfig.fromJSON(decoded['cycle_config']);
+    Settings().weekConfig = WeekConfig.fromJSON(decoded['week_config']);
+    Settings().timetable = Timetable.fromJSON(decoded['timetable']);
 
     return Settings();
   }

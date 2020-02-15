@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
 import 'package:schooler/ui/timetable_editor_screen.dart';
-import 'package:spinner_input/spinner_input.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
@@ -10,18 +9,18 @@ import 'package:schooler/lib/settings.dart';
 /// Local resources.
 final CalendarEditorResources _R = R.calendarEditor;
 
-/// Screen for editing cycle configuration.
-class CyclesEditorScreen extends StatefulWidget {
+/// Screen for editing week configuration.
+class WeeksEditorScreen extends StatefulWidget {
   void Function() onPop;
 
-  CyclesEditorScreen({this.onPop});
+  WeeksEditorScreen({this.onPop});
 
   @override
-  CyclesEditorScreenState createState() => CyclesEditorScreenState();
+  WeeksEditorScreenState createState() => WeeksEditorScreenState();
 }
 
 @visibleForTesting
-class CyclesEditorScreenState extends State<CyclesEditorScreen> {
+class WeeksEditorScreenState extends State<WeeksEditorScreen> {
   /// Calendar controller for all `TableCalendar` instances.
   CalendarController _calendarController;
 
@@ -40,14 +39,14 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
   /// The list of occasion `Event.id`s corresponding to the expanded `ExpansionTile`. Used for rebuilding the widget.
   List<String> _occasionIDsExpanded = [];
 
-  /// Current cycle config.
-  CycleConfig _cycleConfig;
+  /// Current week config.
+  WeekConfig _weekConfig;
 
-  /// Calendar info for the current cycle config `_cycleConfig`.
+  /// Calendar info for the current week config `_weekConfig`.
   Map<DateTime, CalendarDayInfo> _curCalendarInfo;
 
   /// This screen has two "views": option view and selection view.
-  /// The option view shows all available settings for the cycle config,
+  /// The option view shows all available settings for the week config,
   /// while the selection view prompts the user to select a date from the calendar for a setting.
   ///
   /// The option view and the selection view can be made by calling `_buildOptionView` and `_buildSelectionView` respectively.
@@ -64,14 +63,14 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     }
 
     _calendarController = CalendarController();
-    if (Settings().cycleConfig == null) {
-      _cycleConfig = _R.defaultCycleConfig;
-      Settings().cycleConfig = _cycleConfig;
+    if (Settings().weekConfig == null) {
+      _weekConfig = _R.defaultWeekConfig;
+      Settings().weekConfig = _weekConfig;
       Settings().saveSettings();
     } else {
-      _cycleConfig = Settings().cycleConfig;
+      _weekConfig = Settings().weekConfig;
     }
-    _curCalendarInfo = _cycleConfig.getCalendar();
+    _curCalendarInfo = _weekConfig.getCalendar();
   }
 
   @override
@@ -102,8 +101,8 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       /// Used for the `textStyle` of the day `Text` (the largest text for displaying the day of the month).
       TextStyle changeColorIfOutside(TextStyle textStyle) {
         return isOutsideMonth ||
-                dateTime.isBefore(_cycleConfig.startSchoolYear) ||
-                dateTime.isAfter(_cycleConfig.endSchoolYear
+                dateTime.isBefore(_weekConfig.startSchoolYear) ||
+                dateTime.isAfter(_weekConfig.endSchoolYear
                     .add(Duration(days: 1))) // No idea why need to add 1 day
             ? textStyle.copyWith(color: _R.outsideMonthColor)
             : textStyle;
@@ -191,15 +190,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 dateTime.day.toString(),
                 style: changeColorIfOutside(Theme.of(context).textTheme.body1),
               ),
-              Text(
-                (calendarInfo.cycleDay == '1'
-                        ? '[${calendarInfo.cycle}] '
-                        : '') +
-                    (calendarInfo.cycleDay ?? '').toString(),
-                textAlign: TextAlign.center,
-                style: changeColorIfOutside(
-                    _R.getCalendarDayInfoTextTheme(context)),
-              ),
+              Text(''),
               Spacer(),
             ],
           );
@@ -257,7 +248,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     return Scaffold(
       key: UniqueKey(),
       appBar: AppBar(
-        title: Text(_R.cyclesAppBarTitle),
+        title: Text(_R.weeksAppBarTitle),
         leading: BackButton(
           onPressed: () {
             if (widget.onPop != null) widget.onPop();
@@ -320,50 +311,10 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         onChanged: (bool newValue) {
           setState(() {
             onChanged(newValue);
-            _curCalendarInfo = _cycleConfig.getCalendar();
+            _curCalendarInfo = _weekConfig.getCalendar();
             _currentView = _buildOptionView();
           });
         },
-      );
-    }
-
-    /// Build an option with a type of `int`.
-    Widget buildSpinnerOption({
-      @required String name,
-      @required int value,
-      @required void Function(int) onChanged,
-    }) {
-      return ListTile(
-        leading: Icon(Icons.list),
-        title: Text(name),
-        trailing: SpinnerInput(
-          disabledLongPress: true,
-          spinnerValue: value.toDouble(),
-          minValue: 1,
-
-          minusButton: SpinnerButtonStyle(
-            color: Theme.of(context).accentColor,
-            textColor:
-                Theme.of(context).accentColorBrightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-          ),
-          plusButton: SpinnerButtonStyle(
-            color: Theme.of(context).accentColor,
-            textColor:
-                Theme.of(context).accentColorBrightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-          ), // Different instance for `minusButton` and `plusButton` because `SpinnerButtonStyle.child` changes during the initialize of `SpinnerInput`
-
-          onChange: (newValue) {
-            setState(() {
-              onChanged(newValue.toInt());
-              _curCalendarInfo = _cycleConfig.getCalendar();
-              _currentView = _buildOptionView();
-            });
-          },
-        ),
       );
     }
 
@@ -387,7 +338,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                 setState(() {
                   onChanged(changed);
 
-                  _curCalendarInfo = _cycleConfig.getCalendar();
+                  _curCalendarInfo = _weekConfig.getCalendar();
                   _currentView = _buildOptionView();
                 });
               },
@@ -435,7 +386,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                     onPressed: () {
                       setState(() {
                         onEventDeleted(event);
-                        _curCalendarInfo = _cycleConfig.getCalendar();
+                        _curCalendarInfo = _weekConfig.getCalendar();
                         _currentView = _buildOptionView();
                       });
                     },
@@ -457,7 +408,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   name: _R.eventStartText,
                   dateTime: event.startDate,
                   onSelected: (selected) {
-                    if (!selected.isBefore(_cycleConfig.startSchoolYear) &&
+                    if (!selected.isBefore(_weekConfig.startSchoolYear) &&
                         !selected.isAfter(event.endDate)) {
                       event.startDate = selected;
                       return true;
@@ -470,7 +421,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   name: _R.eventEndText,
                   dateTime: event.endDate,
                   onSelected: (selected) {
-                    if (!selected.isAfter(_cycleConfig.endSchoolYear) &&
+                    if (!selected.isAfter(_weekConfig.endSchoolYear) &&
                         !selected.isBefore(event.startDate)) {
                       event.endDate = selected;
                       return true;
@@ -478,11 +429,6 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                       return false;
                     }
                   },
-                ),
-                buildCheckboxOption(
-                  name: _R.eventSkipDayText,
-                  value: event.skipDay,
-                  onChanged: (changed) => event.skipDay = changed,
                 ),
               ],
             ),
@@ -497,17 +443,17 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
                   // If it is before start of school year, set it to start of school year
                   // If it is after end of school year, set it to end of school year
                   if (_calendarController.focusedDay
-                      .isBefore(_cycleConfig.startSchoolYear))
-                    return _cycleConfig.startSchoolYear;
+                      .isBefore(_weekConfig.startSchoolYear))
+                    return _weekConfig.startSchoolYear;
                   if (_calendarController.focusedDay
-                      .isAfter(_cycleConfig.endSchoolYear))
-                    return _cycleConfig.endSchoolYear;
+                      .isAfter(_weekConfig.endSchoolYear))
+                    return _weekConfig.endSchoolYear;
 
                   return _calendarController.focusedDay;
                 }());
                 _calendarController.setFocusedDay(eventDate);
                 onAddNewPressed(eventDate);
-                _curCalendarInfo = _cycleConfig.getCalendar();
+                _curCalendarInfo = _weekConfig.getCalendar();
                 _currentView = _buildOptionView();
               });
             },
@@ -524,11 +470,11 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     return ListView(controller: scrollController, children: <Widget>[
       buildDateOption(
         name: _R.startSchoolYearOptionText,
-        dateTime: _cycleConfig.startSchoolYear,
+        dateTime: _weekConfig.startSchoolYear,
         onSelected: (selected) {
-          if (selected.isBefore(_cycleConfig.endSchoolYear)) {
-            _cycleConfig.startSchoolYear = selected;
-            Settings().cycleConfig = _cycleConfig;
+          if (selected.isBefore(_weekConfig.endSchoolYear)) {
+            _weekConfig.startSchoolYear = selected;
+            Settings().weekConfig = _weekConfig;
             Settings().saveSettings();
             return true;
           } else {
@@ -538,11 +484,11 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       ),
       buildDateOption(
         name: _R.endSchoolYearOptionText,
-        dateTime: _cycleConfig.endSchoolYear,
+        dateTime: _weekConfig.endSchoolYear,
         onSelected: (selected) {
-          if (selected.isAfter(_cycleConfig.startSchoolYear)) {
-            _cycleConfig.endSchoolYear = selected;
-            Settings().cycleConfig = _cycleConfig;
+          if (selected.isAfter(_weekConfig.startSchoolYear)) {
+            _weekConfig.endSchoolYear = selected;
+            Settings().weekConfig = _weekConfig;
             Settings().saveSettings();
             return true;
           } else {
@@ -552,37 +498,28 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       ),
       buildCheckboxOption(
         name: _R.saturdayHolidayOptionText,
-        value: _cycleConfig.isSaturdayHoliday,
+        value: _weekConfig.isSaturdayHoliday,
         onChanged: (value) {
-          _cycleConfig.isSaturdayHoliday = value;
-          Settings().cycleConfig = _cycleConfig;
+          _weekConfig.isSaturdayHoliday = value;
+          Settings().weekConfig = _weekConfig;
           Settings().saveSettings();
         },
       ),
       buildCheckboxOption(
         name: _R.sundayHolidayOptionText,
-        value: _cycleConfig.isSundayHoliday,
+        value: _weekConfig.isSundayHoliday,
         onChanged: (value) {
-          _cycleConfig.isSundayHoliday = value;
-          Settings().cycleConfig = _cycleConfig;
-          Settings().saveSettings();
-        },
-      ),
-      buildSpinnerOption(
-        name: _R.noOfDaysInCycleOptionText,
-        value: _cycleConfig.noOfDaysInCycle,
-        onChanged: (value) {
-          _cycleConfig.noOfDaysInCycle = value;
-          Settings().cycleConfig = _cycleConfig;
+          _weekConfig.isSundayHoliday = value;
+          Settings().weekConfig = _weekConfig;
           Settings().saveSettings();
         },
       ),
       buildEventsOption(
         name: _R.holidaysOptionText,
-        events: _cycleConfig.holidays,
+        events: _weekConfig.holidays,
         addNewText: _R.addHolidayText,
         onAddNewPressed: (eventDate) {
-          _cycleConfig.holidays.add(Event(
+          _weekConfig.holidays.add(Event(
             id: Event.generateID(),
             name: _R.newHolidayName,
             skipDay: _R.newHolidaySkipDay,
@@ -592,7 +529,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         },
         onEventDeleted: (event) {
           _holidayIDsExpanded.remove(event.id);
-          _cycleConfig.holidays.remove(event);
+          _weekConfig.holidays.remove(event);
         },
         isTitleExpanded: _isHolidaysExpanded,
         onTitleExpansionChanged: (isExpanded) {
@@ -608,10 +545,10 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
       ),
       buildEventsOption(
         name: _R.occasionsOptionText,
-        events: _cycleConfig.occasions,
+        events: _weekConfig.occasions,
         addNewText: _R.addOccasionText,
         onAddNewPressed: (eventDate) {
-          _cycleConfig.occasions.add(Event(
+          _weekConfig.occasions.add(Event(
             id: Event.generateID(),
             name: _R.newOccasionName,
             skipDay: _R.newOccasionSkipDay,
@@ -621,7 +558,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         },
         onEventDeleted: (event) {
           _occasionIDsExpanded.remove(event.id);
-          _cycleConfig.occasions.remove(event);
+          _weekConfig.occasions.remove(event);
         },
         isTitleExpanded: _isOccasionsExpanded,
         onTitleExpansionChanged: (isExpanded) {
@@ -647,7 +584,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
     return Scaffold(
       key: UniqueKey(),
       appBar: AppBar(
-        title: Text(_R.cyclesAppBarTitle),
+        title: Text(_R.weeksAppBarTitle),
         leading: IconButton(
           icon: Icon(_R.selectionCloseIcon),
           onPressed: _closeSelection,
@@ -660,7 +597,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
             _buildCalendar(onSelected: (selected) {
               if (onSelected(removeTimeFrom(selected))) {
                 setState(() {
-                  _curCalendarInfo = _cycleConfig.getCalendar();
+                  _curCalendarInfo = _weekConfig.getCalendar();
                   _currentView = _buildOptionView();
                 });
               }

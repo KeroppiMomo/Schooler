@@ -40,82 +40,83 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: Settings().timetable.noOfDays + 1, // +1 is the "add" tab
-      child: Scaffold(
-        appBar: AppBar(
-          leading: BackButton(
-            onPressed: () {
-              // TODO: put this in WillPopScope
-              showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Discard Timetable'),
-                  content: Text(
-                      'Are you sure to discard the timetable and return to the previous page?'),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text('Cancel'),
-                      onPressed: () => Navigator.of(context).pop(false),
-                    ),
-                    FlatButton(
-                      child: Text('Discard and Return'),
-                      onPressed: () => Navigator.of(context).pop(true),
-                    ),
-                  ],
-                ),
-              ).then((bool dismiss) {
-                if (!(dismiss ?? false)) return;
-                if (widget.onPop != null) widget.onPop();
-                Navigator.pop(context);
-              });
-            },
-          ),
-          title: Text(_R.appBarTitle),
-          bottom: TabBar(
-            isScrollable: true,
-            tabs: [
-              ...Settings().timetable.days.map((TimetableDay day) {
-                String name = '';
-                if (day is TimetableWeekDay) {
-                  name = _R.weekDayTabName(day.dayOfWeek);
-                } else if (day is TimetableCycleDay) {
-                  name = _R.cycleDayTabName(day.dayOfCycle);
-                } else if (day is TimetableOccasionDay) {
-                  name = day.occasionName;
-                } else {
-                  assert(false, 'Unexpected Timetableday subtype');
-                }
-
-                return Tab(text: name);
-              }),
-              Tab(icon: Icon(_R.addTabIcon)),
+    return WillPopScope(
+      onWillPop: () async {
+        final dismiss = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Discard Timetable'),
+            content: Text(
+                'Are you sure to discard the timetable and return to the previous page?'),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              FlatButton(
+                child: Text('Discard and Return'),
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
             ],
           ),
-        ),
-        body: Builder(
-          builder: (context) => SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      ...Settings()
-                          .timetable
-                          .timetable
-                          .keys
-                          .map(_buildTimetable),
-                      _buildAddDay(context),
-                    ],
-                  ),
-                ),
-                Divider(),
-                FlatButton(
-                  child: Text(_R.doneButtonText),
-                  onPressed: _donePressed,
-                ),
+        );
+        if (!(dismiss ?? false)) return false;
+        widget.onPop?.call();
+        return true;
+      },
+      child: DefaultTabController(
+        length: Settings().timetable.noOfDays + 1, // +1 is the "add" tab
+        child: Scaffold(
+          appBar: AppBar(
+            leading: BackButton(
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(_R.appBarTitle),
+            bottom: TabBar(
+              isScrollable: true,
+              tabs: [
+                ...Settings().timetable.days.map((TimetableDay day) {
+                  String name = '';
+                  if (day is TimetableWeekDay) {
+                    name = _R.weekDayTabName(day.dayOfWeek);
+                  } else if (day is TimetableCycleDay) {
+                    name = _R.cycleDayTabName(day.dayOfCycle);
+                  } else if (day is TimetableOccasionDay) {
+                    name = day.occasionName;
+                  } else {
+                    assert(false, 'Unexpected Timetableday subtype');
+                  }
+
+                  return Tab(text: name);
+                }),
+                Tab(icon: Icon(_R.addTabIcon)),
               ],
+            ),
+          ),
+          body: Builder(
+            builder: (context) => SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        ...Settings()
+                            .timetable
+                            .timetable
+                            .keys
+                            .map(_buildTimetable),
+                        _buildAddDay(context),
+                      ],
+                    ),
+                  ),
+                  Divider(),
+                  FlatButton(
+                    child: Text(_R.doneButtonText),
+                    onPressed: _donePressed,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

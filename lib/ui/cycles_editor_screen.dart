@@ -254,30 +254,33 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
 
   /// Create a widget for the option view. See documentation for `_currentView`.
   Widget _buildOptionView() {
-    return Scaffold(
-      key: UniqueKey(),
-      appBar: AppBar(
-        title: Text(_R.cyclesAppBarTitle),
-        leading: BackButton(
-          onPressed: () {
-            if (widget.onPop != null) widget.onPop();
-            Navigator.pop(context);
-          },
+    return WillPopScope(
+      onWillPop: () async {
+        widget.onPop?.call();
+        return true;
+      },
+      child: Scaffold(
+        key: UniqueKey(),
+        appBar: AppBar(
+          title: Text(_R.cyclesAppBarTitle),
+          leading: BackButton(
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _buildCalendar(),
-            Divider(),
-            Expanded(child: _buildOptions()),
-            Divider(),
-            FlatButton(
-              child: Text(_R.doneButtonText),
-              onPressed: _donePressed,
-            ),
-          ],
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              _buildCalendar(),
+              Divider(),
+              Expanded(child: _buildOptions()),
+              Divider(),
+              FlatButton(
+                child: Text(_R.doneButtonText),
+                onPressed: _donePressed,
+              ),
+            ],
+          ),
         ),
       ),
     );

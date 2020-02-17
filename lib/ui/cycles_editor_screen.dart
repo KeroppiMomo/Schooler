@@ -263,9 +263,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
         key: UniqueKey(),
         appBar: AppBar(
           title: Text(_R.cyclesAppBarTitle),
-          leading: BackButton(
-            onPressed: () => Navigator.pop(context),
-          ),
+          leading: BackButton(),
         ),
         body: SafeArea(
           child: Column(

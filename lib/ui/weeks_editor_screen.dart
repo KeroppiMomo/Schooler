@@ -254,9 +254,7 @@ class WeeksEditorScreenState extends State<WeeksEditorScreen> {
         key: UniqueKey(),
         appBar: AppBar(
           title: Text(_R.weeksAppBarTitle),
-          leading: BackButton(
-            onPressed: () => Navigator.pop(context),
-          ),
+          leading: BackButton(),
         ),
         body: SafeArea(
           child: Column(

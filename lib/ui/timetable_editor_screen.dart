@@ -42,6 +42,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        print('hello');
         final dismiss = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -69,7 +70,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
         child: Scaffold(
           appBar: AppBar(
             leading: BackButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.maybePop(context),
             ),
             title: Text(_R.appBarTitle),
             bottom: TabBar(

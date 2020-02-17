@@ -3,6 +3,7 @@ import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/timetable_editor.dart';
+import 'package:schooler/ui/subject_editor_screen.dart';
 
 TimetableEditorScreenResources _R = R.timetableEditorScreen;
 
@@ -34,6 +35,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
         assert(false, 'Unexpected CalendarType value');
       }
     }
+    Settings().saveSettings();
 
     _addTimetableNameController = TextEditingController();
   }
@@ -319,5 +321,11 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
     });
   }
 
-  void _donePressed() {}
+  void _donePressed() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => SubjectEditorScreen(
+        onPop: () {},
+      ),
+    ));
+  }
 }

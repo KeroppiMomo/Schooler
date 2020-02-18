@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/timetable.dart';
+import 'package:schooler/lib/subject.dart';
 
 enum CalendarType { week, cycle }
 
@@ -31,6 +32,7 @@ class Settings {
   CycleConfig cycleConfig;
   WeekConfig weekConfig;
   Timetable timetable;
+  List<Subject> subjects;
 
   // Serilization & File -----------------------------------------------------
 
@@ -41,6 +43,7 @@ class Settings {
       'cycle_config': cycleConfig?.toJSON(),
       'week_config': weekConfig?.toJSON(),
       'timetable': timetable?.toJSON(),
+      'subjects': subjects?.map((subject) => subject.toJSON())?.toList(),
     });
   }
 
@@ -59,6 +62,7 @@ class Settings {
     Settings().cycleConfig = CycleConfig.fromJSON(decoded['cycle_config']);
     Settings().weekConfig = WeekConfig.fromJSON(decoded['week_config']);
     Settings().timetable = Timetable.fromJSON(decoded['timetable']);
+    Settings().subjects = Subject.fromJSONList(decoded['subjects']);
 
     return Settings();
   }

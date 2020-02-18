@@ -57,7 +57,7 @@ class TimetableEditorState extends State<TimetableEditor> {
     final copyableDays = getCopyableDays();
     return AnimatedList(
       key: _listKey,
-      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      padding: _R.listPadding,
       initialItemCount: (widget.sessions.length == 0
               ? copyableDays.length
               : widget.sessions.length) +
@@ -70,8 +70,8 @@ class TimetableEditorState extends State<TimetableEditor> {
         final copyableDays = getCopyableDays();
         if (i == widget.sessions.length) {
           return FlatButton.icon(
-            label: Text('Add Session'),
-            icon: Icon(Icons.add),
+            label: Text(_R.addSessionButtonText),
+            icon: Icon(_R.addSessionButtonIcon),
             onPressed: _addSessionPressed,
           );
         } else if (i ==
@@ -81,8 +81,8 @@ class TimetableEditorState extends State<TimetableEditor> {
                 1) {
           // One less than the length of list
           return FlatButton.icon(
-            label: Text('Remove This Timetable'),
-            icon: Icon(Icons.delete),
+            label: Text(_R.removeTimetableText),
+            icon: Icon(_R.removeTimetableIcon),
             onPressed: widget.onRemoveDay,
           );
         } else if (widget.sessions.length == 0) {
@@ -103,12 +103,12 @@ class TimetableEditorState extends State<TimetableEditor> {
       label: Flexible(
         fit: FlexFit.loose,
         child: Text(
-          'Copy Time Slots from ${_R.dayTabName(day)}',
+          _R.getCopyTimeSlotsText(_R.dayTabName(day)),
           softWrap: false,
           overflow: TextOverflow.fade,
         ),
       ),
-      icon: Icon(Icons.content_copy),
+      icon: Icon(_R.copyTimeSlotsIcon),
       onPressed: () => _copyTimeSlots(day),
     );
     if (animation == null)
@@ -116,7 +116,7 @@ class TimetableEditorState extends State<TimetableEditor> {
     else
       return SizeTransition(
         axisAlignment: 1.0,
-        sizeFactor: animation.drive(CurveTween(curve: Curves.easeInOut)),
+        sizeFactor: animation.drive(CurveTween(curve: _R.listItemsSizeTransitionCurve)),
         child: FadeTransition(
           opacity: animation.drive(Tween(begin: 0, end: 1)),
           child: SizedBox(

@@ -44,20 +44,19 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        print('hello');
         final dismiss = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Discard Timetable'),
+            title: Text(_R.popConfirmTitle),
             content: Text(
-                'Are you sure to discard the timetable and return to the previous page?'),
+                _R.popConfirmMessage),
             actions: <Widget>[
               FlatButton(
-                child: Text('Cancel'),
+                child: Text(_R.popConfirmCancelText),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
               FlatButton(
-                child: Text('Discard and Return'),
+                child: Text(_R.popConfirmDiscardText),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],

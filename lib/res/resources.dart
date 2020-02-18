@@ -19,6 +19,16 @@ class Resources {
 }
 
 class TimetableEditorResources {
+  final listPadding = EdgeInsets.all(16.0);
+  final addSessionButtonText = 'Add Session';
+  final addSessionButtonIcon = Icons.add;
+
+  final removeTimetableText = 'Remove This Timetable';
+  final removeTimetableIcon = Icons.delete;
+
+  String getCopyTimeSlotsText(String dayName) => 'Copy Time Slots from $dayName';
+  final copyTimeSlotsIcon = Icons.content_copy;
+
   String Function(TimetableDay) get dayTabName =>
       R.timetableEditorScreen.dayTabName;
 
@@ -138,6 +148,11 @@ class EditTextResources {
 
 class TimetableEditorScreenResources {
   final appBarTitle = 'Timetable';
+
+  final popConfirmTitle = 'Discard Timetable';
+  final popConfirmMessage = 'Are you sure to discard the timetable and return to the previous page?';
+  final popConfirmCancelText = 'CANCEL';
+  final popConfirmDiscardText = 'DISCARD AND RETURN';
 
   String weekDayTabName(int weekDay) => {
         1: 'Mon',

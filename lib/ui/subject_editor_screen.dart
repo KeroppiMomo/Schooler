@@ -3,6 +3,9 @@ import 'package:flutter_material_color_picker/flutter_material_color_picker.dart
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
+import 'package:schooler/res/resources.dart';
+
+SubjectEditorScreenResources _R = R.subjectEditorScreen;
 
 class SubjectEditorScreen extends StatefulWidget {
   final void Function() onPop;
@@ -34,16 +37,15 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
         final dismiss = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Discard Subjects'),
-            content: Text(
-                'Are you sure to discard the subjects and return to the previous page?'),
+            title: Text(_R.popConfirmTitle),
+            content: Text(_R.popConfirmMessage),
             actions: <Widget>[
               FlatButton(
-                child: Text('CANCEL'),
+                child: Text(_R.popConfirmCancelText),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
               FlatButton(
-                child: Text('DISCARD AND RETURN'),
+                child: Text(_R.popConfirmDiscardText),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
@@ -55,7 +57,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Subjects'),
+          title: Text(_R.appBarTitle),
           leading: BackButton(),
         ),
         body: SafeArea(
@@ -65,14 +67,14 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
               Expanded(
                 child: AnimatedList(
                   key: _listKey,
-                  padding: EdgeInsets.all(16.0),
-                  initialItemCount:
-                      Settings().subjects.length + 1, // +1 is the "Add Subject" button
+                  padding: _R.listPadding,
+                  initialItemCount: Settings().subjects.length +
+                      1, // +1 is the "Add Subject" button
                   itemBuilder: (context, i, animation) {
                     if (i == Settings().subjects.length) {
                       return FlatButton.icon(
-                        icon: Icon(Icons.add),
-                        label: Text('Add Subject'),
+                        label: Text(_R.addSubjectText),
+                        icon: Icon(_R.addSubjectIcon),
                         onPressed: () => _addSubject(context),
                       );
                     } else {
@@ -83,10 +85,10 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
               ),
               Divider(),
               FlatButton(
-                child: Text('Done'),
+                child: Text(_R.doneButtonText),
                 onPressed: () => _onDonePressed(context),
               ),
-            ]
+            ],
           ),
         ),
       ),
@@ -95,10 +97,11 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
 
   Widget _buildSubject(BuildContext context, int i, {Animation animation}) {
     Subject subject = Settings().subjects[i];
-    final listTile = Builder( // To get the context for Scaffold.of
+    final listTile = Builder(
+      // To get the context for Scaffold.of
       builder: (context) => ListTile(
         leading: Icon(
-          Icons.book,
+          _R.subjectIcon,
           color: subject.color,
         ),
         title: Text(subject.name),
@@ -106,12 +109,12 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.palette),
-              tooltip: 'Change Color',
+              icon: Icon(_R.colorButtonIcon),
+              tooltip: _R.colorButtonTooltip,
               onPressed: () {
                 _showColorPicker(
                   context,
-                  'Select color for "${subject.name}"',
+                  _R.getColorPickerTitle(subject.name),
                   subject.color,
                   (selectedColor) {
                     setState(() => subject.color = selectedColor);
@@ -121,8 +124,8 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
               },
             ),
             IconButton(
-              icon: Icon(Icons.delete),
-              tooltip: 'Remove Subject',
+              icon: Icon(_R.removeSubjectIcon),
+              tooltip: _R.removeSubjectTooltip,
               onPressed: () => _removeSubject(context, i),
             ),
           ],
@@ -136,7 +139,8 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
     else
       return SizeTransition(
         axisAlignment: -1.0,
-        sizeFactor: animation.drive(CurveTween(curve: Curves.easeInOut)),
+        sizeFactor: animation
+            .drive(CurveTween(curve: _R.removeSubjectSizeTransitionCurve)),
         child: FadeTransition(
           opacity: animation.drive(Tween(begin: 0, end: 1)),
           child: listTile,
@@ -158,7 +162,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
         ),
         actions: <Widget>[
           FlatButton(
-            child: Text('CANCEL'),
+            child: Text(_R.colorPickerCancelText),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],
@@ -172,7 +176,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
   }
 
   void _addSubject(BuildContext context) {
-    Settings().subjects.add(Subject('', color: Colors.grey));
+    Settings().subjects.add(_R.defaultNewSubject);
     Settings().saveSettings();
 
     _listKey.currentState.insertItem(Settings().subjects.length - 1);
@@ -182,7 +186,8 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
     _listKey.currentState.removeItem(
       i,
       (context, animation) {
-        final widget = AbsorbPointer(child: _buildSubject(context, i, animation: animation));
+        final widget = AbsorbPointer(
+            child: _buildSubject(context, i, animation: animation));
         Settings().subjects.removeAt(i);
         Settings().saveSettings();
         return widget;
@@ -197,10 +202,11 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
       isScrollControlled: true,
       builder: (sheetContext) => SingleChildScrollView(
         child: Container(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom),
           child: SuggestionTextField(
-            minItemForListView: 4,
-            listViewHeight: 195.0,
+            minItemForListView: _R.suggestionMinItemForListView,
+            listViewHeight: _R.suggestionListViewHeight,
             curValue: subject.name,
             suggestionCallback: (pattern) {
               Set<String> suggestionList = Set();
@@ -208,7 +214,8 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
                 for (final session in sessions) {
                   if (session.name == '') continue;
                   if (session.name.length < pattern.length) continue;
-                  if (session.name.substring(0, pattern.length).toLowerCase() == pattern.toLowerCase()) {
+                  if (session.name.substring(0, pattern.length).toLowerCase() ==
+                      pattern.toLowerCase()) {
                     suggestionList.add(session.name);
                   }
                 }
@@ -220,9 +227,11 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
             },
             onDone: (newName) {
               if (Settings().subjects[i].name == newName) return;
-              if (Settings().subjects.any((subject) => subject.name == newName)) {
+              if (Settings()
+                  .subjects
+                  .any((subject) => subject.name == newName)) {
                 Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text('Subject with name "$newName" already exists.'),
+                  content: Text(_R.getSubjectNameExistMessage(newName)),
                 ));
                 return;
               }

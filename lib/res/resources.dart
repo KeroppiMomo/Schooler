@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
+import 'package:schooler/lib/subject.dart';
 
 final R = Resources();
 
@@ -16,6 +17,7 @@ class Resources {
   final calendarEditor = CalendarEditorResources();
   final editText = EditTextResources();
   final timetableEditorScreen = TimetableEditorScreenResources();
+  final subjectEditorScreen = SubjectEditorScreenResources();
 }
 
 class TimetableEditorResources {
@@ -195,4 +197,39 @@ class TimetableEditorScreenResources {
 
   String getAddTabInputNameExistMessage(String name) =>
       'Timetable with name "$name" already exists.';
+}
+
+class SubjectEditorScreenResources {
+  final popConfirmTitle = 'Discard Subjects';
+  final popConfirmMessage = 'Are you sure to discard the subjects and return to the previous page?';
+  final popConfirmCancelText = 'CANCEL';
+  final popConfirmDiscardText = 'DISCARD AND RETURN';
+
+  final appBarTitle = 'Subjects';
+
+  final listPadding = EdgeInsets.all(16.0);
+  final addSubjectText = 'Add Subject';
+  final addSubjectIcon = Icons.add;
+
+  final doneButtonText = 'Done';
+
+  final subjectIcon = Icons.book;
+  final colorButtonIcon = Icons.palette;
+  final colorButtonTooltip = 'Change Color';
+
+  String getColorPickerTitle(String subjectName) => 'Select color for "$subjectName"';
+
+  final removeSubjectIcon = Icons.delete;
+  final removeSubjectTooltip = 'Remove Subject';
+
+  final removeSubjectSizeTransitionCurve = Curves.easeInOut;
+
+  final colorPickerCancelText = 'CANCEL';
+
+  Subject get defaultNewSubject => Subject('', color: Colors.grey);
+  
+  final suggestionMinItemForListView = 4;
+  final suggestionListViewHeight = 195.0;
+
+  String getSubjectNameExistMessage(String name) => 'Subject with name "$name" already exists.';
 }

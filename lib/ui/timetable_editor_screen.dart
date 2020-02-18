@@ -44,7 +44,6 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        print('hello');
         final dismiss = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(

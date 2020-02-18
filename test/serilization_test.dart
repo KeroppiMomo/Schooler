@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:collection/collection.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
-import 'package:collection/collection.dart';
+import 'package:schooler/lib/subject.dart';
 
 void main() {
   group('(serilization)', () {
@@ -230,6 +233,29 @@ void main() {
         final toJSONed = timetable.toJSON();
         final fromJSONed = Timetable.fromJSON(toJSONed);
         expect(fromJSONed, timetable);
+      });
+    });
+
+    group('(Subject)', () {
+      test('[toJSON then fromJSON] {return the same object}', () {
+        final subject = Subject('N', color: Color(0x23A9FB0C));
+        final toJSONed = subject.toJSON();
+        final fromJSONed = Subject.fromJSON(toJSONed);
+
+        expect(fromJSONed, subject);
+      });
+      test('[List toJSON then fromJSONList] {return the same list}', () {
+        final subjects = [
+          Subject('N1', color: Colors.red.shade500),
+          Subject('N2', color: Colors.green.shade500),
+          Subject('N3', color: Color(0x3289A34A)),
+        ];
+        final toJSONed = subjects.map((subject) => subject.toJSON()).toList();
+        final fromJSONed = Subject.fromJSONList(toJSONed);
+        
+        for (int i = 0; i < subjects.length - 1; i++) {
+          expect(subjects[i], fromJSONed[i]);
+        }
       });
     });
   });

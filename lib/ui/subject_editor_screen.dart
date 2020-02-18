@@ -119,7 +119,10 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
                   _R.getColorPickerTitle(subject.name),
                   subject.color,
                   (selectedColor) {
-                    setState(() => subject.color = selectedColor);
+                    setState(() { 
+                      Settings().subjects[i].color = selectedColor; 
+                      Settings().saveSettings();
+                    });
                   },
                   null,
                 );

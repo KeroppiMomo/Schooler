@@ -43,6 +43,7 @@ class Settings {
       'cycle_config': cycleConfig?.toJSON(),
       'week_config': weekConfig?.toJSON(),
       'timetable': timetable?.toJSON(),
+      'subjects': subjects?.map((subject) => subject.toJSON())?.toList(),
     });
   }
 
@@ -61,6 +62,7 @@ class Settings {
     Settings().cycleConfig = CycleConfig.fromJSON(decoded['cycle_config']);
     Settings().weekConfig = WeekConfig.fromJSON(decoded['week_config']);
     Settings().timetable = Timetable.fromJSON(decoded['timetable']);
+    Settings().subjects = Subject.fromJSONList(decoded['subjects']);
 
     return Settings();
   }

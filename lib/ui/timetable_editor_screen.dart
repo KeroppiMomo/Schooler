@@ -330,7 +330,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => SubjectEditorScreen(
         onPop: () {
-          Settings().subjects = [];
+          Settings().subjects = null;
         },
       ),
     ));

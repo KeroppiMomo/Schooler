@@ -20,7 +20,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
   void initState() {
     super.initState();
     if (Settings().subjects == null) {
-      Settings().subjects = [Subject('Chinese', color: Colors.green)];
+      Settings().subjects = [];
       Settings().saveSettings();
     }
 

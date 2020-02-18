@@ -24,6 +24,12 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   void initState() {
     super.initState();
 
+    if (Settings().subjects != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _donePressed();
+      });
+    }
+
     if (Settings().timetable == null) {
       if (Settings().calendarType == CalendarType.cycle) {
         Settings().timetable =
@@ -323,7 +329,9 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   void _donePressed() {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => SubjectEditorScreen(
-        onPop: () {},
+        onPop: () {
+          Settings().subjects = [];
+        },
       ),
     ));
   }

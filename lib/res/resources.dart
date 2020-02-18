@@ -214,6 +214,7 @@ class SubjectEditorScreenResources {
   final doneButtonText = 'Done';
 
   final subjectIcon = Icons.book;
+  final subjectPlaceholderText = 'No Name';
   final colorButtonIcon = Icons.palette;
   final colorButtonTooltip = 'Change Color';
 

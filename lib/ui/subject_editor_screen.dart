@@ -104,7 +104,9 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
           _R.subjectIcon,
           color: subject.color,
         ),
-        title: Text(subject.name),
+        title: subject.name == ''
+            ? Text(_R.subjectPlaceholderText, style: R.placeholderTextStyle)
+            : Text(subject.name),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

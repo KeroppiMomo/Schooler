@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
-import 'package:schooler/ui/timetable_editor_screen.dart';
+import 'package:schooler/ui/setup/timetable_editor_screen.dart';
 import 'package:spinner_input/spinner_input.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:schooler/lib/cycle_week_config.dart';

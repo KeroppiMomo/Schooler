@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/res/resources.dart';
-import 'package:schooler/ui/cycles_editor_screen.dart';
-import 'package:schooler/ui/weeks_editor_screen.dart';
+import 'package:schooler/ui/setup/cycles_editor_screen.dart';
+import 'package:schooler/ui/setup/weeks_editor_screen.dart';
 
 final CalendarTypeScreenResources _R = R.calendarType;
 

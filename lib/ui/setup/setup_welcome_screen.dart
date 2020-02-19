@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:icon_shadow/icon_shadow.dart';
-import 'package:schooler/ui/calendar_type_screen.dart';
+import 'package:schooler/ui/setup/calendar_type_screen.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/lib/settings.dart';
 

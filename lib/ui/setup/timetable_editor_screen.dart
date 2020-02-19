@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/res/resources.dart';
-import 'package:schooler/ui/timetable_editor.dart';
-import 'package:schooler/ui/subject_editor_screen.dart';
+import 'package:schooler/ui/setup/timetable_editor.dart';
+import 'package:schooler/ui/setup/subject_editor_screen.dart';
 
 TimetableEditorScreenResources _R = R.timetableEditorScreen;
 

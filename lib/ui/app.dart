@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:schooler/ui/setup_welcome_screen.dart';
+import 'package:schooler/ui/setup/setup_welcome_screen.dart';
 import 'package:schooler/ui/main_screen.dart';
 import 'package:schooler/lib/settings.dart';
 

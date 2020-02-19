@@ -45,6 +45,8 @@ class Event {
   }
 
   static Event fromJSON(Map<String, Object> json) {
+    if (json == null) return null;
+
     final id = json['id'];
     final name = json['name'];
     final startDateEpochMS = json['start_date_epoch_ms'];
@@ -370,6 +372,8 @@ class WeekConfig {
   }
 
   static WeekConfig fromJSON(Map<String, Object> json) {
+    if (json == null) return null;
+
     final dynamic startSchoolYearEpochMS = json['start_school_year_epoch_ms'];
     final dynamic endSchoolYearEpochMS = json['end_school_year_epoch_ms'];
     final dynamic isSatHoliday = json['is_sat_holiday'];

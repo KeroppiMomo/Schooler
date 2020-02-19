@@ -3,7 +3,7 @@ import 'package:flutter_material_color_picker/flutter_material_color_picker.dart
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
-import 'package:schooler/ui/setup_completed_screen.dart';
+import 'package:schooler/ui/setup/setup_completed_screen.dart';
 import 'package:schooler/res/resources.dart';
 
 SubjectEditorScreenResources _R = R.subjectEditorScreen;

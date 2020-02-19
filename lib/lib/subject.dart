@@ -20,6 +20,8 @@ class Subject {
   }
 
   static Subject fromJSON(Map<String, Object> json) {
+    if (json == null) return null;
+
     final name = json['name'];
     final colorValue = json['color'];
 

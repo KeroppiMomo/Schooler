@@ -126,7 +126,7 @@ class TimetableSession {
       ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
       throw ParseJSONException(
           message:
-              'Event type mismatch: $curTypeMessage found; int, int, String expected');
+              'TimetableSession type mismatch: $curTypeMessage found; int, int, String expected');
     }
   }
 

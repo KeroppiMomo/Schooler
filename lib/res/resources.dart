@@ -19,6 +19,7 @@ class Resources {
   final editText = EditTextResources();
   final timetableEditorScreen = TimetableEditorScreenResources();
   final subjectEditorScreen = SubjectEditorScreenResources();
+  final setupCompletedScreen = SetupCompletedScreenResources();
 }
 
 class TimetableEditorResources {
@@ -62,6 +63,7 @@ class TimetableEditorResources {
 class SetupWelcomeScreenResources {
   final padding = EdgeInsets.symmetric(horizontal: 64.0);
 
+  final icon = Icons.school;
   final iconShadowColor = Colors.grey.withOpacity(0.5);
   
   final itemSpacing = 16.0;
@@ -264,4 +266,20 @@ class SubjectEditorScreenResources {
   final suggestionListViewHeight = 195.0;
 
   String getSubjectNameExistMessage(String name) => 'Subject with name "$name" already exists.';
+}
+
+class SetupCompletedScreenResources {
+  final padding = EdgeInsets.symmetric(horizontal: 64.0);
+
+  final icon = Icons.done;
+  final iconShadowColor = Colors.grey.withOpacity(0.5);
+  
+  final itemSpacing = 16.0;
+
+  TextStyle getTitleTextStyle(BuildContext context) => Theme.of(context).textTheme.title;
+  final titleText = 'Setup Completed';
+  TextStyle getMessageTextStyle(BuildContext context) => Theme.of(context).textTheme.subhead;
+  final messageText = 'You can always change these settings later.';
+  Color getButtonSplashColor(BuildContext context) => Theme.of(context).primaryColor.withOpacity(0.2);
+  final buttonText = 'Done';
 }

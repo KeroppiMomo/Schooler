@@ -1,31 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:icon_shadow/icon_shadow.dart';
-import 'package:schooler/ui/calendar_type_screen.dart';
-import 'package:schooler/res/resources.dart';
 import 'package:schooler/lib/settings.dart';
+import 'package:schooler/res/resources.dart';
+import 'package:schooler/ui/main_screen.dart';
 
-SetupWelcomeScreenResources _R = R.setupWelcomeScreen;
+SetupCompletedScreenResources _R = R.setupCompletedScreen;
 
-class SetupWelcomeScreen extends StatefulWidget {
-  @override
-  SetupWelcomeScreenState createState() => SetupWelcomeScreenState();
-}
-
-class SetupWelcomeScreenState extends State<SetupWelcomeScreen> {
+class SetupCompletedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    if (Settings().calendarType != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _getStarted(context);
-      });
-    }
-
     final textColor =
         Theme.of(context).primaryColorBrightness == Brightness.light
             ? Colors.black
             : Colors.white;
     return Scaffold(
       backgroundColor: Theme.of(context).primaryColor,
+      appBar: AppBar(elevation: 0.0),
       body: SizedBox.expand(
         child: Padding(
           padding: _R.padding,
@@ -60,7 +50,7 @@ class SetupWelcomeScreenState extends State<SetupWelcomeScreen> {
                 child: Text(_R.buttonText),
                 color: textColor,
                 splashColor: _R.getButtonSplashColor(context),
-                onPressed: () => _getStarted(context),
+                onPressed: () => _onDonePressed(context),
               ),
             ],
           ),
@@ -69,8 +59,12 @@ class SetupWelcomeScreenState extends State<SetupWelcomeScreen> {
     );
   }
 
-  void _getStarted(BuildContext context) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => CalendarTypeScreen()));
+  void _onDonePressed(BuildContext context) {
+    Settings().isSetupCompleted = true;
+    Settings().saveSettings();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => MainScreen()),
+      (_) => false, // Remove all setup screens
+    );
   }
 }

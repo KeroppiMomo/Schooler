@@ -29,6 +29,7 @@ dependencies:
   path_provider: ^1.5.1
   flutter_datetime_picker: ^1.3.4
   flutter_material_color_picker: ^1.0.5
+  icon_shadow: ^1.0.1
 
 dev_dependencies:
   flutter_test:

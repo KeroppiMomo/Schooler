@@ -33,6 +33,7 @@ class Settings {
   WeekConfig weekConfig;
   Timetable timetable;
   List<Subject> subjects;
+  bool isSetupCompleted = false;
 
   // Serilization & File -----------------------------------------------------
 
@@ -44,6 +45,7 @@ class Settings {
       'week_config': weekConfig?.toJSON(),
       'timetable': timetable?.toJSON(),
       'subjects': subjects?.map((subject) => subject.toJSON())?.toList(),
+      'setup_completed': isSetupCompleted,
     });
   }
 
@@ -63,6 +65,13 @@ class Settings {
     Settings().weekConfig = WeekConfig.fromJSON(decoded['week_config']);
     Settings().timetable = Timetable.fromJSON(decoded['timetable']);
     Settings().subjects = Subject.fromJSONList(decoded['subjects']);
+    if (decoded['setup_completed'] is bool) {
+      Settings().isSetupCompleted = decoded['setup_completed'];
+    } else {
+      throw ParseJSONException(
+          message:
+              'isSetupCompleted type mismatch: ${decoded["setup_completed"].runtimeType} found; bool expected');
+    }
 
     return Settings();
   }

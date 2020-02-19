@@ -13,6 +13,7 @@ class Resources {
 
   final timetableEditor = TimetableEditorResources();
 
+  final setupWelcomeScreen = SetupWelcomeScreenResources();
   final calendarType = CalendarTypeScreenResources();
   final calendarEditor = CalendarEditorResources();
   final editText = EditTextResources();
@@ -56,6 +57,21 @@ class TimetableEditorResources {
 
   final suggestionMinItemForListView = 4;
   final suggestionListViewHeight = 195.0;
+}
+
+class SetupWelcomeScreenResources {
+  final padding = EdgeInsets.symmetric(horizontal: 64.0);
+
+  final iconShadowColor = Colors.grey.withOpacity(0.5);
+  
+  final itemSpacing = 16.0;
+
+  TextStyle getTitleTextStyle(BuildContext context) => Theme.of(context).textTheme.title;
+  final titleText = 'Welcome to Schooler!';
+  TextStyle getMessageTextStyle(BuildContext context) => Theme.of(context).textTheme.subhead;
+  final messageText = 'Help you easily manage your school life.';
+  Color getButtonSplashColor(BuildContext context) => Theme.of(context).primaryColor.withOpacity(0.2);
+  final buttonText = 'Get Started';
 }
 
 class CalendarTypeScreenResources {

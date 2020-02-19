@@ -7,13 +7,15 @@ class App extends StatelessWidget {
   /// If true, navigation is forced to run through the setup.
   /// Note that setting this value to true doesn't change the value to `Settings().isSetupCompleted`.
   final bool forceSetup;
-  App({Key key, this.forceSetup = false}): super(key: key);
+  App({Key key, this.forceSetup = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Schooler',
-      home: (Settings().isSetupCompleted && !forceSetup) ? MainScreen() : SetupWelcomeScreen(),
+      home: (Settings().isSetupCompleted && !forceSetup)
+          ? MainScreen()
+          : SetupWelcomeScreen(),
     );
   }
 }

@@ -54,8 +54,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text(_R.popConfirmTitle),
-            content: Text(
-                _R.popConfirmMessage),
+            content: Text(_R.popConfirmMessage),
             actions: <Widget>[
               FlatButton(
                 child: Text(_R.popConfirmCancelText),

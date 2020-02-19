@@ -252,7 +252,7 @@ void main() {
         ];
         final toJSONed = subjects.map((subject) => subject.toJSON()).toList();
         final fromJSONed = Subject.fromJSONList(toJSONed);
-        
+
         for (int i = 0; i < subjects.length - 1; i++) {
           expect(subjects[i], fromJSONed[i]);
         }

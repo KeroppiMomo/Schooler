@@ -120,8 +120,8 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
                   _R.getColorPickerTitle(subject.name),
                   subject.color,
                   (selectedColor) {
-                    setState(() { 
-                      Settings().subjects[i].color = selectedColor; 
+                    setState(() {
+                      Settings().subjects[i].color = selectedColor;
                       Settings().saveSettings();
                     });
                   },
@@ -253,6 +253,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
   }
 
   void _onDonePressed(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SetupCompletedScreen()));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => SetupCompletedScreen()));
   }
 }

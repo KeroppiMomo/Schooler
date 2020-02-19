@@ -36,6 +36,7 @@ class Subject {
               'Subject type mismatch: $curTypeMessage found; non-null String, non-null int expected');
     }
   }
+
   /// Convert a potential `List<Map<String, Object>>` JSON object into a `List` of `Subject`.
   /// Throw [ParseJSONException] when `json` is not a `List<Map<String, Object>>`.
   static List<Subject> fromJSONList(dynamic json) {
@@ -45,7 +46,9 @@ class Subject {
         final tmpList = json as List;
         return tmpList.cast<Map<String, Object>>();
       } catch (e) {
-        throw ParseJSONException(message: 'Subject List type mismatch: ${json.runtimeType} found; List<Map<String, Object>> expected');
+        throw ParseJSONException(
+            message:
+                'Subject List type mismatch: ${json.runtimeType} found; List<Map<String, Object>> expected');
       }
     }();
 

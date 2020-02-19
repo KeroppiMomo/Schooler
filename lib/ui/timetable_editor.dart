@@ -116,7 +116,8 @@ class TimetableEditorState extends State<TimetableEditor> {
     else
       return SizeTransition(
         axisAlignment: 1.0,
-        sizeFactor: animation.drive(CurveTween(curve: _R.listItemsSizeTransitionCurve)),
+        sizeFactor:
+            animation.drive(CurveTween(curve: _R.listItemsSizeTransitionCurve)),
         child: FadeTransition(
           opacity: animation.drive(Tween(begin: 0, end: 1)),
           child: SizedBox(

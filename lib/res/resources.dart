@@ -30,7 +30,8 @@ class TimetableEditorResources {
   final removeTimetableText = 'Remove This Timetable';
   final removeTimetableIcon = Icons.delete;
 
-  String getCopyTimeSlotsText(String dayName) => 'Copy Time Slots from $dayName';
+  String getCopyTimeSlotsText(String dayName) =>
+      'Copy Time Slots from $dayName';
   final copyTimeSlotsIcon = Icons.content_copy;
 
   String Function(TimetableDay) get dayTabName =>
@@ -65,14 +66,17 @@ class SetupWelcomeScreenResources {
 
   final icon = Icons.school;
   final iconShadowColor = Colors.grey.withOpacity(0.5);
-  
+
   final itemSpacing = 16.0;
 
-  TextStyle getTitleTextStyle(BuildContext context) => Theme.of(context).textTheme.title;
+  TextStyle getTitleTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.title;
   final titleText = 'Welcome to Schooler!';
-  TextStyle getMessageTextStyle(BuildContext context) => Theme.of(context).textTheme.subhead;
+  TextStyle getMessageTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subhead;
   final messageText = 'Help you easily manage your school life.';
-  Color getButtonSplashColor(BuildContext context) => Theme.of(context).primaryColor.withOpacity(0.2);
+  Color getButtonSplashColor(BuildContext context) =>
+      Theme.of(context).primaryColor.withOpacity(0.2);
   final buttonText = 'Get Started';
 }
 
@@ -170,7 +174,8 @@ class TimetableEditorScreenResources {
   final appBarTitle = 'Timetable';
 
   final popConfirmTitle = 'Discard Timetable';
-  final popConfirmMessage = 'Are you sure to discard the timetable and return to the previous page?';
+  final popConfirmMessage =
+      'Are you sure to discard the timetable and return to the previous page?';
   final popConfirmCancelText = 'CANCEL';
   final popConfirmDiscardText = 'DISCARD AND RETURN';
 
@@ -234,7 +239,8 @@ class TimetableEditorScreenResources {
 
 class SubjectEditorScreenResources {
   final popConfirmTitle = 'Discard Subjects';
-  final popConfirmMessage = 'Are you sure to discard the subjects and return to the previous page?';
+  final popConfirmMessage =
+      'Are you sure to discard the subjects and return to the previous page?';
   final popConfirmCancelText = 'CANCEL';
   final popConfirmDiscardText = 'DISCARD AND RETURN';
 
@@ -251,7 +257,8 @@ class SubjectEditorScreenResources {
   final colorButtonIcon = Icons.palette;
   final colorButtonTooltip = 'Change Color';
 
-  String getColorPickerTitle(String subjectName) => 'Select color for "$subjectName"';
+  String getColorPickerTitle(String subjectName) =>
+      'Select color for "$subjectName"';
 
   final removeSubjectIcon = Icons.delete;
   final removeSubjectTooltip = 'Remove Subject';
@@ -261,11 +268,12 @@ class SubjectEditorScreenResources {
   final colorPickerCancelText = 'CANCEL';
 
   Subject get defaultNewSubject => Subject('', color: Colors.grey);
-  
+
   final suggestionMinItemForListView = 4;
   final suggestionListViewHeight = 195.0;
 
-  String getSubjectNameExistMessage(String name) => 'Subject with name "$name" already exists.';
+  String getSubjectNameExistMessage(String name) =>
+      'Subject with name "$name" already exists.';
 }
 
 class SetupCompletedScreenResources {
@@ -273,13 +281,16 @@ class SetupCompletedScreenResources {
 
   final icon = Icons.done;
   final iconShadowColor = Colors.grey.withOpacity(0.5);
-  
+
   final itemSpacing = 16.0;
 
-  TextStyle getTitleTextStyle(BuildContext context) => Theme.of(context).textTheme.title;
+  TextStyle getTitleTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.title;
   final titleText = 'Setup Completed';
-  TextStyle getMessageTextStyle(BuildContext context) => Theme.of(context).textTheme.subhead;
+  TextStyle getMessageTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subhead;
   final messageText = 'You can always change these settings later.';
-  Color getButtonSplashColor(BuildContext context) => Theme.of(context).primaryColor.withOpacity(0.2);
+  Color getButtonSplashColor(BuildContext context) =>
+      Theme.of(context).primaryColor.withOpacity(0.2);
   final buttonText = 'Done';
 }

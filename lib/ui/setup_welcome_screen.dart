@@ -6,12 +6,7 @@ import 'package:schooler/lib/settings.dart';
 
 SetupWelcomeScreenResources _R = R.setupWelcomeScreen;
 
-class SetupWelcomeScreen extends StatefulWidget {
-  @override
-  SetupWelcomeScreenState createState() => SetupWelcomeScreenState();
-}
-
-class SetupWelcomeScreenState extends State<SetupWelcomeScreen> {
+class SetupWelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (Settings().calendarType != null) {

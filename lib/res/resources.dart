@@ -4,6 +4,9 @@ import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
+import 'package:schooler/ui/main_tabs/assignments_tab.dart';
+import 'package:schooler/ui/main_tabs/today_tab.dart';
+import 'package:schooler/ui/main_tabs/calendar_tab.dart';
 
 final R = Resources();
 
@@ -20,6 +23,8 @@ class Resources {
   final timetableEditorScreen = TimetableEditorScreenResources();
   final subjectEditorScreen = SubjectEditorScreenResources();
   final setupCompletedScreen = SetupCompletedScreenResources();
+
+  final mainScreen = MainScreenResources();
 }
 
 class TimetableEditorResources {
@@ -293,4 +298,29 @@ class SetupCompletedScreenResources {
   Color getButtonSplashColor(BuildContext context) =>
       Theme.of(context).primaryColor.withOpacity(0.2);
   final buttonText = 'Done';
+}
+
+class MainScreenResourcesTabInfo {
+  final String name;
+  final IconData icon;
+  final WidgetBuilder builder;
+
+  const MainScreenResourcesTabInfo({this.name, this.icon, this.builder});
+}
+
+class MainScreenResources {
+  final tabsInfo = [
+    MainScreenResourcesTabInfo(
+        name: 'Assignments',
+        icon: Icons.assignment,
+        builder: (_) => AssignmentsTab()),
+    MainScreenResourcesTabInfo(
+        name: 'Today',
+        icon: Icons.assignment_turned_in,
+        builder: (_) => TodayTab()),
+    MainScreenResourcesTabInfo(
+        name: 'Calendar',
+        icon: Icons.calendar_today,
+        builder: (_) => CalendarTab()),
+  ];
 }

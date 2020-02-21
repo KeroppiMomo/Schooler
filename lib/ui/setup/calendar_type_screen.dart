@@ -6,15 +6,25 @@ import 'package:schooler/ui/setup/weeks_editor_screen.dart';
 
 final CalendarTypeScreenResources _R = R.calendarType;
 
-class CalendarTypeScreen extends StatelessWidget {
+class CalendarTypeScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
+  CalendarTypeScreenState createState() => CalendarTypeScreenState();
+}
+
+class CalendarTypeScreenState extends State<CalendarTypeScreen> {
+  @override
+  void initState() {
+    super.initState();
+
     if (Settings().calendarType != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _typeButtonPressed(context, selectedType: Settings().calendarType);
       });
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_R.appBarTitle),

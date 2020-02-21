@@ -6,15 +6,25 @@ import 'package:schooler/lib/settings.dart';
 
 SetupWelcomeScreenResources _R = R.setupWelcomeScreen;
 
-class SetupWelcomeScreen extends StatelessWidget {
+class SetupWelcomeScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
+  SetupWelcomeScreenState createState() => SetupWelcomeScreenState();
+}
+
+class SetupWelcomeScreenState extends State<SetupWelcomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+
     if (Settings().calendarType != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _getStarted(context);
       });
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     final textColor =
         Theme.of(context).primaryColorBrightness == Brightness.light
             ? Colors.black

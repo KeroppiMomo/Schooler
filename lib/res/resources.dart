@@ -15,6 +15,7 @@ class Resources {
   final placeholderTextStyle = TextStyle(color: Colors.grey);
 
   final timetableEditor = TimetableEditorResources();
+  final subjectBlock = SubjectBlockResources();
 
   final setupWelcomeScreen = SetupWelcomeScreenResources();
   final calendarType = CalendarTypeScreenResources();
@@ -25,6 +26,10 @@ class Resources {
   final setupCompletedScreen = SetupCompletedScreenResources();
 
   final mainScreen = MainScreenResources();
+  final todayTab = TodayTabResources();
+
+  final wwidget = WWidgetResources();
+  final timetableWWidget = TimetableWWidgetResources();
 }
 
 class TimetableEditorResources {
@@ -64,6 +69,13 @@ class TimetableEditorResources {
 
   final suggestionMinItemForListView = 4;
   final suggestionListViewHeight = 195.0;
+}
+
+class SubjectBlockResources {
+  final margin = EdgeInsets.symmetric(vertical: 2.0);
+  final textPadding = EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
+  TextStyle getTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.body2;
 }
 
 class SetupWelcomeScreenResources {
@@ -196,7 +208,7 @@ class TimetableEditorScreenResources {
   String cycleDayTabName(int cycleDay) => 'Day $cycleDay';
 
   String dayTabName(TimetableDay day) {
-    // Also used in R.timetableEditor.dayTabName
+    // Also used in R.timetableEditor.dayTabName and R.timetableWWidget.dayDisplayName
     if (day is TimetableWeekDay)
       return weekDayTabName(day.dayOfWeek);
     else if (day is TimetableCycleDay)
@@ -323,4 +335,64 @@ class MainScreenResources {
         icon: Icons.calendar_today,
         builder: (_) => CalendarTab()),
   ];
+}
+
+class TodayTabResources {
+  String getDescriptionComponentCycleDay(String cycleDay) => 'Day $cycleDay';
+  String getDescriptionComponentCycle(String cycle) => 'Cycle $cycle';
+
+  final descriptionWeekendText = 'Weekend';
+
+  final appBarTitle = 'Today';
+
+  final listViewPadding =
+      EdgeInsets.only(left: 16.0, right: 16.0, top: 64.0, bottom: 16.0);
+
+  final dateFormat = DateFormat('dd MMMM yyyy');
+  TextStyle getDateTextStyle(BuildContext context) => Theme.of(context)
+      .textTheme
+      .headline
+      .copyWith(fontWeight: FontWeight.bold);
+  TextStyle getDayDescriptionTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subhead;
+
+  final dayWWidgetsSpacing = 16.0;
+}
+
+class WWidgetResources {
+  final titleItemsSpacing = 16.0;
+  final titleIconSize = 20.0;
+  TextStyle titleTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subhead;
+  final titleSettingsIconPadding =
+      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+  final contentPadding = EdgeInsets.all(16.0);
+}
+
+class TimetableWWidgetResources {
+  final timestampFormat = DateFormat('hh:mm');
+  TextStyle currentTimestampTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.body1.copyWith(
+          fontWeight: FontWeight.bold, decoration: TextDecoration.underline);
+  TextStyle afterTimestampTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.body1;
+  TextStyle beforeTimestampTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.body1.copyWith(color: Colors.grey);
+
+  String Function(TimetableDay day) get dayDisplayName =>
+      R.timetableEditor.dayTabName;
+
+  final sessionTimeTo = '–'; // Text between the start time and end time
+
+  final wwidgetTitle = 'Timetable';
+  final wwidgetIcon = Icons.access_time;
+
+  final columnTimeToWidth = 20.0; // The width of the column of characters '–'
+  final timestampNameSpacing =
+      8.0; // Spacing between the timestamp and the session name
+
+  final viewTimetableIcon = Icons.remove_red_eye;
+  final viewNoTimetableText = 'View Timetable';
+  String viewTimetableText(TimetableDay day) =>
+      'View Timetable for ${dayDisplayName(day)}';
 }

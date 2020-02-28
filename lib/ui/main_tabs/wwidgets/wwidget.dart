@@ -9,7 +9,13 @@ class WWidget extends StatelessWidget {
   final String title;
   final IconData icon;
   final Widget child;
+
+  /// Set to null to hide the settings button.
   final void Function() onSettingsPressed;
+
+  /// Set to null to hide the refresh button.
+  final void Function() onRefreshPressed;
+  final EdgeInsets contentPadding;
 
   WWidget({
     Key key,
@@ -17,6 +23,8 @@ class WWidget extends StatelessWidget {
     @required this.icon,
     @required this.child,
     this.onSettingsPressed,
+    this.onRefreshPressed,
+    this.contentPadding,
   }) : super(key: key);
 
   @override
@@ -46,22 +54,41 @@ class WWidget extends StatelessWidget {
                       .copyWith(color: colorOnPrimaryColor),
                 ),
                 Expanded(child: Container()),
-                InkWell(
-                  child: Padding(
-                    padding: _R.titleSettingsIconPadding,
-                    child: Icon(
-                      Icons.settings,
-                      color: colorOnPrimaryColor,
-                      size: _R.titleIconSize,
-                    ),
-                  ),
-                  onTap: onSettingsPressed,
-                ),
+                ...onRefreshPressed == null
+                    ? []
+                    : [
+                        InkWell(
+                          child: Padding(
+                            padding: _R.titleActionIconPadding,
+                            child: Icon(
+                              _R.refreshIcon,
+                              color: colorOnPrimaryColor,
+                              size: _R.titleIconSize,
+                            ),
+                          ),
+                          onTap: onRefreshPressed,
+                        )
+                      ],
+                ...onSettingsPressed == null
+                    ? []
+                    : [
+                        InkWell(
+                          child: Padding(
+                            padding: _R.titleActionIconPadding,
+                            child: Icon(
+                              _R.settingsIcon,
+                              color: colorOnPrimaryColor,
+                              size: _R.titleIconSize,
+                            ),
+                          ),
+                          onTap: onSettingsPressed,
+                        )
+                      ],
               ],
             ),
           ),
           Padding(
-            padding: _R.contentPadding,
+            padding: contentPadding ?? _R.contentPadding,
             child: child,
           ),
         ],

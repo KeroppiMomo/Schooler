@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
@@ -34,6 +35,8 @@ class Settings {
   Timetable timetable;
   List<Subject> subjects;
   bool isSetupCompleted = false;
+
+  List<Assignment> assignments;
 
   // Serilization & File -----------------------------------------------------
 

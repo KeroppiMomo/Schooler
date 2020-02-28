@@ -30,6 +30,7 @@ class Resources {
 
   final wwidget = WWidgetResources();
   final timetableWWidget = TimetableWWidgetResources();
+  final assignmentWWidget = AssignmentWWidgetResources();
 }
 
 class TimetableEditorResources {
@@ -364,8 +365,10 @@ class WWidgetResources {
   final titleIconSize = 20.0;
   TextStyle titleTextStyle(BuildContext context) =>
       Theme.of(context).textTheme.subhead;
-  final titleSettingsIconPadding =
+  final titleActionIconPadding =
       EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+  final settingsIcon = Icons.settings;
+  final refreshIcon = Icons.refresh;
   final contentPadding = EdgeInsets.all(16.0);
 }
 
@@ -395,4 +398,69 @@ class TimetableWWidgetResources {
   final viewNoTimetableText = 'View Timetable';
   String viewTimetableText(TimetableDay day) =>
       'View Timetable for ${dayDisplayName(day)}';
+}
+
+class AssignmentWWidgetResources {
+  final wwidgetTitle = 'Assignments';
+  final wwidgetIcon = Icons.assignment;
+  final wwidgetPadding = EdgeInsets.symmetric(
+      vertical: 16.0); // To allow assignments to expand to the edge
+
+  final addAssignmentText = 'Add Assignment';
+  final addAssignmentIcon = Icons.add;
+
+  final viewAssignmentsIcon = Icons.remove_red_eye;
+  String getViewAssignmentsText(int noOfAssignments) =>
+      'View All $noOfAssignments Assignment${noOfAssignments == 1 ? '' : 's'}';
+
+  final completedTextPadding = EdgeInsets.only(bottom: 8.0);
+  final completedText = 'All Done!';
+  TextStyle getCompletedTextStyle(BuildContext context) => Theme.of(context)
+      .textTheme
+      .bodyText2
+      .copyWith(color: Theme.of(context).primaryColor);
+
+  final dueColorFuture = Colors.grey;
+  final dueColorExpired = Colors.red;
+  Color getDueColorOneDay(BuildContext context) =>
+      Theme.of(context).primaryColor;
+
+  final assignmentPadding =
+      EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0);
+  final checkboxColumnWidth = 36.0;
+  final checkboxSize = 24.0;
+  TextStyle getAssignmentNameTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1;
+  final assignmentSubjectNameSpacing = 4.0;
+  TextStyle dueTextStyle(BuildContext context, Color dueColor) =>
+      Theme.of(context).textTheme.bodyText2.copyWith(color: dueColor);
+
+  String relativeDueDateString(DateTime now, DateTime dueDate, bool withTime) {
+    if (dueDate == null) return 'No Due Date';
+
+    final nowDateOnly = DateTime.utc(now.year, now.month, now.day);
+    final dueDateOnly = DateTime.utc(dueDate.year, dueDate.month, dueDate.day);
+
+    final String dateString = () {
+      final dayDifference = dueDateOnly.difference(nowDateOnly).inDays;
+      if (dayDifference < -1) return '${-dayDifference} Days Ago';
+      if (dayDifference == -1) return 'Yesterday';
+      if (dayDifference == 0) return 'Today';
+      if (dayDifference == 1) return 'Tomorrow';
+      if (dayDifference > 1 && dayDifference < 7)
+        return DateFormat('EEEE').format(dueDateOnly);
+      return DateFormat('dd MMM').format(dueDateOnly);
+    }();
+
+    if (withTime) {
+      final timeString = DateFormat('HH:mm').format(dueDate);
+      return 'Due ' + dateString + ' ' + timeString;
+    } else {
+      return 'Due ' + dateString;
+    }
+  }
+
+  final sizeTransitionCurve = Curves.easeInOut;
+
+  final completionRemovalDelay = const Duration(seconds: 1);
 }

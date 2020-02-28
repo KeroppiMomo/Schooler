@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/main_tabs/wwidgets/timetable_wwidget.dart';
+import 'package:schooler/ui/main_tabs/wwidgets/assignments_wwidget.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:intl/intl.dart';
@@ -78,10 +79,8 @@ class TodayTabState extends State<TodayTab> {
             style: _R.getDayDescriptionTextStyle(context),
           ),
           SizedBox(height: _R.dayWWidgetsSpacing),
-          TimetableWWidget(
-            now: now,
-            dayInfo: dayInfo,
-          ),
+          TimetableWWidget(now: now, dayInfo: dayInfo),
+          AssignmentsWWidget(now: now),
         ],
       ),
     );

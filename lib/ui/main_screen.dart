@@ -19,7 +19,10 @@ class MainScreenState extends State<MainScreen> {
     }
 
     return Scaffold(
-      body: _tabWidgets[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _tabWidgets,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         items: _R.tabsInfo

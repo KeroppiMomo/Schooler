@@ -27,6 +27,7 @@ class Resources {
 
   final mainScreen = MainScreenResources();
   final todayTab = TodayTabResources();
+  final assignmentTab = AssignmentsTabResources();
 
   final wwidget = WWidgetResources();
   final timetableWWidget = TimetableWWidgetResources();
@@ -463,4 +464,67 @@ class AssignmentWWidgetResources {
   final sizeTransitionCurve = Curves.easeInOut;
 
   final completionRemovalDelay = const Duration(seconds: 1);
+}
+
+class AssignmentsTabResources {
+  final appBarTitle = 'Assignments';
+  final goToTodayIcon = Icons.today;
+  final goToTodayTooltip = 'Go to Today';
+  final todayOffset = -100.0;
+  final goToTodayDuration = const Duration(milliseconds: 400);
+  final goToTodayCurve = Curves.easeInOut;
+
+  final dayDividerHeight = 32.0;
+  final dayDividerIndent = 90.0;
+
+  final dayDayOfWeekFormat = DateFormat('EEE');
+  String dayCycleDayFormat(String cycleDay) => 'Day $cycleDay';
+  String dayCycleFormat(int cycle) => 'Cycle $cycle';
+
+  final dayWidth = 90.0;
+
+  final todayCircleSize = 40.0;
+  final normalDayColor = Colors.black;
+  final holidayDayColor = Colors.red;
+  final todayCircleTextColor = Colors.white;
+  final occasionTextDecoration = TextDecoration.underline;
+  final dayFontWeight = FontWeight.bold;
+  TextStyle dayTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline5;
+
+  final dayDescriptionSpacing = 8.0;
+  final dayDescriptionPadding = EdgeInsets.symmetric(horizontal: 8.0);
+  TextStyle dayDescriptionTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1;
+
+  final addAssignmentPadding =
+      EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
+  final addAssignmentIcon = Icons.add;
+  final addAssignmentColor = Colors.grey;
+  final addAssignmentText = 'Add Assignment';
+  TextStyle addAssignmentTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.grey);
+
+  final monthHeaderColor = Color(0xFFCCCCCC);
+  final monthHeaderPadding =
+      const EdgeInsets.only(left: 32.0, right: 32.0, top: 24.0, bottom: 16.0);
+  final monthHeaderFormat = DateFormat('MMMM yyyy');
+  TextStyle monthHeaderTextStyle(BuildContext context) => Theme.of(context)
+      .textTheme
+      .headline5
+      .copyWith(fontWeight: FontWeight.bold);
+  final monthHeaderElevation = 5.0;
+  final monthHeaderDaySpacing = 16.0;
+
+  final assignmentPadding =
+      EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
+  final assignmentCheckboxColumnWidth = 36.0;
+  final assignmentCheckboxSize = 24.0;
+  final assignmentCompletedOpacity = 0.5;
+  TextStyle assignmentTitleStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1;
+  final assignmentTitleSubjectSpacing = 4.0;
+  final assignmentDueDateFormat = DateFormat("'Due' HH:mm '|' ");
+  TextStyle assignmentDescriptionTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.grey);
 }

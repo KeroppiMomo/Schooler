@@ -143,6 +143,38 @@ class AssignmentsTabState extends State<AssignmentsTab> {
   Widget _buildDay(DateTime date) {
     final dayInfo = _calendar[date];
 
+    if (dayInfo == null) {
+      DateTime startSchoolYear, endSchoolYear;
+      if (Settings().calendarType == CalendarType.week) {
+        startSchoolYear = Settings().weekConfig.startSchoolYear;
+        endSchoolYear = Settings().weekConfig.endSchoolYear;
+      } else if (Settings().calendarType == CalendarType.cycle) {
+        startSchoolYear = Settings().cycleConfig.startSchoolYear;
+        endSchoolYear = Settings().cycleConfig.endSchoolYear;
+      } else {
+        assert(false, 'Unexpected CalendarType value');
+      }
+
+      if (date.isBefore(startSchoolYear)) {
+        print('build start');
+        return Column(children: [
+          Container(height: 1000000.0),
+          Text(
+            'Start of School Year Reached.',
+            style: Theme.of(context).textTheme.headline5,
+          ),
+        ]);
+      } else {
+        return Column(children: [
+          Text(
+            'End of School Year Reached.',
+            style: Theme.of(context).textTheme.headline5,
+          ),
+          Container(height: 1000000.0),
+        ]);
+      }
+    }
+
     final isToday = date == DateTime.utc(now.year, now.month, now.day);
     final isHoliday = dayInfo.holidays != null;
     final isOccasion = dayInfo.occasions != null;

@@ -7,6 +7,7 @@ import 'package:schooler/lib/subject.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:schooler/ui/subject_block.dart';
+import 'package:schooler/ui/assignment_screen.dart';
 
 AssignmentsTabResources _R = R.assignmentTab;
 
@@ -151,7 +152,6 @@ class AssignmentsTabState extends State<AssignmentsTab> {
       if (Settings().calendarType == CalendarType.week) {
         lines.add(_R.dayDayOfWeekFormat.format(date));
       } else if (Settings().calendarType == CalendarType.cycle) {
-        final lines = <String>[];
         lines.add(_R.dayDayOfWeekFormat.format(date));
         if (dayInfo.cycleDay != null && dayInfo.cycle != null) {
           lines.add('');
@@ -345,7 +345,7 @@ class AssignmentsTabState extends State<AssignmentsTab> {
                       Container(),
                       Opacity(
                         opacity: assignment.isCompleted
-                            ? _R.assignmentTitleSubjectSpacing
+                            ? _R.assignmentCompletedOpacity
                             : 1.0,
                         child: Text.rich(
                           TextSpan(
@@ -381,6 +381,8 @@ class AssignmentsTabState extends State<AssignmentsTab> {
   }
 
   void _assignmentPressed(Assignment assignment) {
-    // TODO
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AssignmentScreen(assignment: assignment),
+    ));
   }
 }

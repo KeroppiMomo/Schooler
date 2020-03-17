@@ -7,12 +7,14 @@ final EditTextResources _R = R.editText;
 class EditTextScreen extends StatefulWidget {
   final String title;
   final String value;
+  final int maxLines;
   final void Function(String) onDone;
   final void Function() onCancelled;
 
   EditTextScreen({
     this.title,
     this.value,
+    this.maxLines = 1,
     this.onDone,
     this.onCancelled,
   });
@@ -52,23 +54,28 @@ class EditTextScreenState extends State<EditTextScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Padding(
-              padding: _R.textFieldPadding,
-              child: TextField(
-                controller: _controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: widget.title,
-                  suffixIcon: IconButton(
-                    icon: Icon(_R.clearButtonIcon),
-                    onPressed: () => _controller.clear(),
-                    tooltip: _R.clearButtonTooltip,
+            Expanded(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Padding(
+                  padding: _R.textFieldPadding,
+                  child: TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    maxLines: widget.maxLines,
+                    decoration: InputDecoration(
+                      labelText: widget.title,
+                      suffixIcon: IconButton(
+                        icon: Icon(_R.clearButtonIcon),
+                        onPressed: () => _controller.clear(),
+                        tooltip: _R.clearButtonTooltip,
+                      ),
+                    ),
+                    onSubmitted: (_) => donePressed(),
                   ),
                 ),
-                onSubmitted: (_) => donePressed(),
               ),
             ),
-            Expanded(child: Container()),
             Divider(),
             FlatButton.icon(
               icon: Icon(_R.cancelIcon),

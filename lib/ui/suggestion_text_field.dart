@@ -9,6 +9,12 @@ class SuggestionTextField extends StatefulWidget {
   final int minItemForListView;
   final double listViewHeight;
   final List<String> Function(String) suggestionCallback;
+
+  /// An optional widget builder for a suggestion.
+  /// The builder function should has three arguments:
+  /// build context, suggestion, and on submit function.
+  final Widget Function(BuildContext, String, void Function())
+      suggestionBuilder;
   final void Function(String) onDone;
 
   SuggestionTextField({
@@ -16,6 +22,7 @@ class SuggestionTextField extends StatefulWidget {
     this.minItemForListView,
     this.listViewHeight,
     this.suggestionCallback,
+    this.suggestionBuilder,
     this.onDone,
   });
 
@@ -37,11 +44,15 @@ class SuggestionTextFieldState extends State<SuggestionTextField> {
     final suggestions = widget.suggestionCallback == null
         ? []
         : widget.suggestionCallback(_textFieldController.text);
+    Widget Function(BuildContext, String, void Function()) suggestionBuilder =
+        widget.suggestionBuilder ??
+            (_, suggestion, onSubmit) => ListTile(
+                  title: Text(suggestion),
+                  onTap: onSubmit,
+                );
     final suggestionsChildren = suggestions
-        .map((suggestion) => ListTile(
-              title: Text(suggestion),
-              onTap: () => _submit(suggestion),
-            ))
+        .map((suggestion) =>
+            suggestionBuilder(context, suggestion, () => _submit(suggestion)))
         .toList();
     return Column(
       children: [

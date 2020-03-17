@@ -10,7 +10,7 @@ class Assignment {
 
   /// Whether the assignment has a due time, not only a due date.
   bool withDueTime;
-  String comment;
+  String notes;
 
   Assignment({
     this.isCompleted = false,
@@ -19,6 +19,6 @@ class Assignment {
     this.subject,
     this.dueDate,
     this.withDueTime,
-    this.comment,
+    this.notes,
   });
 }

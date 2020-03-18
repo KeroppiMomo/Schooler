@@ -32,6 +32,8 @@ class Resources {
   final wwidget = WWidgetResources();
   final timetableWWidget = TimetableWWidgetResources();
   final assignmentWWidget = AssignmentWWidgetResources();
+
+  final assignmentScreen = AssignmentScreenResources();
 }
 
 class TimetableEditorResources {
@@ -483,6 +485,11 @@ class AssignmentsTabResources {
 
   final dayWidth = 90.0;
 
+  final startReachedMessage = 'Start of School Year Reached.';
+  final endReachedMessage = 'End of School Year Reached.';
+  TextStyle startEndMessageStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline5;
+
   final todayCircleSize = 40.0;
   final normalDayColor = Colors.black;
   final holidayDayColor = Colors.red;
@@ -527,4 +534,64 @@ class AssignmentsTabResources {
   final assignmentDueDateFormat = DateFormat("'Due' HH:mm '|' ");
   TextStyle assignmentDescriptionTextStyle(BuildContext context) =>
       Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.grey);
+}
+
+class AssignmentScreenResources {
+  final appBarTitle = 'Assignment';
+  final listViewPadding =
+      EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0);
+  final iconColumnWidth = 48.0;
+  final leftIconColor = Colors.black54;
+  final rightIconColor = Colors.grey;
+  final checkboxSize = 24.0;
+  TextStyle placeholderStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+  final editIcon = Icons.edit;
+
+  final titleHintText = 'Title';
+  final descriptionHintText = 'Add Description';
+  final descriptionSubjectSpacing = 32.0;
+  final subjectIcon = Icons.book;
+  final subjectRow = 32.0;
+  final subjectPlaceholderPadding = EdgeInsets.all(4.0);
+  final subjectPlaceholder = 'Add Subject';
+  final subjectRowSpacing = 4.0;
+  final subjectRemoveIcon = Icons.delete;
+  final subjectDueTypeSpacing = 16.0;
+  final dueTypeRunSpacing = -8.0;
+  final dueTypeSpacing = 4.0;
+  final dueTypeNoDueDate = 'No Due Date';
+  final dueTypeDueDate = 'Due Date';
+  final dueTypeDueTime = 'Due Time';
+  final dueDateAnimationDuration = const Duration(milliseconds: 100);
+  final dueDateNotesSpacing = 16.0;
+  final notesIcon = Icons.subject;
+  final notesPadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0);
+  final notesPlaceholder = 'Add Notes';
+
+  final dueDateRowHeight = 32.0;
+  final dueDateIcon = Icons.today;
+  final dueDateInkWellPadding = EdgeInsets.all(4.0);
+  final dueDateFormat = DateFormat('dd MMM');
+  final dueTimeFormat = DateFormat('HH:mm');
+  final dueDateEditSpacing = 4.0;
+
+  final subjectMinItemForListView = 4;
+  final subjectListViewHeight = 195.0;
+
+  final dueDateCancelOpacity = 0.3;
+  final dueDateCancelPadding = EdgeInsets.symmetric(horizontal: 16.0);
+  final dueDateCancelText = 'Cancel';
+  final dueDateCancelTextStyle =
+      const TextStyle(color: Colors.black54, fontSize: 16.0);
+  final dueDateChoiceIcon = Icons.today;
+  final dueDateChoiceTrailing = Icons.navigate_next;
+  final dueDateTodayText = 'Today';
+  final dueDateTomorrowText = 'Tomorrow';
+  final dueDateMondayText = 'Monday';
+  String getDueDateSubjectSession(String subject) => 'Next $subject Session';
+
+  String getNotesURLError(String url) =>
+      'Failed to open $url. Check whether the URL is correct.';
+  final notesEditTextTitle = 'Notes';
 }

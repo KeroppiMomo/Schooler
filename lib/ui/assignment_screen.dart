@@ -19,6 +19,8 @@ import 'package:schooler/ui/time_picker.dart';
 import 'package:schooler/ui/cycle_calendar.dart';
 import 'package:schooler/ui/week_calendar.dart';
 
+AssignmentScreenResources _R = R.assignmentScreen;
+
 class AssignmentScreen extends StatefulWidget {
   final Assignment assignment;
 
@@ -67,20 +69,20 @@ class AssignmentScreenState extends State<AssignmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Assignment'),
+        title: Text(_R.appBarTitle),
       ),
       body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+        padding: _R.listViewPadding,
         children: [
           Table(
-            columnWidths: {0: FixedColumnWidth(48.0)},
+            columnWidths: {0: FixedColumnWidth(_R.iconColumnWidth)},
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
               _buildRow(
                 // Title and isCompleted
                 leading: SizedBox(
-                  width: 24.0,
-                  height: 24.0,
+                  width: _R.checkboxSize,
+                  height: _R.checkboxSize,
                   child: Checkbox(
                     value: widget.assignment.isCompleted,
                     onChanged: _isCompletedTapped,
@@ -90,7 +92,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                   style: Theme.of(context).textTheme.headline5,
                   controller: _nameController,
                   decoration: InputDecoration(
-                    hintText: 'Title',
+                    hintText: _R.titleHintText,
                   ),
                   onChanged: _nameOnChanged,
                 ),
@@ -101,7 +103,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                 child: TextField(
                   controller: _descriptionController,
                   decoration: InputDecoration(
-                    hintText: 'Add Description',
+                    hintText: _R.descriptionHintText,
                     isDense: true,
                   ),
                   onChanged: _descriptionOnChanged,
@@ -109,81 +111,81 @@ class AssignmentScreenState extends State<AssignmentScreen> {
               ),
               _buildRow(
                 // Spacing
-                leading: SizedBox(height: 32.0),
+                leading: SizedBox(height: _R.descriptionSubjectSpacing),
                 child: Container(),
               ),
               _buildRow(
                 // Select Subject
                 leading: Icon(
-                  Icons.book,
-                  color: Colors.black54,
+                  _R.subjectIcon,
+                  color: _R.leftIconColor,
                 ),
                 child: InkWell(
                   child: widget.assignment.subject == null
                       ? Container(
-                          height: 32.0,
+                          height: _R.subjectRow,
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Padding(
-                              padding: EdgeInsets.all(4.0),
+                              padding: _R.subjectPlaceholderPadding,
                               child: Text(
-                                'Add Subject',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyText1
-                                    .copyWith(color: Colors.black54),
+                                _R.subjectPlaceholder,
+                                style: _R.placeholderStyle(context),
                               ),
                             ),
                           ),
                         )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Expanded(
-                              child: SubjectBlock(
-                                name: widget.assignment.subject.name,
-                                color: widget.assignment.subject.color,
+                      : Container(
+                          height: _R.subjectRow,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Expanded(
+                                child: SubjectBlock(
+                                  name: widget.assignment.subject.name,
+                                  color: widget.assignment.subject.color,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 4.0),
-                            Icon(
-                              Icons.edit,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(width: 4.0),
-                            InkWell(
-                              child: Icon(
-                                Icons.delete,
-                                color: Colors.grey,
+                              SizedBox(width: _R.subjectRowSpacing),
+                              Icon(
+                                _R.editIcon,
+                                color: _R.rightIconColor,
                               ),
-                              onTap: _subjectRemoved,
-                            ),
-                          ],
+                              SizedBox(width: _R.subjectRowSpacing),
+                              InkWell(
+                                child: Icon(
+                                  _R.subjectRemoveIcon,
+                                  color: _R.rightIconColor,
+                                ),
+                                onTap: _subjectRemoved,
+                              ),
+                            ],
+                          ),
                         ),
                   onTap: _subjectTapped,
                 ),
               ),
               _buildRow(
                 // Spacing
-                leading: SizedBox(height: 16.0),
+                leading: SizedBox(height: _R.subjectDueTypeSpacing),
                 child: Container(),
               ),
               _buildRow(
                 // Select withTime
                 leading: Container(),
                 child: Wrap(
-                  runSpacing: -8.0,
-                  spacing: 4.0,
+                  runSpacing: _R.dueTypeRunSpacing,
+                  spacing: _R.dueTypeSpacing,
                   children: <Widget>[
                     ChoiceChip(
-                      label: Text('No Due Date'),
+                      label: Text(_R.dueTypeNoDueDate),
                       selected: widget.assignment.dueDate == null,
                       onSelected: (value) {
                         if (value) _dueDateTypeChanged(null);
                       },
                     ),
                     ChoiceChip(
-                      label: Text('Due Date'),
+                      label: Text(_R.dueTypeDueDate),
                       selected: widget.assignment.dueDate != null &&
                           !widget.assignment.withDueTime,
                       onSelected: (value) {
@@ -191,7 +193,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                       },
                     ),
                     ChoiceChip(
-                      label: Text('Due Time'),
+                      label: Text(_R.dueTypeDueTime),
                       selected: widget.assignment.dueDate != null &&
                           widget.assignment.withDueTime,
                       onSelected: (value) {
@@ -203,28 +205,31 @@ class AssignmentScreenState extends State<AssignmentScreen> {
               ),
               _buildRow(
                 leading: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 100),
+                  duration: _R.dueDateAnimationDuration,
                   child: _dueDateRowLeading,
                 ),
                 child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 100),
+                  duration: _R.dueDateAnimationDuration,
                   child: _dueDateRowChild,
                 ),
               ),
               _buildRow(
                 leading: Container(),
-                child: SizedBox(height: 16.0),
+                child: SizedBox(height: _R.dueDateNotesSpacing),
               ),
               _buildRow(
-                leading: Icon(Icons.subject, color: Colors.black54),
+                leading: Icon(
+                  _R.notesIcon,
+                  color: _R.leftIconColor,
+                ),
                 child: InkWell(
                   onTap: _notesTapped,
                   child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                    padding: _R.notesPadding,
                     child: widget.assignment.notes == null ||
                             widget.assignment.notes == ''
-                        ? Text('Add Notes', style: R.placeholderTextStyle)
+                        ? Text(_R.notesPlaceholder,
+                            style: _R.placeholderStyle(context))
                         : Builder(
                             builder: (context) => Linkify(
                               onOpen: (link) => _notesURLTapped(context, link),
@@ -255,14 +260,14 @@ class AssignmentScreenState extends State<AssignmentScreen> {
   void _setDueDateRow() {
     if (widget.assignment.dueDate == null) {
       _dueDateRowLeading =
-          Icon(Icons.today, key: ValueKey(false), color: Colors.transparent);
-      _dueDateRowChild = Container(height: 32.0);
+          Icon(_R.dueDateIcon, key: ValueKey(false), color: Colors.transparent);
+      _dueDateRowChild = Container(height: _R.dueDateRowHeight);
     } else if (widget.assignment.withDueTime) {
       _dueDateRowLeading =
-          Icon(Icons.today, key: ValueKey(true), color: Colors.black54);
+          Icon(_R.dueDateIcon, key: ValueKey(true), color: _R.leftIconColor);
       _dueDateRowChild = Container(
         key: ValueKey(true),
-        height: 32.0,
+        height: _R.dueDateRowHeight,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -271,9 +276,9 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                 child: Row(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(4.0),
+                      padding: _R.dueDateInkWellPadding,
                       child: Text(
-                        DateFormat('dd MMM').format(widget.assignment.dueDate),
+                        _R.dueDateFormat.format(widget.assignment.dueDate),
                       ),
                     ),
                   ],
@@ -284,12 +289,12 @@ class AssignmentScreenState extends State<AssignmentScreen> {
             InkWell(
               child: Row(children: [
                 Padding(
-                  padding: EdgeInsets.all(4.0),
-                  child: Text(
-                      DateFormat('HH:mm').format(widget.assignment.dueDate)),
+                  padding: _R.dueDateInkWellPadding,
+                  child:
+                      Text(_R.dueTimeFormat.format(widget.assignment.dueDate)),
                 ),
-                SizedBox(width: 4.0),
-                Icon(Icons.edit, color: Colors.grey),
+                SizedBox(width: _R.dueDateEditSpacing),
+                Icon(_R.editIcon, color: _R.rightIconColor),
               ]),
               onTap: _dueTimeTapped,
             ),
@@ -298,25 +303,25 @@ class AssignmentScreenState extends State<AssignmentScreen> {
       );
     } else {
       _dueDateRowLeading =
-          Icon(Icons.today, key: ValueKey(true), color: Colors.black54);
+          Icon(_R.dueDateIcon, key: ValueKey(true), color: _R.leftIconColor);
       _dueDateRowChild = Container(
         key: ValueKey(false),
-        height: 32.0,
+        height: _R.dueDateRowHeight,
         child: InkWell(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: EdgeInsets.all(4.0),
+                padding: _R.dueDateInkWellPadding,
                 child: Align(
                   alignment: Alignment.center,
                   child: Text(
-                    DateFormat('dd MMM').format(widget.assignment.dueDate),
+                    _R.dueDateFormat.format(widget.assignment.dueDate),
                   ),
                 ),
               ),
-              SizedBox(width: 4.0),
-              Icon(Icons.edit, color: Colors.grey),
+              SizedBox(width: _R.dueDateEditSpacing),
+              Icon(_R.editIcon, color: _R.rightIconColor),
             ],
           ),
           onTap: _dueDateTapped,
@@ -342,8 +347,8 @@ class AssignmentScreenState extends State<AssignmentScreen> {
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: SuggestionTextField(
-            minItemForListView: 4,
-            listViewHeight: 195.0,
+            minItemForListView: _R.subjectMinItemForListView,
+            listViewHeight: _R.subjectListViewHeight,
             curValue: '',
             suggestionCallback: (pattern) {
               final List<String> suggestions = [];
@@ -361,7 +366,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                   .subjects
                   .firstWhere((subject) => subject.name == name);
               return ListTile(
-                leading: Icon(Icons.book, color: subject.color),
+                leading: Icon(_R.subjectIcon, color: subject.color),
                 title: Text(subject.name),
                 onTap: onSubmit,
               );
@@ -510,12 +515,11 @@ class AssignmentScreenState extends State<AssignmentScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: CupertinoButton(
-                  pressedOpacity: 0.3,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  pressedOpacity: _R.dueDateCancelOpacity,
+                  padding: _R.dueDateCancelPadding,
                   child: Text(
-                    'Cancel',
-                    style:
-                        const TextStyle(color: Colors.black54, fontSize: 16.0),
+                    _R.dueDateCancelText,
+                    style: _R.dueDateCancelTextStyle,
                   ),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -523,37 +527,37 @@ class AssignmentScreenState extends State<AssignmentScreen> {
               calendarWidget,
               Divider(),
               ListTile(
-                leading: Icon(Icons.today),
-                title: Text('Today'),
-                subtitle: Text(DateFormat('dd MMM').format(DateTime.now())),
-                trailing: Icon(Icons.navigate_next),
+                leading: Icon(_R.dueDateChoiceIcon),
+                title: Text(_R.dueDateTodayText),
+                subtitle: Text(_R.dueDateFormat.format(DateTime.now())),
+                trailing: Icon(_R.dueDateChoiceTrailing),
                 onTap: () => dateChosen(DateTime.now()),
               ),
               ListTile(
-                leading: Icon(Icons.today),
-                title: Text('Tomorrow'),
-                subtitle: Text(DateFormat('dd MMM')
+                leading: Icon(_R.dueDateChoiceIcon),
+                title: Text(_R.dueDateTomorrowText),
+                subtitle: Text(_R.dueDateFormat
                     .format(DateTime.now().add(Duration(days: 1)))),
-                trailing: Icon(Icons.navigate_next),
+                trailing: Icon(_R.dueDateChoiceTrailing),
                 onTap: () => dateChosen(DateTime.now().add(Duration(days: 1))),
               ),
               ListTile(
-                leading: Icon(Icons.today),
-                title: Text('Monday'),
-                subtitle: Text(DateFormat('dd MMM').format(monday)),
-                trailing: Icon(Icons.navigate_next),
+                leading: Icon(_R.dueDateChoiceIcon),
+                title: Text(_R.dueDateMondayText),
+                subtitle: Text(_R.dueDateFormat.format(monday)),
+                trailing: Icon(_R.dueDateChoiceTrailing),
                 onTap: () => dateChosen(monday),
               ),
               ...subjectSessionDate == null
                   ? []
                   : [
                       ListTile(
-                        leading: Icon(Icons.today),
-                        title: Text(
-                            'Next ${widget.assignment.subject.name} Session'),
-                        subtitle: Text(
-                            DateFormat('dd MMM').format(subjectSessionDate)),
-                        trailing: Icon(Icons.navigate_next),
+                        leading: Icon(_R.dueDateChoiceIcon),
+                        title: Text(_R.getDueDateSubjectSession(
+                            widget.assignment.subject.name)),
+                        subtitle:
+                            Text(_R.dueDateFormat.format(subjectSessionDate)),
+                        trailing: Icon(_R.dueDateChoiceTrailing),
                         onTap: () => dateChosen(subjectSessionDate),
                       )
                     ],
@@ -591,8 +595,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     } catch (e) {
       print(e);
       Scaffold.of(context).showSnackBar(SnackBar(
-        content: Text(
-            'Failed to open ${link.url}. Check whether the URL is correct.'),
+        content: Text(_R.getNotesURLError(link.url)),
       ));
     }
   }
@@ -600,7 +603,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
   void _notesTapped() {
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => EditTextScreen(
-              title: 'Notes',
+              title: _R.notesEditTextTitle,
               value: widget.assignment.notes ?? '',
               maxLines: null,
               onDone: (text) => setState(() => widget.assignment.notes = text),

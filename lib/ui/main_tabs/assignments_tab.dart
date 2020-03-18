@@ -5,7 +5,6 @@ import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/res/resources.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/ui/assignment_screen.dart';
 
@@ -108,7 +107,7 @@ class AssignmentsTabState extends State<AssignmentsTab> {
       }
     }();
 
-    _controller = InfiniteScrollController(initialScrollOffset: -100.0);
+    _controller = InfiniteScrollController(initialScrollOffset: _R.todayOffset);
   }
 
   @override
@@ -156,19 +155,18 @@ class AssignmentsTabState extends State<AssignmentsTab> {
       }
 
       if (date.isBefore(startSchoolYear)) {
-        print('build start');
         return Column(children: [
           Container(height: 1000000.0),
           Text(
-            'Start of School Year Reached.',
-            style: Theme.of(context).textTheme.headline5,
+            _R.startReachedMessage,
+            style: _R.startEndMessageStyle(context),
           ),
         ]);
       } else {
         return Column(children: [
           Text(
-            'End of School Year Reached.',
-            style: Theme.of(context).textTheme.headline5,
+            _R.endReachedMessage,
+            style: _R.startEndMessageStyle(context),
           ),
           Container(height: 1000000.0),
         ]);

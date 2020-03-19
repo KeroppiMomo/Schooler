@@ -127,6 +127,11 @@ class AssignmentsTabState extends State<AssignmentsTab> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: _R.addFABTooltip,
+        child: Icon(_R.addFABIcon),
+        onPressed: () => _addAssignmentPressed(null),
+      ),
       body: InfiniteListView.separated(
         controller: _controller,
         itemBuilder: (context, i) => _buildDay(
@@ -406,8 +411,24 @@ class AssignmentsTabState extends State<AssignmentsTab> {
     setState(() => assignment.isCompleted = newValue);
   }
 
+  /// When "Add Assignment" buttons are pressed.
+  ///
+  /// If `date == null`, the FAB is pressed.
+  /// If `date != null`, the "Add Assignment" button in the day widget is pressed.
   void _addAssignmentPressed(DateTime date) {
-    // TODO
+    final assignment = Assignment(
+      isCompleted: false,
+      name: '',
+      description: '',
+      subject: null,
+      dueDate: date,
+      withDueTime: false,
+      notes: '',
+    );
+    Settings().assignments.add(assignment);
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AssignmentScreen(assignment: assignment),
+    ));
   }
 
   void _assignmentPressed(Assignment assignment) {

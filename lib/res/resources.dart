@@ -472,6 +472,8 @@ class AssignmentsTabResources {
   final appBarTitle = 'Assignments';
   final goToTodayIcon = Icons.today;
   final goToTodayTooltip = 'Go to Today';
+  final addFABIcon = Icons.add;
+  final addFABTooltip = 'Add Assignment';
   final todayOffset = -100.0;
   final goToTodayDuration = const Duration(milliseconds: 400);
   final goToTodayCurve = Curves.easeInOut;

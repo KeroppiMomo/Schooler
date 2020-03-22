@@ -48,6 +48,23 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
   List<MapEntry<Assignment, Tuple2<Timer, List<Assignment>>>> _removeDelayInfo =
       [];
 
+  /// Whether the list update is triggered inside the wwidget.
+  ///
+  /// This is used when the [ValueListenableBuilder] is rebuilding
+  /// due to changes to assignments, If the change is trigerred in
+  /// the wwidget, updating the shown assignment list is controlled
+  /// in other part of the class (`_assignmentCompletionChanged`),
+  /// so the list should not be updated there. If the change is
+  /// triggered in other parts of the app, the shown assignment list
+  /// should be updated (without animation).
+  ///
+  /// Therefore, if the assignment list is changed in this wwidget,
+  /// this variable should be set to `true`. This variable should be
+  /// set back to `false` once the build is completed. If this
+  /// variable is `false` before the build, the shown assignment list
+  /// should be updated.
+  bool _isInternalUpdating = false;
+
   @override
   void initState() {
     super.initState();
@@ -106,7 +123,6 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
 
     Settings().assignments = testAssignments;
     _shownAssignments = _getShownAssignments();
-    _listKey = GlobalKey();
   }
 
   @override
@@ -115,45 +131,72 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
       title: _R.wwidgetTitle,
       icon: _R.wwidgetIcon,
       contentPadding: _R.wwidgetPadding,
-      child: AnimatedList(
-        // Use AnimatedList because it handles inserting and removing items
-        key: _listKey,
-        physics: NeverScrollableScrollPhysics(), // Not allow to scroll
-        shrinkWrap: true, // Use minimum space
-        initialItemCount: max(_shownAssignments.length, 1) + 2,
-        // When length == 0, the empty messge is shown, so min = 1. +2 is the "Add" and "View" buttons.
-        itemBuilder: (context, i, animation) {
-          final noOfAssignments = max(
-              _shownAssignments.length, 1); // See comment on initialItemCount
-          if (i == noOfAssignments) {
-            return FlatButton.icon(
-              icon: Icon(_R.addAssignmentIcon),
-              label: Text(_R.addAssignmentText),
-              onPressed: _addAssignmentPressed,
-            );
-          } else if (i == noOfAssignments + 1) {
-            return FlatButton.icon(
-              icon: Icon(_R.viewAssignmentsIcon),
-              label: Text(_R.getViewAssignmentsText(
-                  ((Settings().assignments ?? []).where((a) => !a.isCompleted))
-                      .length)),
-              onPressed: _viewAssignmentsPressed,
-            );
+      child: ValueListenableBuilder(
+        valueListenable: Settings().assignmentListener,
+        builder: (context, value, _) {
+          // Determine whether the change is from the wwidget or from other parts of the app
+          // See documentation of `_isInternalUpdating`.
+          if (_isInternalUpdating) {
+            // The change is from this wwidget. The `_shownAssignments` update mechanism is handled elsewhere.
+            _isInternalUpdating = false;
           } else {
-            if (_shownAssignments.length == 0) {
-              return Padding(
-                padding: _R.completedTextPadding,
-                child: Text(
-                  _R.completedText,
-                  textAlign: TextAlign.center,
-                  style: _R.getCompletedTextStyle(context),
-                ),
-              );
-            } else {
-              return _buildAssignment(
-                  context, i, _shownAssignments[i], animation);
+            // The change is from other parts of the app.
+
+            // Change key to notify Flutter to show the new [AnimatedList]
+            _listKey = GlobalKey();
+
+            // Update the shown assignments
+            _shownAssignments = _getShownAssignments();
+
+            // Cancel removal timer and delete delays
+            for (int i = _removeDelayInfo.length - 1; i >= 0; i--) {
+              _removeDelayInfo[i].value.item1.cancel();
+              _removeDelayInfo.removeAt(i);
             }
           }
+
+          return AnimatedList(
+            // Use AnimatedList because it handles inserting and removing items
+            key: _listKey,
+            physics: NeverScrollableScrollPhysics(), // Not allow to scroll
+            shrinkWrap: true, // Use minimum space
+            initialItemCount: max(_shownAssignments.length, 1) + 2,
+            // When length == 0, the empty messge is shown, so min = 1. +2 is the "Add" and "View" buttons.
+            itemBuilder: (context, i, animation) {
+              final noOfAssignments = max(_shownAssignments.length,
+                  1); // See comment on initialItemCount
+              if (i == noOfAssignments) {
+                return FlatButton.icon(
+                  icon: Icon(_R.addAssignmentIcon),
+                  label: Text(_R.addAssignmentText),
+                  onPressed: _addAssignmentPressed,
+                );
+              } else if (i == noOfAssignments + 1) {
+                return FlatButton.icon(
+                  icon: Icon(_R.viewAssignmentsIcon),
+                  label: Text(_R.getViewAssignmentsText(
+                      ((Settings().assignments ?? [])
+                              .where((a) => !a.isCompleted))
+                          .length)),
+                  onPressed: _viewAssignmentsPressed,
+                );
+              } else {
+                if (_shownAssignments.length == 0) {
+                  return Padding(
+                    padding: _R.completedTextPadding,
+                    child: Text(
+                      _R.completedText,
+                      textAlign: TextAlign.center,
+                      style: _R.getCompletedTextStyle(context),
+                    ),
+                  );
+                } else {
+                  return _buildAssignment(
+                      context, i, _shownAssignments[i], animation);
+                }
+              }
+            },
+          );
         },
       ),
       onSettingsPressed: _settingsPressed,
@@ -294,6 +337,12 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
   void _assignmentCompletionChanged(int assignmentIndex, bool isCompleted) {
     final assignment = _shownAssignments[assignmentIndex];
     assignment.isCompleted = isCompleted;
+
+    /// Don't update shown list when building
+    _isInternalUpdating = true;
+    Settings().assignmentListener.notifyListeners();
+
+    // Update Checkbox
     setState(() {});
 
     // Check whether same assignment has already been scheduled removal.
@@ -306,6 +355,7 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
     }
     final removeTimer = Timer(_R.completionRemovalDelay, () {
       if (isCompleted == false) return;
+
       // Determine any and which assignment is needed to be inserted into the list
       assignmentIndex =
           _shownAssignments.indexWhere((a) => identical(a, assignment));

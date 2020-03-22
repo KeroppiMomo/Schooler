@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
@@ -25,7 +26,9 @@ class ParseJSONException implements Exception {
 class Settings {
   // Singleton ---------------------------------------------------------------
   static Settings instance = Settings._();
-  Settings._();
+  Settings._() {
+    assignmentListener = ValueNotifier(assignments);
+  }
   factory Settings() => Settings.instance;
 
   // Fields ------------------------------------------------------------------
@@ -37,6 +40,9 @@ class Settings {
   bool isSetupCompleted = false;
 
   List<Assignment> assignments;
+
+  // Value Listener ----------------------------------------------------------
+  ValueNotifier<List<Assignment>> assignmentListener;
 
   // Serilization & File -----------------------------------------------------
 

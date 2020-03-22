@@ -132,13 +132,17 @@ class AssignmentsTabState extends State<AssignmentsTab> {
         child: Icon(_R.addFABIcon),
         onPressed: () => _addAssignmentPressed(null),
       ),
-      body: InfiniteListView.separated(
-        controller: _controller,
-        itemBuilder: (context, i) => _buildDay(
-            DateTime.utc(now.year, now.month, now.day).add(Duration(days: i))),
-        separatorBuilder: (context, i) => Divider(
-          height: _R.dayDividerHeight,
-          indent: _R.dayDividerIndent,
+      body: ValueListenableBuilder(
+        valueListenable: Settings().assignmentListener,
+        builder: (context, assignments, _) => InfiniteListView.separated(
+          controller: _controller,
+          itemBuilder: (context, i) => _buildDay(
+              DateTime.utc(now.year, now.month, now.day)
+                  .add(Duration(days: i))),
+          separatorBuilder: (context, i) => Divider(
+            height: _R.dayDividerHeight,
+            indent: _R.dayDividerIndent,
+          ),
         ),
       ),
     );
@@ -408,7 +412,10 @@ class AssignmentsTabState extends State<AssignmentsTab> {
   }
 
   void _assignmentCompletionChanged(Assignment assignment, bool newValue) {
-    setState(() => assignment.isCompleted = newValue);
+    setState(() {
+      assignment.isCompleted = newValue;
+      Settings().assignmentListener.notifyListeners();
+    });
   }
 
   /// When "Add Assignment" buttons are pressed.
@@ -426,6 +433,7 @@ class AssignmentsTabState extends State<AssignmentsTab> {
       notes: '',
     );
     Settings().assignments.add(assignment);
+    Settings().assignmentListener.notifyListeners();
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => AssignmentScreen(assignment: assignment),
     ));

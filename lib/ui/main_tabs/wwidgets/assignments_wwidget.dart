@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/subject.dart';
+import 'package:schooler/ui/assignment_screen.dart';
 import 'package:schooler/ui/main_tabs/wwidgets/wwidget.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/subject_block.dart';
@@ -413,16 +414,30 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
   }
 
   void _assignmentPressed(Assignment assignment) {
-    // TODO: Implement this
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AssignmentScreen(assignment: assignment),
+    ));
   }
+
   void _addAssignmentPressed() {
-    // TODO: Implement this
+    final assignment = Assignment(
+      isCompleted: false,
+      name: '',
+      description: '',
+      subject: null,
+      dueDate: null,
+      withDueTime: false,
+      notes: '',
+    );
+    Settings().assignments.add(assignment);
+    Settings().assignmentListener.notifyListeners();
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AssignmentScreen(assignment: assignment),
+    ));
   }
+
   void _viewAssignmentsPressed() {
     // TODO: Implement this
-  }
-  void _refreshPressed() {
-    setState(() => _shownAssignments = _getShownAssignments());
   }
 
   void _settingsPressed() {

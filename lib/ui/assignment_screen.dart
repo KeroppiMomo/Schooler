@@ -70,6 +70,13 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_R.appBarTitle),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            tooltip: 'Delete Assignment',
+            onPressed: _deletePressed,
+          ),
+        ],
       ),
       body: ValueListenableBuilder(
         valueListenable: Settings().assignmentListener,
@@ -244,7 +251,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -620,5 +627,34 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                 Settings().assignmentListener.notifyListeners();
               },
             )));
+  }
+
+  void _deletePressed() {
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Assignment?'),
+        content: Text('This action cannot be undone.'),
+        actions: <Widget>[
+          FlatButton(
+            child: Text('CANCEL'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          FlatButton(
+            child: Text('DELETE'),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    ).then((shouldDelete) {
+      // Not `if (shouldDelete)` because it might be null
+      if (shouldDelete == true) {
+        Settings().assignments.remove(widget.assignment);
+        Settings().assignmentListener.notifyListeners();
+
+        // Go to previous page
+        Navigator.pop(context);
+      }
+    });
   }
 }

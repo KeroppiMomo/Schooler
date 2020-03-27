@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
@@ -7,6 +8,7 @@ import 'package:schooler/lib/subject.dart';
 import 'package:schooler/ui/main_tabs/assignments_tab.dart';
 import 'package:schooler/ui/main_tabs/today_tab.dart';
 import 'package:schooler/ui/main_tabs/calendar_tab.dart';
+import 'package:schooler/ui/assignments_list_screen.dart';
 
 final R = Resources();
 
@@ -34,6 +36,7 @@ class Resources {
   final assignmentWWidget = AssignmentWWidgetResources();
 
   final assignmentScreen = AssignmentScreenResources();
+  final assignmentListScreen = AssignmentListScreenResources();
 }
 
 class TimetableEditorResources {
@@ -525,6 +528,7 @@ class AssignmentsTabResources {
   final monthHeaderElevation = 5.0;
   final monthHeaderDaySpacing = 16.0;
 
+  // Same as R.assignmentsListScreen
   final assignmentPadding =
       EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
   final assignmentCheckboxColumnWidth = 36.0;
@@ -596,4 +600,57 @@ class AssignmentScreenResources {
   String getNotesURLError(String url) =>
       'Failed to open $url. Check whether the URL is correct.';
   final notesEditTextTitle = 'Notes';
+}
+
+class AssignmentListScreenResources {
+  final Map<String, Comparable Function(Assignment)> assignmentSorts = {
+    'Completed': (a) => a.isCompleted ? 1 : 0,
+    'Due Date': (a) => a.dueDate?.millisecondsSinceEpoch ?? 0,
+    'Name': (a) => a.name,
+    'Subject': (a) => a.subject?.name ?? '',
+  };
+  final noSortText = 'Creation Date';
+  MapEntry<String, Comparable Function(Assignment)> get defaultSorting =>
+      assignmentSorts.entries.toList()[1];
+  final defaultSortDirection = SortDirection.ascending;
+
+  final appBarTitle = 'Assignments';
+
+  final searchBarIcon = Icons.search;
+  final searchBarClearIcon = Icons.clear;
+  final searchBarClearTooltip = 'Clear Search';
+  final searchBarHintText = 'Search';
+
+  final listViewPadding = const EdgeInsets.fromLTRB(24.0, 24.0, 0.0, 24.0);
+
+  final sortText = 'Sort By';
+  final sortTextChipsSpacing = 8.0;
+  final sortRowHeight = 52.0;
+  Color getSortChipSelectedColor(BuildContext context) =>
+      Theme.of(context).primaryColor.withOpacity(0.3);
+  final sortChipsSpacing = 4.0;
+  final sortAscendingIcon = Icons.arrow_drop_up;
+  final sortDescendingIcon = Icons.arrow_drop_down;
+
+  // From R.assignmentTab
+  EdgeInsets get assignmentPadding => R.assignmentTab.assignmentPadding;
+  double get assignmentCheckboxColumnWidth =>
+      R.assignmentTab.assignmentCheckboxColumnWidth;
+  double get assignmentCheckboxSize => R.assignmentTab.assignmentCheckboxSize;
+  double get assignmentCompletedOpacity =>
+      R.assignmentTab.assignmentCompletedOpacity;
+  TextStyle assignmentTitleStyle(BuildContext context) =>
+      R.assignmentTab.assignmentTitleStyle(context);
+  double get assignmentTitleSubjectSpacing =>
+      R.assignmentTab.assignmentTitleSubjectSpacing;
+  final assignmentDueTimeFormat = DateFormat("'Due' dd MMM HH:mm '|' ");
+  final assignmentDueDateFormat = DateFormat("'Due' dd MMM '|' ");
+  TextStyle assignmentDescriptionTextStyle(BuildContext context) =>
+      R.assignmentTab.assignmentDescriptionTextStyle(context);
+
+  /// Each assignment is turned into a [String] when a search is performed.
+  /// The due date is formated according to this format.
+  final searchDueDateFormat = DateFormat('dd MMMM HH:mm');
+
+  final refreshDelay = const Duration(milliseconds: 500);
 }

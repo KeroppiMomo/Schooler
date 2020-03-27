@@ -3,6 +3,7 @@ import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/ui/assignment_screen.dart';
+import 'package:schooler/ui/assignments_list_screen.dart';
 import 'package:schooler/ui/main_tabs/wwidgets/wwidget.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/subject_block.dart';
@@ -437,7 +438,9 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
   }
 
   void _viewAssignmentsPressed() {
-    // TODO: Implement this
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AssignmentsListScreen(),
+    ));
   }
 
   void _settingsPressed() {

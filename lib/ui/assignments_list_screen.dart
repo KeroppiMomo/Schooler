@@ -8,6 +8,9 @@ import 'package:schooler/ui/subject_block.dart';
 AssignmentListScreenResources _R = R.assignmentListScreen;
 
 class AssignmentsListScreen extends StatefulWidget {
+  final Function onSwitchView;
+
+  AssignmentsListScreen({Key key, this.onSwitchView}) : super(key: key);
   @override
   AssignmentsListScreenState createState() => AssignmentsListScreenState();
 }
@@ -22,6 +25,11 @@ class AssignmentsListScreenState extends State<AssignmentsListScreen> {
 
   TextEditingController _searchBarController;
 
+  /// Total number of assignments in Settings last time refreshed.
+  /// This variable is to determine whether an assignment is added
+  /// or removed.
+  int _totalNoOfAssignments = 0;
+
   @override
   void initState() {
     super.initState();
@@ -30,11 +38,27 @@ class AssignmentsListScreenState extends State<AssignmentsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final assignments =
-        _sortAssignments(_filterSearchAssignments(Settings().assignments));
+    _totalNoOfAssignments = Settings().assignments.length;
+    List<Assignment> assignments = _sortAssignments(
+        _filterSearchAssignments(Settings().assignments ?? []));
     return Scaffold(
       appBar: AppBar(
         title: Text(_R.appBarTitle),
+        actions: widget.onSwitchView == null
+            ? null
+            : [
+                IconButton(
+                  icon: Icon(_R.switchViewIcon),
+                  tooltip: _R.switchViewTooltip,
+                  onPressed: widget.onSwitchView,
+                ),
+              ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: null,
+        tooltip: _R.addFABTooltip,
+        child: Icon(_R.addFABIcon),
+        onPressed: () => _addAssignmentPressed(),
       ),
       body: Column(
         children: [
@@ -55,74 +79,83 @@ class AssignmentsListScreenState extends State<AssignmentsListScreen> {
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: Settings().assignmentListener,
-              builder: (context, _, __) => RefreshIndicator(
-                child: ListView.separated(
-                  padding: _R.listViewPadding,
-                  itemCount: assignments.length + 1, // +1 is the sort row
-                  separatorBuilder: (context, i) =>
-                      Divider(indent: _R.assignmentCheckboxColumnWidth),
-                  itemBuilder: (context, i) {
-                    if (i == 0) {
-                      return Row(children: <Widget>[
-                        Text(_R.sortText),
-                        SizedBox(width: _R.sortTextChipsSpacing),
-                        Expanded(
-                          child: SizedBox(
-                            height: _R.sortRowHeight,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: [
-                                for (var entry in _R.assignmentSorts.entries)
-                                  Row(children: [
-                                    FilterChip(
-                                      avatar: (_sorting != null &&
-                                              entry.key == _sorting.key)
-                                          ? Icon(
-                                              _sortDirection ==
-                                                      SortDirection.ascending
-                                                  ? Icons.arrow_drop_up
-                                                  : Icons.arrow_drop_down,
-                                            )
-                                          : null,
-                                      label: Text(entry.key),
-                                      showCheckmark: false,
-                                      selectedColor:
-                                          _R.getSortChipSelectedColor(context),
-                                      selected: _sorting != null &&
-                                          entry.key == _sorting.key,
-                                      onSelected: (_) => _sortingPressed(entry),
-                                    ),
-                                    SizedBox(width: _R.sortChipsSpacing),
-                                  ]),
-                                FilterChip(
-                                  // Just follow the order of assignment list (or reversed)
-                                  avatar: _sorting == null
-                                      ? Icon(
-                                          _sortDirection ==
-                                                  SortDirection.ascending
-                                              ? _R.sortAscendingIcon
-                                              : _R.sortDescendingIcon,
-                                        )
-                                      : null,
-                                  label: Text(_R.noSortText),
-                                  showCheckmark: false,
-                                  selectedColor:
-                                      _R.getSortChipSelectedColor(context),
-                                  selected: _sorting == null,
-                                  onSelected: (_) => _sortingPressed(null),
-                                ),
-                                SizedBox(width: _R.sortChipsSpacing),
-                              ],
+              builder: (context, _, __) {
+                if (Settings().assignments.length != _totalNoOfAssignments) {
+                  assignments = _sortAssignments(
+                      _filterSearchAssignments(Settings().assignments ?? []));
+                  _totalNoOfAssignments = Settings().assignments.length;
+                }
+
+                return RefreshIndicator(
+                  child: ListView.separated(
+                    padding: _R.listViewPadding,
+                    itemCount: assignments.length + 1, // +1 is the sort row
+                    separatorBuilder: (context, i) =>
+                        Divider(indent: _R.assignmentCheckboxColumnWidth),
+                    itemBuilder: (context, i) {
+                      if (i == 0) {
+                        return Row(children: <Widget>[
+                          Text(_R.sortText),
+                          SizedBox(width: _R.sortTextChipsSpacing),
+                          Expanded(
+                            child: SizedBox(
+                              height: _R.sortRowHeight,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  for (var entry in _R.assignmentSorts.entries)
+                                    Row(children: [
+                                      FilterChip(
+                                        avatar: (_sorting != null &&
+                                                entry.key == _sorting.key)
+                                            ? Icon(
+                                                _sortDirection ==
+                                                        SortDirection.ascending
+                                                    ? Icons.arrow_drop_up
+                                                    : Icons.arrow_drop_down,
+                                              )
+                                            : null,
+                                        label: Text(entry.key),
+                                        showCheckmark: false,
+                                        selectedColor: _R
+                                            .getSortChipSelectedColor(context),
+                                        selected: _sorting != null &&
+                                            entry.key == _sorting.key,
+                                        onSelected: (_) =>
+                                            _sortingPressed(entry),
+                                      ),
+                                      SizedBox(width: _R.sortChipsSpacing),
+                                    ]),
+                                  FilterChip(
+                                    // Just follow the order of assignment list (or reversed)
+                                    avatar: _sorting == null
+                                        ? Icon(
+                                            _sortDirection ==
+                                                    SortDirection.ascending
+                                                ? _R.sortAscendingIcon
+                                                : _R.sortDescendingIcon,
+                                          )
+                                        : null,
+                                    label: Text(_R.noSortText),
+                                    showCheckmark: false,
+                                    selectedColor:
+                                        _R.getSortChipSelectedColor(context),
+                                    selected: _sorting == null,
+                                    onSelected: (_) => _sortingPressed(null),
+                                  ),
+                                  SizedBox(width: _R.sortChipsSpacing),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ]);
-                    }
-                    return _buildAssignment(assignments[i - 1]);
-                  },
-                ),
-                onRefresh: _onRefresh,
-              ),
+                        ]);
+                      }
+                      return _buildAssignment(assignments[i - 1]);
+                    },
+                  ),
+                  onRefresh: _onRefresh,
+                );
+              },
             ),
           ),
         ],
@@ -292,5 +325,22 @@ class AssignmentsListScreenState extends State<AssignmentsListScreen> {
   Future<void> _onRefresh() async {
     setState(() {});
     await Future.delayed(_R.refreshDelay);
+  }
+
+  void _addAssignmentPressed() {
+    final assignment = Assignment(
+      isCompleted: false,
+      name: '',
+      description: '',
+      subject: null,
+      dueDate: null,
+      withDueTime: false,
+      notes: '',
+    );
+    Settings().assignments.add(assignment);
+    Settings().assignmentListener.notifyListeners();
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => AssignmentScreen(assignment: assignment),
+    ));
   }
 }

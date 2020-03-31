@@ -36,6 +36,7 @@ class Resources {
   final assignmentWWidget = AssignmentWWidgetResources();
 
   final assignmentScreen = AssignmentScreenResources();
+  final assignmentDayScreen = AssignmentDayScreenResources();
   final assignmentListScreen = AssignmentListScreenResources();
 }
 
@@ -366,6 +367,10 @@ class TodayTabResources {
   final dayWWidgetsSpacing = 16.0;
 }
 
+class AssignmentsTabResources {
+  final switchViewDuration = const Duration(milliseconds: 200);
+}
+
 class WWidgetResources {
   final titleItemsSpacing = 16.0;
   final titleIconSize = 20.0;
@@ -471,10 +476,72 @@ class AssignmentWWidgetResources {
   final completionRemovalDelay = const Duration(seconds: 1);
 }
 
-class AssignmentsTabResources {
+class AssignmentScreenResources {
+  final appBarTitle = 'Assignment';
+  final listViewPadding =
+      EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0);
+  final iconColumnWidth = 48.0;
+  final leftIconColor = Colors.black54;
+  final rightIconColor = Colors.grey;
+  final checkboxSize = 24.0;
+  TextStyle placeholderStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+  final editIcon = Icons.edit;
+
+  final titleHintText = 'Title';
+  final descriptionHintText = 'Add Description';
+  final descriptionSubjectSpacing = 32.0;
+  final subjectIcon = Icons.book;
+  final subjectRow = 32.0;
+  final subjectPlaceholderPadding = EdgeInsets.all(4.0);
+  final subjectPlaceholder = 'Add Subject';
+  final subjectRowSpacing = 4.0;
+  final subjectRemoveIcon = Icons.delete;
+  final subjectDueTypeSpacing = 16.0;
+  final dueTypeRunSpacing = -8.0;
+  final dueTypeSpacing = 4.0;
+  final dueTypeNoDueDate = 'No Due Date';
+  final dueTypeDueDate = 'Due Date';
+  final dueTypeDueTime = 'Due Time';
+  final dueDateAnimationDuration = const Duration(milliseconds: 100);
+  final dueDateNotesSpacing = 16.0;
+  final notesIcon = Icons.subject;
+  final notesPadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0);
+  final notesPlaceholder = 'Add Notes';
+
+  final dueDateRowHeight = 32.0;
+  final dueDateIcon = Icons.today;
+  final dueDateInkWellPadding = EdgeInsets.all(4.0);
+  final dueDateFormat = DateFormat('dd MMM');
+  final dueTimeFormat = DateFormat('HH:mm');
+  final dueDateEditSpacing = 4.0;
+
+  final subjectMinItemForListView = 4;
+  final subjectListViewHeight = 195.0;
+
+  final dueDateCancelOpacity = 0.3;
+  final dueDateCancelPadding = EdgeInsets.symmetric(horizontal: 16.0);
+  final dueDateCancelText = 'Cancel';
+  final dueDateCancelTextStyle =
+      const TextStyle(color: Colors.black54, fontSize: 16.0);
+  final dueDateChoiceIcon = Icons.today;
+  final dueDateChoiceTrailing = Icons.navigate_next;
+  final dueDateTodayText = 'Today';
+  final dueDateTomorrowText = 'Tomorrow';
+  final dueDateMondayText = 'Monday';
+  String getDueDateSubjectSession(String subject) => 'Next $subject Session';
+
+  String getNotesURLError(String url) =>
+      'Failed to open $url. Check whether the URL is correct.';
+  final notesEditTextTitle = 'Notes';
+}
+
+class AssignmentDayScreenResources {
   final appBarTitle = 'Assignments';
   final goToTodayIcon = Icons.today;
   final goToTodayTooltip = 'Go to Today';
+  final switchViewIcon = Icons.list;
+  final switchViewTooltip = 'Switch to List View';
   final addFABIcon = Icons.add;
   final addFABTooltip = 'Add Assignment';
   final todayOffset = -100.0;
@@ -542,66 +609,6 @@ class AssignmentsTabResources {
       Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.grey);
 }
 
-class AssignmentScreenResources {
-  final appBarTitle = 'Assignment';
-  final listViewPadding =
-      EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0);
-  final iconColumnWidth = 48.0;
-  final leftIconColor = Colors.black54;
-  final rightIconColor = Colors.grey;
-  final checkboxSize = 24.0;
-  TextStyle placeholderStyle(BuildContext context) =>
-      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
-  final editIcon = Icons.edit;
-
-  final titleHintText = 'Title';
-  final descriptionHintText = 'Add Description';
-  final descriptionSubjectSpacing = 32.0;
-  final subjectIcon = Icons.book;
-  final subjectRow = 32.0;
-  final subjectPlaceholderPadding = EdgeInsets.all(4.0);
-  final subjectPlaceholder = 'Add Subject';
-  final subjectRowSpacing = 4.0;
-  final subjectRemoveIcon = Icons.delete;
-  final subjectDueTypeSpacing = 16.0;
-  final dueTypeRunSpacing = -8.0;
-  final dueTypeSpacing = 4.0;
-  final dueTypeNoDueDate = 'No Due Date';
-  final dueTypeDueDate = 'Due Date';
-  final dueTypeDueTime = 'Due Time';
-  final dueDateAnimationDuration = const Duration(milliseconds: 100);
-  final dueDateNotesSpacing = 16.0;
-  final notesIcon = Icons.subject;
-  final notesPadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0);
-  final notesPlaceholder = 'Add Notes';
-
-  final dueDateRowHeight = 32.0;
-  final dueDateIcon = Icons.today;
-  final dueDateInkWellPadding = EdgeInsets.all(4.0);
-  final dueDateFormat = DateFormat('dd MMM');
-  final dueTimeFormat = DateFormat('HH:mm');
-  final dueDateEditSpacing = 4.0;
-
-  final subjectMinItemForListView = 4;
-  final subjectListViewHeight = 195.0;
-
-  final dueDateCancelOpacity = 0.3;
-  final dueDateCancelPadding = EdgeInsets.symmetric(horizontal: 16.0);
-  final dueDateCancelText = 'Cancel';
-  final dueDateCancelTextStyle =
-      const TextStyle(color: Colors.black54, fontSize: 16.0);
-  final dueDateChoiceIcon = Icons.today;
-  final dueDateChoiceTrailing = Icons.navigate_next;
-  final dueDateTodayText = 'Today';
-  final dueDateTomorrowText = 'Tomorrow';
-  final dueDateMondayText = 'Monday';
-  String getDueDateSubjectSession(String subject) => 'Next $subject Session';
-
-  String getNotesURLError(String url) =>
-      'Failed to open $url. Check whether the URL is correct.';
-  final notesEditTextTitle = 'Notes';
-}
-
 class AssignmentListScreenResources {
   final Map<String, Comparable Function(Assignment)> assignmentSorts = {
     'Completed': (a) => a.isCompleted ? 1 : 0,
@@ -615,6 +622,11 @@ class AssignmentListScreenResources {
   final defaultSortDirection = SortDirection.ascending;
 
   final appBarTitle = 'Assignments';
+  final switchViewIcon = Icons.calendar_view_day;
+  final switchViewTooltip = 'Switch to Day View';
+
+  final addFABIcon = Icons.add;
+  final addFABTooltip = 'Add Assignment';
 
   final searchBarIcon = Icons.search;
   final searchBarClearIcon = Icons.clear;
@@ -632,21 +644,22 @@ class AssignmentListScreenResources {
   final sortAscendingIcon = Icons.arrow_drop_up;
   final sortDescendingIcon = Icons.arrow_drop_down;
 
-  // From R.assignmentTab
-  EdgeInsets get assignmentPadding => R.assignmentTab.assignmentPadding;
+  // From R.assignmentDayScreen
+  EdgeInsets get assignmentPadding => R.assignmentDayScreen.assignmentPadding;
   double get assignmentCheckboxColumnWidth =>
-      R.assignmentTab.assignmentCheckboxColumnWidth;
-  double get assignmentCheckboxSize => R.assignmentTab.assignmentCheckboxSize;
+      R.assignmentDayScreen.assignmentCheckboxColumnWidth;
+  double get assignmentCheckboxSize =>
+      R.assignmentDayScreen.assignmentCheckboxSize;
   double get assignmentCompletedOpacity =>
-      R.assignmentTab.assignmentCompletedOpacity;
+      R.assignmentDayScreen.assignmentCompletedOpacity;
   TextStyle assignmentTitleStyle(BuildContext context) =>
-      R.assignmentTab.assignmentTitleStyle(context);
+      R.assignmentDayScreen.assignmentTitleStyle(context);
   double get assignmentTitleSubjectSpacing =>
-      R.assignmentTab.assignmentTitleSubjectSpacing;
+      R.assignmentDayScreen.assignmentTitleSubjectSpacing;
   final assignmentDueTimeFormat = DateFormat("'Due' dd MMM HH:mm '|' ");
   final assignmentDueDateFormat = DateFormat("'Due' dd MMM '|' ");
   TextStyle assignmentDescriptionTextStyle(BuildContext context) =>
-      R.assignmentTab.assignmentDescriptionTextStyle(context);
+      R.assignmentDayScreen.assignmentDescriptionTextStyle(context);
 
   /// Each assignment is turned into a [String] when a search is performed.
   /// The due date is formated according to this format.

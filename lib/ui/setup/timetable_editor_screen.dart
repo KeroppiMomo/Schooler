@@ -9,8 +9,10 @@ TimetableEditorScreenResources _R = R.timetableEditorScreen;
 
 class TimetableEditorScreen extends StatefulWidget {
   final void Function() onPop;
+  final void Function() onDone;
+  final bool isSetup;
 
-  TimetableEditorScreen({this.onPop});
+  TimetableEditorScreen({this.onPop, this.onDone, this.isSetup = true});
 
   @override
   State createState() => TimetableEditorScreenState();
@@ -24,10 +26,12 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   void initState() {
     super.initState();
 
-    if (Settings().subjects != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _donePressed();
-      });
+    if (widget.isSetup) {
+      if (Settings().subjects != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _donePressed();
+        });
+      }
     }
 
     if (Settings().timetable == null) {
@@ -75,9 +79,14 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
         length: Settings().timetable.noOfDays + 1, // +1 is the "add" tab
         child: Scaffold(
           appBar: AppBar(
-            leading: BackButton(
-              onPressed: () => Navigator.maybePop(context),
-            ),
+            leading: widget.isSetup
+                ? BackButton(
+                    onPressed: () => Navigator.maybePop(context),
+                  )
+                : IconButton(
+                    icon: Icon(_R.dismissIcon),
+                    onPressed: () => Navigator.maybePop(context),
+                  ),
             title: Text(_R.appBarTitle),
             bottom: TabBar(
               isScrollable: true,
@@ -326,12 +335,17 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   }
 
   void _donePressed() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => SubjectEditorScreen(
-        onPop: () {
-          Settings().subjects = null;
-        },
-      ),
-    ));
+    if (widget.isSetup) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SubjectEditorScreen(
+          onPop: () {
+            Settings().subjects = null;
+          },
+        ),
+      ));
+    } else {
+      widget.onDone?.call();
+      Navigator.of(context).pop();
+    }
   }
 }

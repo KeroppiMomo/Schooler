@@ -28,6 +28,7 @@ class Settings {
   static Settings instance = Settings._();
   Settings._() {
     assignmentListener = ValueNotifier(assignments);
+    timetableListener = ValueNotifier(timetable);
   }
   factory Settings() => Settings.instance;
 
@@ -43,6 +44,7 @@ class Settings {
 
   // Value Listener ----------------------------------------------------------
   ValueNotifier<List<Assignment>> assignmentListener;
+  ValueNotifier<Timetable> timetableListener;
 
   // Serilization & File -----------------------------------------------------
 

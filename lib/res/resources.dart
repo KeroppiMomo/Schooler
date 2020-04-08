@@ -38,10 +38,12 @@ class Resources {
   final assignmentScreen = AssignmentScreenResources();
   final assignmentDayScreen = AssignmentDayScreenResources();
   final assignmentListScreen = AssignmentListScreenResources();
+
+  final timetableScreen = TimetableScreenResources();
 }
 
 class TimetableEditorResources {
-  final listPadding = EdgeInsets.all(16.0);
+  final listPadding = EdgeInsets.all(16.0); // Share with R.timetableScreen
   final addSessionButtonText = 'Add Session';
   final addSessionButtonIcon = Icons.add;
 
@@ -57,6 +59,7 @@ class TimetableEditorResources {
 
   final listItemsSizeTransitionCurve = Curves.easeInOut;
 
+  // Share with R.timetableScreen
   final sessionEditIcon = Icons.edit;
   final sessionEditIconSize = 16.0;
   final sessionEditIconColor = Colors.grey;
@@ -196,6 +199,7 @@ class EditTextResources {
 }
 
 class TimetableEditorScreenResources {
+  final dismissIcon = Icons.clear;
   final appBarTitle = 'Timetable';
 
   final popConfirmTitle = 'Discard Timetable';
@@ -204,6 +208,7 @@ class TimetableEditorScreenResources {
   final popConfirmCancelText = 'CANCEL';
   final popConfirmDiscardText = 'DISCARD AND RETURN';
 
+  // Share with R.timetableScreen
   String weekDayTabName(int weekDay) => {
         1: 'Mon',
         2: 'Tue',
@@ -666,4 +671,32 @@ class AssignmentListScreenResources {
   final searchDueDateFormat = DateFormat('dd MMMM HH:mm');
 
   final refreshDelay = const Duration(milliseconds: 500);
+}
+
+class TimetableScreenResources {
+  final appBarTitle = 'Timetable';
+  final editIcon = Icons.edit;
+  final editTooltip = 'Edit Timetable';
+
+  // From R.timetableEditorScreen
+  String Function(int) get weekDayTabName =>
+      R.timetableEditorScreen.weekDayTabName;
+  String Function(int) get cycleDayTabName =>
+      R.timetableEditorScreen.cycleDayTabName;
+  String Function(TimetableDay) get dayTabName =>
+      R.timetableEditorScreen.dayTabName;
+
+  final listPadding =
+      const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0);
+  final sessionPadding = const EdgeInsets.symmetric(vertical: 8.0);
+
+  final sessionTimeNameSpacing = 16.0;
+
+  // From R.timetableEditor
+  double get sessionTimeStampSpacing =>
+      R.timetableEditor.sessionEditRegionWidgetsSpacing;
+  DateFormat get sessionTimeFormat => R.timetableEditor.sessionTimeFormat;
+  double get sessionTimeWidth => R.timetableEditor.sessionTimeWidth;
+  String get sessionTimeTo => R.timetableEditor.sessionTimeTo;
+  String get sessionNoNameText => R.timetableEditor.sessionNoNameText;
 }

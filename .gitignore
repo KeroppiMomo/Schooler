@@ -76,3 +76,4 @@
 .flutter-plugins-dependencies
 .vim_session.vim
 watch_test.sh
+**/.*.swo

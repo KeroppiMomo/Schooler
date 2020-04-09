@@ -314,6 +314,7 @@ class AssignmentsListScreenState extends State<AssignmentsListScreen> {
   void _assignmentCompletionChanged(Assignment assignment, bool value) {
     assignment.isCompleted = value;
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
   }
 
   void _assignmentPressed(Assignment assignment) {
@@ -339,6 +340,7 @@ class AssignmentsListScreenState extends State<AssignmentsListScreen> {
     );
     Settings().assignments.add(assignment);
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => AssignmentScreen(assignment: assignment),
     ));

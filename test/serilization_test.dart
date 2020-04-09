@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
+import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
@@ -256,6 +257,42 @@ void main() {
         for (int i = 0; i < subjects.length - 1; i++) {
           expect(subjects[i], fromJSONed[i]);
         }
+      });
+    });
+
+    group('(Assignment)', () {
+      test(
+          '[toJSON then fromJSON, all fields non-null] {return the same object}',
+          () {
+        final assignment = Assignment(
+          isCompleted: true,
+          name: 'N',
+          description: 'D',
+          subject: Subject('S', color: Color(0xFFFF0000)),
+          dueDate: DateTime(2020, 2, 29, 15, 05),
+          withDueTime: true,
+          notes: 'Notes',
+        );
+        final toJSONed = assignment.toJSON();
+        final fromJSONed = Assignment.fromJSON(toJSONed);
+
+        expect(fromJSONed, assignment);
+      });
+      test('[toJSON then fromJSON, some fields null] {return the same object}',
+          () {
+        final assignment = Assignment(
+          isCompleted: true,
+          name: 'N',
+          description: null,
+          subject: null,
+          dueDate: null,
+          withDueTime: null,
+          notes: null,
+        );
+        final toJSONed = assignment.toJSON();
+        final fromJSONed = Assignment.fromJSON(toJSONed);
+
+        expect(fromJSONed, assignment);
       });
     });
   });

@@ -29,77 +29,6 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
   void initState() {
     super.initState();
 
-    final testAssignments = [
-      Assignment(
-        name: 'Assignment Tab Assignments',
-        description: 'Wow',
-        subject: null,
-        dueDate: DateTime(2019, 12, 31),
-        withDueTime: false,
-      ),
-      Assignment(
-        name: 'Exercise 4A',
-        description: 'P.19',
-        subject: Subject('Maths'),
-        dueDate: DateTime(2020, 1, 1),
-        withDueTime: false,
-      ),
-      Assignment(
-        name: 'Maths Assignment',
-        description: '4A 1-20, Draw Diagram',
-        subject: Subject('Maths'),
-        dueDate: DateTime(2020, 1, 1, 15, 0),
-        withDueTime: true,
-      ),
-      Assignment(
-        name: 'Upload File',
-        description: 'History Worksheet',
-        subject: null,
-        dueDate: DateTime(2020, 1, 7, 12, 00),
-        withDueTime: true,
-      ),
-      Assignment(
-        name: 'Poem Reading',
-        description: 'The Great Poem',
-        subject: Subject('English'),
-        dueDate: DateTime(2020, 1, 2, 12, 00),
-        withDueTime: true,
-      ),
-      Assignment(
-        name: 'Writing',
-        subject: Subject('English'),
-        dueDate: null,
-        withDueTime: false,
-      ),
-      Assignment(
-        name: 'Reply Email',
-        dueDate: DateTime(2020, 1, 3, 23, 59),
-        withDueTime: true,
-      ),
-      Assignment(
-        name: 'Experiment Report',
-        isCompleted: false,
-        subject: Subject('Chemistry', color: Colors.yellow),
-        dueDate: DateTime(2020, 1, 10),
-        withDueTime: false,
-      ),
-      Assignment(
-        name: 'Long long long long long long long',
-        isCompleted: false,
-        subject: null,
-        dueDate: DateTime(2020, 1, 8),
-        withDueTime: false,
-      ),
-      Assignment(
-        name: 'Book Report',
-        isCompleted: false,
-        subject: Subject('Chinese', color: Colors.orange),
-        dueDate: DateTime(2020, 1, 9),
-        withDueTime: false,
-      ),
-    ];
-    Settings().assignments = testAssignments;
-
     _calendar = () {
       if (Settings().calendarType == CalendarType.week) {
         return Settings().weekConfig.getCalendar();
@@ -427,6 +356,7 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
     setState(() {
       assignment.isCompleted = newValue;
       Settings().assignmentListener.notifyListeners();
+      Settings().saveSettings();
     });
   }
 
@@ -446,6 +376,7 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
     );
     Settings().assignments.add(assignment);
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => AssignmentScreen(assignment: assignment),
     ));

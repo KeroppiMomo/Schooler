@@ -345,12 +345,14 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     widget.assignment.name = newValue;
     _setDueDateRow();
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
   }
 
   void _descriptionOnChanged(String newValue) {
     widget.assignment.description = newValue;
     _setDueDateRow();
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
   }
 
   void _subjectTapped() {
@@ -393,6 +395,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
               widget.assignment.subject = subject;
               _setDueDateRow();
               Settings().assignmentListener.notifyListeners();
+              Settings().saveSettings();
             },
           ),
         ),
@@ -404,12 +407,14 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     widget.assignment.subject = null;
     _setDueDateRow();
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
   }
 
   void _isCompletedTapped(bool newValue) {
     widget.assignment.isCompleted = newValue;
     _setDueDateRow();
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
   }
 
   /// Called when the due date type (i.e. no due date, due date or due time) is changed.
@@ -424,6 +429,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
       widget.assignment.withDueTime = withTime;
     _setDueDateRow();
     Settings().assignmentListener.notifyListeners();
+    Settings().saveSettings();
   }
 
   void _dueDateTapped() {
@@ -436,6 +442,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
       _dueDateAccurate = widget.assignment.dueDate;
       _setDueDateRow();
       Settings().assignmentListener.notifyListeners();
+      Settings().saveSettings();
     }
 
     final monday =
@@ -596,6 +603,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
         _dueDateAccurate = widget.assignment.dueDate;
         _setDueDateRow();
         Settings().assignmentListener.notifyListeners();
+        Settings().saveSettings();
       },
     );
   }
@@ -625,6 +633,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
                 widget.assignment.notes = text;
                 _setDueDateRow();
                 Settings().assignmentListener.notifyListeners();
+                Settings().saveSettings();
               },
             )));
   }
@@ -651,6 +660,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
       if (shouldDelete == true) {
         Settings().assignments.remove(widget.assignment);
         Settings().assignmentListener.notifyListeners();
+        Settings().saveSettings();
 
         // Go to previous page
         Navigator.pop(context);

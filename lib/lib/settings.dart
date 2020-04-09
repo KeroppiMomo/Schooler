@@ -57,6 +57,8 @@ class Settings {
       'timetable': timetable?.toJSON(),
       'subjects': subjects?.map((subject) => subject.toJSON())?.toList(),
       'setup_completed': isSetupCompleted,
+      'assignments':
+          assignments?.map((assignment) => assignment.toJSON())?.toList(),
     });
   }
 
@@ -83,6 +85,8 @@ class Settings {
           message:
               'isSetupCompleted type mismatch: ${decoded["setup_completed"].runtimeType} found; bool expected');
     }
+
+    Settings().assignments = Assignment.fromJSONList(decoded['assignments']);
 
     return Settings();
   }

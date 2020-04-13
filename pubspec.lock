@@ -100,6 +100,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  geofencing:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "0c3313d8aeea8321f45fca8dbe77db90a7bf4938"
+      url: "git://github.com/bkonyi/FlutterGeofencing.git"
+    source: git
+    version: "0.0.1"
   icon_shadow:
     dependency: "direct main"
     description:

@@ -34,6 +34,9 @@ dependencies:
   infinite_listview: ^1.0.1+1
   flutter_linkify: ^3.1.0
   url_launcher: ^5.4.2
+  geofencing:
+    git:
+      url: git://github.com/bkonyi/FlutterGeofencing.git
 
 dev_dependencies:
   flutter_test:

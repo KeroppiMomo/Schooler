@@ -7,6 +7,7 @@ import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
+import 'package:schooler/lib/reminder.dart';
 
 enum CalendarType { week, cycle }
 
@@ -41,6 +42,7 @@ class Settings {
   bool isSetupCompleted = false;
 
   List<Assignment> assignments;
+  List<Reminder> reminders;
 
   // Value Listener ----------------------------------------------------------
   ValueNotifier<List<Assignment>> assignmentListener;

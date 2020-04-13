@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geofencing/geofencing.dart';
 import 'package:intl/intl.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
@@ -34,6 +35,7 @@ class Resources {
   final wwidget = WWidgetResources();
   final timetableWWidget = TimetableWWidgetResources();
   final assignmentWWidget = AssignmentWWidgetResources();
+  final remindersWWidget = RemindersWWidgetReosurces();
 
   final assignmentScreen = AssignmentScreenResources();
   final assignmentDayScreen = AssignmentDayScreenResources();
@@ -479,6 +481,43 @@ class AssignmentWWidgetResources {
   final sizeTransitionCurve = Curves.easeInOut;
 
   final completionRemovalDelay = const Duration(seconds: 1);
+}
+
+class RemindersWWidgetReosurces {
+  final wwidgetTitle = 'Reminders';
+  final wwidgetIcon = Icons.notifications;
+  final wwidgetPadding = EdgeInsets.symmetric(vertical: 16.0);
+
+  final addIcon = Icons.add;
+  final addText = 'Add Reminder';
+  final viewIcon = Icons.remove_red_eye;
+  final viewText = 'View All 6 Reminders';
+
+  final reminderGeofenceEventString = {
+    GeofenceEvent.enter: 'When Enter ',
+    GeofenceEvent.exit: 'When Exit ',
+  };
+  String reminderLatLongFormat(double lat, double long) => '($lat, $long)';
+  final reminderDateFormat = DateFormat("'At' dd MMM HH:mm");
+
+  final reminderDisabledOpacity = 0.5;
+  final reminderPadding =
+      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0);
+
+  final reminderIconColumnWidth = 36.0;
+  final reminderIconPadding = EdgeInsets.all(2.0);
+  final reminderIconEnable = Icons.notifications_active;
+  final reminderIconDisabled = Icons.notifications_off;
+  final reminderIconSize = 21.0;
+
+  TextStyle reminderTitleTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1;
+  final reminderSubjectTitleSpacing = 4.0;
+  final reminderTriggerIconColor = Colors.grey;
+  final reminderTriggerIconSize = 16.0;
+  final reminderTriggerIconTextSpacing = 4.0;
+  TextStyle reminderTriggerTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText2.copyWith(color: Colors.grey);
 }
 
 class AssignmentScreenResources {

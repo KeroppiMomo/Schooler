@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/lib/settings.dart';
-import 'package:schooler/lib/subject.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/main_tabs/wwidgets/wwidget.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/ui/subject_block.dart';
-import 'package:intl/intl.dart' show DateFormat;
-import 'package:geofencing/geofencing.dart';
+import 'package:schooler/ui/reminder_screen.dart';
 
 final RemindersWWidgetReosurces _R = R.remindersWWidget;
 
@@ -17,90 +15,54 @@ class RemindersWWidget extends StatefulWidget {
 
 class RemindersWWidgetState extends State<RemindersWWidget> {
   @override
-  void initState() {
-    super.initState();
-
-    final testReminders = [
-      Reminder(
-        id: '0001',
-        name: 'Call John',
-        trigger: TimeReminderTrigger(dateTime: DateTime(2020, 4, 20)),
-      ),
-      Reminder(
-        id: '0002',
-        name: 'Call Mary',
-        subject: Subject('English', color: Colors.red),
-        enabled: false,
-        trigger: TimeReminderTrigger(dateTime: DateTime(2019, 12, 31)),
-      ),
-      Reminder(
-        id: '0003',
-        name: 'Take Workbook',
-        trigger: LocationReminderTrigger(
-          geofenceEvent: GeofenceEvent.enter,
-          region: LocationReminderRegion(
-            name: 'Home',
-            latitude: 22.4487838,
-            longitude: 114.0698347,
-            radius: 200,
-          ),
-        ),
-      ),
-      Reminder(
-        id: '0004',
-        name: 'Take Textbook from locker',
-        trigger: LocationReminderTrigger(
-          geofenceEvent: GeofenceEvent.exit,
-          region: LocationReminderRegion(
-            name: 'School',
-            latitude: 22.4487838,
-            longitude: 114.0698347,
-            radius: 200,
-          ),
-        ),
-      ),
-    ];
-
-    Settings().reminders = testReminders;
-  }
-
-  @override
   Widget build(BuildContext context) {
     return WWidget(
       title: _R.wwidgetTitle,
       icon: _R.wwidgetIcon,
       contentPadding: _R.wwidgetPadding,
       onSettingsPressed: _settingsPressed,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          ...(Settings().reminders ?? []).map(_buildReminder).toList(),
-          FlatButton.icon(
-            icon: Icon(_R.addIcon),
-            label: Text(_R.addText),
-            onPressed: _addPressed,
-          ),
-          FlatButton.icon(
-            icon: Icon(_R.viewIcon),
-            label: Text(_R.viewText),
-            onPressed: _viewPressed,
-          ),
-        ],
+      child: ValueListenableBuilder(
+        valueListenable: Settings().reminderListener,
+        builder: (context, _, __) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            ...(Settings().reminders ?? []).map(_buildReminder).toList(),
+            FlatButton.icon(
+              icon: Icon(_R.addIcon),
+              label: Text(_R.addText),
+              onPressed: _addPressed,
+            ),
+            FlatButton.icon(
+              icon: Icon(_R.viewIcon),
+              label: Text(_R.getViewText(Settings().reminders.length)),
+              onPressed: _viewPressed,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildReminder(Reminder reminder) {
     final String triggerString = () {
-      if (reminder.trigger is LocationReminderTrigger) {
+      if (reminder.trigger == null) {
+        return _R.reminderNoTriggerText;
+      } else if (reminder.trigger is LocationReminderTrigger) {
         final trigger = reminder.trigger as LocationReminderTrigger;
         final region = trigger.region;
 
+        if (region == null) return _R.locationReminderNullText;
+
         return _R.reminderGeofenceEventString[trigger.geofenceEvent] +
-            (region.name ??
-                _R.reminderLatLongFormat(region.latitude, region.longitude));
+            trigger.region.location.getUserDescription(
+                geocoderCompletion: (addresses) {
+              setState(() {
+                Settings().reminderListener.notifyListeners();
+              });
+            });
       } else if (reminder.trigger is TimeReminderTrigger) {
         final dateTime = (reminder.trigger as TimeReminderTrigger).dateTime;
+        if (dateTime == null) return _R.timeReminderNullText;
         return _R.reminderDateFormat.format(dateTime);
       } else {
         assert(false, 'Unknown subtype of ReminderTrigger');
@@ -108,10 +70,7 @@ class RemindersWWidgetState extends State<RemindersWWidget> {
       }
     }();
 
-    final IconData triggerIcon = {
-      LocationReminderTrigger: Icons.location_on,
-      TimeReminderTrigger: Icons.alarm,
-    }[reminder.trigger.runtimeType];
+    final triggerIcon = _R.reminderTriggerIcon[reminder.trigger.runtimeType];
 
     return InkWell(
       child: Opacity(
@@ -160,15 +119,21 @@ class RemindersWWidgetState extends State<RemindersWWidget> {
                 Container(),
                 Row(
                   children: [
-                    Icon(
-                      triggerIcon,
-                      color: _R.reminderTriggerIconColor,
-                      size: _R.reminderTriggerIconSize,
-                    ),
-                    SizedBox(width: _R.reminderTriggerIconTextSpacing),
-                    Text(
-                      triggerString,
-                      style: _R.reminderTriggerTextStyle(context),
+                    if (triggerIcon != null)
+                      Icon(
+                        triggerIcon,
+                        color: _R.reminderTriggerIconColor,
+                        size: _R.reminderTriggerIconSize,
+                      ),
+                    if (triggerIcon != null)
+                      SizedBox(width: _R.reminderTriggerIconTextSpacing),
+                    Expanded(
+                      child: Text(
+                        triggerString,
+                        style: _R.reminderTriggerTextStyle(context),
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -181,10 +146,34 @@ class RemindersWWidgetState extends State<RemindersWWidget> {
     );
   }
 
-  void _settingsPressed() {}
+  void _settingsPressed() {
+    // TODO: Implement this
+  }
 
-  void _addPressed() {}
-  void _viewPressed() {}
+  void _addPressed() {
+    final reminder = Reminder(
+      id: Reminder.generateID(),
+      name: '',
+      enabled: true,
+      subject: null,
+      trigger: null,
+      notes: '',
+    );
+    Settings().reminders.add(reminder);
+    Settings().reminderListener.notifyListeners();
+    Settings().saveSettings();
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ReminderScreen(reminder: reminder),
+    ));
+  }
 
-  void _reminderPressed(Reminder reminder) {}
+  void _viewPressed() {
+    // TODO: Implement this
+  }
+
+  void _reminderPressed(Reminder reminder) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ReminderScreen(reminder: reminder),
+    ));
+  }
 }

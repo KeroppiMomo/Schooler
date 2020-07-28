@@ -2,11 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-  <string>Schooler requires location usage for location-based reminders.</string>
-  <key>NSLocationWhenInUseUsageDescription</key>
-  <string>Schooler requires location usage for location-based reminders.</string>
-
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -27,21 +22,28 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
+  <!-- Start of Geofence Contents -->
+  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Schooler uses your location to trigger location-based reminders. </string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Schooler uses your location to trigger location-based reminders. </string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+  <!-- End of Geofence Contents -->
+
+  <!-- Start of Google Maps Contents -->
+  <key>io.flutter.embedded_views_preview</key>
+  <true/>
+  <!-- End of Google Maps Contents -->
+
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-  <key>UIRequiredDeviceCapabilities</key>
-  <array>
-    <string>location-services</string>
-    <string>gps</string>
-    <string>armv7</string>
-  </array>
-  <key>UIBackgroundModes</key>
-  <array>
-    <string>location</string>
-  </array>
-  <key>UISupportedInterfaceOrientations</key>
+	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
@@ -56,8 +58,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-
-
-
 </dict>
 </plist>

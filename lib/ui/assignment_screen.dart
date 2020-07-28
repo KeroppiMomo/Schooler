@@ -258,6 +258,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     );
   }
 
+  /// Shared with ReminderScreen
   TableRow _buildRow({Widget leading, Widget child}) {
     return TableRow(children: [
       Align(
@@ -356,50 +357,17 @@ class AssignmentScreenState extends State<AssignmentScreen> {
   }
 
   void _subjectTapped() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SingleChildScrollView(
-        child: Container(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: SuggestionTextField(
-            minItemForListView: _R.subjectMinItemForListView,
-            listViewHeight: _R.subjectListViewHeight,
-            curValue: '',
-            suggestionCallback: (pattern) {
-              final List<String> suggestions = [];
-              for (final subject in Settings().subjects) {
-                if (subject.name.length < pattern.length) continue;
-                if (subject.name.substring(0, pattern.length).toLowerCase() ==
-                    pattern.toLowerCase()) {
-                  suggestions.add(subject.name);
-                }
-              }
-              return suggestions;
-            },
-            suggestionBuilder: (context, name, onSubmit) {
-              final subject = Settings()
-                  .subjects
-                  .firstWhere((subject) => subject.name == name);
-              return ListTile(
-                leading: Icon(_R.subjectIcon, color: subject.color),
-                title: Text(subject.name),
-                onTap: onSubmit,
-              );
-            },
-            onDone: (name) {
-              final subject = Settings().subjects.firstWhere(
-                  (subject) => subject.name == name,
-                  orElse: () => Subject(name));
-              widget.assignment.subject = subject;
-              _setDueDateRow();
-              Settings().assignmentListener.notifyListeners();
-              Settings().saveSettings();
-            },
-          ),
-        ),
-      ),
+    SuggestionTextField.showSubjectPicker(
+      context,
+      subjectIcon: _R.subjectIcon,
+      minItemForListView: _R.subjectMinItemForListView,
+      listViewHeight: _R.subjectListViewHeight,
+      onDone: (subject) {
+        widget.assignment.subject = subject;
+        _setDueDateRow();
+        Settings().assignmentListener.notifyListeners();
+        Settings().saveSettings();
+      },
     );
   }
 
@@ -445,149 +413,10 @@ class AssignmentScreenState extends State<AssignmentScreen> {
       Settings().saveSettings();
     }
 
-    final monday =
-        DateTime.now().add(Duration(days: 8 - DateTime.now().weekday));
-
-    final subjectSessionDate = () {
-      if (widget.assignment.subject == null) return null;
-
-      final Map<DateTime, CalendarDayInfo> calendar = () {
-        if (Settings().calendarType == CalendarType.week)
-          return Settings().weekConfig.getCalendar();
-        if (Settings().calendarType == CalendarType.cycle)
-          return Settings().cycleConfig.getCalendar();
-        else {
-          assert(false, 'Unknown CalendarType value');
-          return {};
-        }
-      }();
-
-      for (DateTime date = removeTimeFrom(DateTime.now());
-          calendar[date] != null;
-          date = date.add(Duration(days: 1))) {
-        final dayInfo = calendar[date];
-
-        final timetableDay = () {
-          final existingDays = Settings().timetable.days;
-          for (final holiday in dayInfo.holidays?.split(', ') ?? []) {
-            final day = TimetableOccasionDay(holiday);
-            if (existingDays.contains(day)) return day;
-          }
-          for (final occasion in dayInfo.holidays?.split(', ') ?? []) {
-            final day = TimetableOccasionDay(occasion);
-            if (existingDays.contains(day)) return day;
-          }
-
-          if (Settings().calendarType == CalendarType.week) {
-            final day = TimetableWeekDay(date.weekday);
-            if (existingDays.contains(day)) return day;
-          } else if (Settings().calendarType == CalendarType.cycle) {
-            if (dayInfo.cycleDay != null) {
-              final day = TimetableCycleDay(int.parse(dayInfo.cycleDay));
-              if (existingDays.contains(day)) return day;
-            }
-          } else {
-            assert(false, 'Unexpected CalendarType value');
-          }
-          return null;
-        }();
-        final List<TimetableSession> sessions = timetableDay == null
-            ? []
-            : Settings().timetable.sessionsOfDay(timetableDay);
-
-        if (sessions
-            .any((session) => session.name == widget.assignment.subject.name)) {
-          return date;
-        }
-      }
-
-      return null;
-    }();
-
-    final calendarController = CalendarController();
-
-    final calendarWidget = () {
-      if (Settings().calendarType == CalendarType.week) {
-        return WeekCalendar(
-          calendarController: calendarController,
-          weekConfig: Settings().weekConfig,
-          calendarInfo: Settings().weekConfig.getCalendar(),
-          onSelected: dateChosen,
-        );
-      } else if (Settings().calendarType == CalendarType.cycle) {
-        return CycleCalendar(
-          calendarController: calendarController,
-          cycleConfig: Settings().cycleConfig,
-          calendarInfo: Settings().cycleConfig.getCalendar(),
-          onSelected: dateChosen,
-        );
-      } else {
-        assert(false, 'Unexpected CalendarType value');
-        return null;
-      }
-    }();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => SingleChildScrollView(
-        child: Container(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CupertinoButton(
-                  pressedOpacity: _R.dueDateCancelOpacity,
-                  padding: _R.dueDateCancelPadding,
-                  child: Text(
-                    _R.dueDateCancelText,
-                    style: _R.dueDateCancelTextStyle,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-              calendarWidget,
-              Divider(),
-              ListTile(
-                leading: Icon(_R.dueDateChoiceIcon),
-                title: Text(_R.dueDateTodayText),
-                subtitle: Text(_R.dueDateFormat.format(DateTime.now())),
-                trailing: Icon(_R.dueDateChoiceTrailing),
-                onTap: () => dateChosen(DateTime.now()),
-              ),
-              ListTile(
-                leading: Icon(_R.dueDateChoiceIcon),
-                title: Text(_R.dueDateTomorrowText),
-                subtitle: Text(_R.dueDateFormat
-                    .format(DateTime.now().add(Duration(days: 1)))),
-                trailing: Icon(_R.dueDateChoiceTrailing),
-                onTap: () => dateChosen(DateTime.now().add(Duration(days: 1))),
-              ),
-              ListTile(
-                leading: Icon(_R.dueDateChoiceIcon),
-                title: Text(_R.dueDateMondayText),
-                subtitle: Text(_R.dueDateFormat.format(monday)),
-                trailing: Icon(_R.dueDateChoiceTrailing),
-                onTap: () => dateChosen(monday),
-              ),
-              ...subjectSessionDate == null
-                  ? []
-                  : [
-                      ListTile(
-                        leading: Icon(_R.dueDateChoiceIcon),
-                        title: Text(_R.getDueDateSubjectSession(
-                            widget.assignment.subject.name)),
-                        subtitle:
-                            Text(_R.dueDateFormat.format(subjectSessionDate)),
-                        trailing: Icon(_R.dueDateChoiceTrailing),
-                        onTap: () => dateChosen(subjectSessionDate),
-                      )
-                    ],
-            ],
-          ),
-        ),
-      ),
+    SuggestionTextField.showDatePicker(
+      context,
+      subject: widget.assignment.subject,
+      onDone: dateChosen,
     );
   }
 

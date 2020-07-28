@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geofencing/geofencing.dart';
 import 'package:intl/intl.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
+import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
@@ -41,7 +43,12 @@ class Resources {
   final assignmentDayScreen = AssignmentDayScreenResources();
   final assignmentListScreen = AssignmentListScreenResources();
 
+  final reminderScreen = ReminderScreenResources();
+
   final timetableScreen = TimetableScreenResources();
+
+  final suggestionTextField = SuggestionTextFieldResources();
+  final regionPicker = RegionPickerResources();
 }
 
 class TimetableEditorResources {
@@ -223,7 +230,7 @@ class TimetableEditorScreenResources {
   String cycleDayTabName(int cycleDay) => 'Day $cycleDay';
 
   String dayTabName(TimetableDay day) {
-    // Also used in R.timetableEditor.dayTabName and R.timetableWWidget.dayDisplayName
+    // Also used in R.timetableEditor.dayTabName, R.timetableWWidget.dayDisplayName, and R.reminderScreen.timeRepeatToString
     if (day is TimetableWeekDay)
       return weekDayTabName(day.dayOfWeek);
     else if (day is TimetableCycleDay)
@@ -491,8 +498,11 @@ class RemindersWWidgetReosurces {
   final addIcon = Icons.add;
   final addText = 'Add Reminder';
   final viewIcon = Icons.remove_red_eye;
-  final viewText = 'View All 6 Reminders';
+  String getViewText(int noOfReminders) => 'View All $noOfReminders Reminders';
 
+  final timeReminderNullText = 'No Date Selected';
+  final locationReminderNullText = 'No Location Selected';
+  final reminderNoTriggerText = 'No Trigger';
   final reminderGeofenceEventString = {
     GeofenceEvent.enter: 'When Enter ',
     GeofenceEvent.exit: 'When Exit ',
@@ -500,6 +510,10 @@ class RemindersWWidgetReosurces {
   String reminderLatLongFormat(double lat, double long) => '($lat, $long)';
   final reminderDateFormat = DateFormat("'At' dd MMM HH:mm");
 
+  final reminderTriggerIcon = {
+    LocationReminderTrigger: Icons.location_on,
+    TimeReminderTrigger: Icons.alarm,
+  };
   final reminderDisabledOpacity = 0.5;
   final reminderPadding =
       const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0);
@@ -712,6 +726,161 @@ class AssignmentListScreenResources {
   final refreshDelay = const Duration(milliseconds: 500);
 }
 
+class ReminderScreenResources {
+  final appBarTitle = 'Reminder';
+  final deleteIcon = Icons.delete;
+  final deleteTooltip = 'Delete Reminder';
+
+  final listViewPadding =
+      EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0);
+
+  final reminderIcon = Icons.notifications;
+  final reminderIconSize = 32.0;
+
+  final iconColor = Colors.black54;
+
+  TextStyle getNameTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline5;
+  final nameHintText = 'Name';
+  final nameEnabledSpacing = 4.0;
+
+  final enabledText = 'Enabled';
+  final enabledSubjectSpacing = 16.0;
+
+  final subjectIcon = Icons.book;
+  final subjectHeight = 32.0;
+  final subjectPlaceholderPadding = EdgeInsets.all(4.0);
+  final subjectPlaceholder = 'Add Subject';
+  TextStyle subjectPlaceholderTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+  final subjectBlockEditSpacing = 4.0;
+  final subjectEditIcon = Icons.edit;
+  final subjectIconColor = Colors.grey;
+  final subjectEditRemoveSpacing = 4.0;
+  final subjectRemoveIcon = Icons.delete;
+  final subjectTriggerSpacing = 16.0;
+
+  final triggerTypeVerticalSpacing = -8.0;
+  final triggerTypeHorizontalSpacing = 4.0;
+  final triggerTypeIconSize = 20.0;
+  final triggerTypeNullText = 'No Trigger';
+  final triggerTypeTimeIcon = Icons.alarm;
+  final triggerTypeTimeText = 'Time-based Trigger';
+  final triggerTypeLocationIcon = Icons.place;
+  final triggerTypeLocationText = 'Location-based Trigger';
+  final triggerTypeOptionsSpacing = 4.0;
+
+  final triggerOptionsSwitchDuration = Duration(milliseconds: 300);
+  final triggerOptionsSwitchCurve = Curves.easeOut;
+  final triggerOptionsNotesSpacing = 16.0;
+
+  final notesIcon = Icons.subject;
+  final notesPadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0);
+  final notesPlaceholder = 'Add Notes';
+  TextStyle getNotesPlaceholderTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+
+  final iconColumnWidth = 48.0;
+
+  final timeOptionsDateTimeHeight = 32.0;
+  final timeOptionsDateTimePlaceholderPadding = EdgeInsets.all(4.0);
+  final timeOptionsDateTimePlaceholder = 'Select Date and Time';
+  TextStyle getTimeOptionsDateTimePlaceholderTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+  final timeOptionsDatePadding = EdgeInsets.all(4.0);
+  final timeOptionsDateFormat = DateFormat('dd MMM');
+  final timeOptionsTimePadding = EdgeInsets.all(4.0);
+  final timeOptionsTimeFormat = DateFormat('HH:mm');
+  final timeOptionsTimeEditSpacing = 4.0;
+  final timeOptionsEditIcon = Icons.edit;
+  final timeOptionsEditIconColor = Colors.grey;
+  final timeOptionsRepeatSpacing = 8.0;
+
+  final timeRepeatIcon = Icons.repeat;
+  final timeRepeatHeight = 32.0;
+  final timeRepeatPadding = EdgeInsets.all(4.0);
+  final timeRepeatPlaceholder = 'Add Repeat';
+  TextStyle getTimeRepeatPlaceholderTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+  String timeRepeatTimeToString(TimeReminderRepeat repeat) {
+    if (repeat == TimeReminderRepeat.day) return 'Daily';
+    if (repeat == TimeReminderRepeat.month) return 'Monthly';
+    if (repeat == TimeReminderRepeat.year) return 'Yearly';
+    if (repeat.getWeekDay() != null) {
+      final weekDayString = {
+        1: 'Monday',
+        2: 'Tuesday',
+        3: 'Wednesday',
+        4: 'Thursday',
+        5: 'Friday',
+        6: 'Saturday',
+        7: 'Sunday',
+      };
+      return 'Every ${weekDayString[repeat.getWeekDay()]}';
+    } else if (repeat.getTimetableDay() != null) {
+      return 'Every ${R.timetableEditor.dayTabName(repeat.getTimetableDay())}';
+    } else {
+      assert(false, 'Unexpected TimeReminderRepeat value');
+      return '';
+    }
+  }
+
+  final timeRepeatEditIcon = Icons.edit;
+  final timeRepeatEditIconColor = Colors.grey;
+
+  final geofenceEventName = {
+    GeofenceEvent.enter: 'Enter',
+    GeofenceEvent.exit: 'Exit',
+  };
+  final locationOptionsHeight = 32.0;
+  final locationOptionsPadding = EdgeInsets.all(4.0);
+  final locationOptionsPlaceholder = 'Select Location';
+  TextStyle getLocationOptionsPlaceholderTextStyle(BuildContext context) =>
+      Theme.of(context).textTheme.bodyText1.copyWith(color: Colors.black54);
+  String getLocationOptionsText(
+          String geofenceEventString, String locationDescription) =>
+      'When $geofenceEventString $locationDescription';
+  final locationOptionsEditIcon = Icons.edit;
+  final locationOptionsEditIconColor = Colors.grey;
+
+  final subjectPickerMinItemForListView = 4;
+  final subjectPickerListViewHeight = 195.0;
+
+  final repeatPickerCancelPressedOpacity = 0.3;
+  final repeatPickerCancelPadding = EdgeInsets.symmetric(horizontal: 16.0);
+  final repeatPickerCancelText = 'Cancel';
+  final repeatPickerCancelTextStyle =
+      TextStyle(color: Colors.black54, fontSize: 16.0);
+  final repeatPickerChoicesText = {
+    null: 'No Repeat',
+    TimeReminderRepeat.day: 'Daily',
+    TimeReminderRepeat.weekDay(1): 'Every Week',
+    TimeReminderRepeat.timetableDay(TimetableCycleDay(1)): 'Every Cycle',
+    TimeReminderRepeat.month: 'Monthly',
+    TimeReminderRepeat.year: 'Yearly',
+  };
+  final repeatPickerArrowIcon = Icons.chevron_right;
+  final repeatPickerWeekdayText = [
+    'Every Monday',
+    'Every Tuesday',
+    'Every Wednesday',
+    'Every Thursday',
+    'Every Friday',
+    'Every Saturday',
+    'Every Sunday',
+  ];
+  String Function(TimetableDay) get timetableDayToString =>
+      R.timetableEditor.dayTabName;
+
+  String getNotesURLError(String url) =>
+      'Failed to open $url. Check whether the URL is correct.';
+  final notesEditTextScreenTitle = 'Notes';
+  final deleteTitle = 'Delete Reminder?';
+  final deleteContent = 'This action cannot be undone.';
+  final deleteCancelText = 'CANCEL';
+  final deleteConfirmText = 'DELETE';
+}
+
 class TimetableScreenResources {
   final appBarTitle = 'Timetable';
   final editIcon = Icons.edit;
@@ -738,4 +907,74 @@ class TimetableScreenResources {
   double get sessionTimeWidth => R.timetableEditor.sessionTimeWidth;
   String get sessionTimeTo => R.timetableEditor.sessionTimeTo;
   String get sessionNoNameText => R.timetableEditor.sessionNoNameText;
+}
+
+class SuggestionTextFieldResources {
+  final dateFormat = DateFormat('dd MMM');
+  final dateCancelOpacity = 0.3;
+  final dateCancelPadding = EdgeInsets.symmetric(horizontal: 16.0);
+  final dateCancelText = 'Cancel';
+  final dateCancelTextStyle =
+      const TextStyle(color: Colors.black54, fontSize: 16.0);
+  final dateChoiceIcon = Icons.today;
+  final dateChoiceTrailing = Icons.navigate_next;
+  final dateTodayText = 'Today';
+  final dateTomorrowText = 'Tomorrow';
+  final dateMondayText = 'Monday';
+  String getDateSubjectSession(String subject) => 'Next $subject Session';
+}
+
+class RegionPickerResources {
+  LocationReminderTrigger get defaultTrigger => LocationReminderTrigger(
+        region: LocationReminderRegion(
+          location: LocationReminderLocation(
+            latitude: 22.3220112,
+            longitude: 114.1678075,
+          ),
+          radius: 100,
+        ),
+        geofenceEvent: GeofenceEvent.enter,
+      );
+  final defaultZoomLevel = 17.0;
+
+  final headerButtonPressedOpacity = 0.3;
+  final headerButtonPadding = EdgeInsets.symmetric(horizontal: 16.0);
+  final cancelButtonText = 'Cancel';
+  final cancelButtonTextStyle =
+      TextStyle(color: Colors.black54, fontSize: 16.0);
+  final doneButtonText = 'Done';
+  final doneButtonTextStyle = TextStyle(color: Colors.blue, fontSize: 16.0);
+
+  final optionTitleWidth = 110.0;
+  final optionTitleContentSpacing = 8.0;
+
+  final geofenceEventTitle = 'Trigger When';
+  final geofenceEnterText = 'Enter Region';
+  final geofenceExitText = 'Exit Region';
+
+  final radiusTitle = 'Region Radius';
+  final radiusSliderMin = 100;
+  final radiusSliderMax = 10000;
+  final radiusSliderStep = 50;
+  final radiusTextFieldWidth = 50.0;
+  final radiusUnitText = ' m';
+
+  final locationTitle = 'Location';
+  final locationNewLocationText = 'New Location';
+  final locationRenameIcon = Icons.edit;
+  final locationRenameTooltip = 'Rename Location';
+
+  final mapHeight = 230.0;
+  final mapRegionFilledColor = Colors.blue.withOpacity(0.2);
+  final mapRegionBorderColor = Colors.blue;
+  final mapRegionBorderWidth = 2.0;
+  final mapPinSize = 50.0;
+  double get mapMyLocationMarginRight => Platform.isAndroid ? 64.0 : 16.0;
+  final mapMyLocationMarginBottom = 16.0;
+  final mapMyLocationIcon = Icons.my_location;
+
+  final myLocationFailedTitle = "Could not access your location";
+  final myLocationFailedContent =
+      "Make sure locations are enabled for this app.";
+  final myLocationFailedOKText = "OK";
 }

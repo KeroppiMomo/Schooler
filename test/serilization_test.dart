@@ -2,8 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
+import 'package:geofencing/geofencing.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
+import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
@@ -293,6 +295,170 @@ void main() {
         final fromJSONed = Assignment.fromJSON(toJSONed);
 
         expect(fromJSONed, assignment);
+      });
+    });
+
+    group('(Reminder)', () {
+      group('(LocationReminderTrigger)', () {
+        test('[toJSON then fromJSON, All fields non-null] {Return same object}',
+            () {
+          final trigger = LocationReminderTrigger(
+            geofenceEvent: GeofenceEvent.enter,
+            id: 'id',
+            region: LocationReminderRegion(
+              radius: 100,
+              location: LocationReminderLocation(
+                latitude: 123.456,
+                longitude: 2.0,
+              ),
+            ),
+          );
+
+          final json = trigger.toJSON();
+          final fromJSONed = LocationReminderTrigger.fromJSON(json);
+
+          expect(trigger, fromJSONed);
+        });
+        test('[toJSON then fromJSON, region is null] {Return same object}', () {
+          final trigger = LocationReminderTrigger(
+            id: 'id',
+            geofenceEvent: GeofenceEvent.exit,
+            region: null,
+          );
+
+          final json = trigger.toJSON();
+          final fromJSONed = LocationReminderTrigger.fromJSON(json);
+
+          expect(trigger, fromJSONed);
+        });
+      });
+      group('(LocationReminderRegion)', () {
+        test('[toJSON then fromJSON] {Return same object}', () {
+          final region = LocationReminderRegion(
+            radius: 100,
+            location: LocationReminderLocation(
+              latitude: 123.456,
+              longitude: 2.0,
+            ),
+          );
+
+          final json = region.toJSON();
+          final fromJSONed = LocationReminderRegion.fromJSON(json);
+
+          expect(region, fromJSONed);
+        });
+      });
+      group('(LocationReminderLocation)', () {
+        test('[toJSON then fromJSON] {Return same object}', () {
+          final location = LocationReminderLocation(
+            latitude: 123.456,
+            longitude: 2.0,
+          );
+
+          final json = location.toJSON();
+          final fromJSONed = LocationReminderLocation.fromJSON(json);
+
+          expect(location, fromJSONed);
+        });
+      });
+      group('(TimeReminderRepeat)', () {
+        test('[toJSON then fromJSON, day, month and year] {Return same object}',
+            () {
+          for (TimeReminderRepeat repeat in [
+            TimeReminderRepeat.day,
+            TimeReminderRepeat.month,
+            TimeReminderRepeat.year,
+          ]) {
+            expect(TimeReminderRepeat.fromJSON(repeat.toJSON()), repeat);
+          }
+        });
+        test(
+            '[toJSON then fromJSON, weekDay and timetableDay] {Return same object}',
+            () {
+          for (TimeReminderRepeat repeat in [
+            TimeReminderRepeat.weekDay(7),
+            TimeReminderRepeat.timetableDay(TimetableWeekDay(3)),
+            TimeReminderRepeat.timetableDay(TimetableCycleDay(3)),
+          ]) {
+            expect(TimeReminderRepeat.fromJSON(repeat.toJSON()), repeat);
+          }
+        });
+      });
+      group('(TimeReminderTrigger)', () {
+        test('[toJSON then fromJSON, all fields non-null] {Return same object}',
+            () {
+          final trigger = TimeReminderTrigger(
+            id: 'id',
+            dateTime: DateTime(2020, 2, 29, 15, 05),
+            repeat: TimeReminderRepeat.timetableDay(TimetableCycleDay(3)),
+          );
+
+          expect(TimeReminderTrigger.fromJSON(trigger.toJSON()), trigger);
+        });
+        test('[toJSON then fromJSON, id and repeat null] {Return same object}',
+            () {
+          final trigger = TimeReminderTrigger(
+            id: null,
+            dateTime: DateTime(2020, 2, 29, 15, 05),
+            repeat: null,
+          );
+
+          expect(TimeReminderTrigger.fromJSON(trigger.toJSON()), trigger);
+        });
+      });
+      group('(Reminder)', () {
+        test('[toJSON then fromJSON, all fields non-null] {Return same object}',
+            () {
+          final reminder1 = Reminder(
+            id: 'I',
+            name: 'N',
+            enabled: false,
+            subject: Subject('S', color: Color(0x12345678)),
+            trigger: TimeReminderTrigger(
+              id: 'ID',
+              dateTime: DateTime(2020, 2, 29, 15, 05),
+              repeat: TimeReminderRepeat.day,
+            ),
+            notes: 'N',
+          );
+
+          expect(Reminder.fromJSON(reminder1.toJSON()), reminder1);
+
+          final reminder2 = Reminder(
+            id: 'I',
+            name: 'N',
+            enabled: false,
+            subject: Subject('S', color: Color(0x12345678)),
+            trigger: LocationReminderTrigger(
+              id: 'id',
+              region: LocationReminderRegion(
+                location: LocationReminderLocation(
+                  latitude: 100,
+                  longitude: 12.3456,
+                ),
+                radius: 30,
+              ),
+              geofenceEvent: GeofenceEvent.enter,
+            ),
+            notes: 'N',
+          );
+
+          expect(Reminder.fromJSON(reminder2.toJSON()), reminder2);
+        });
+        test(
+            '[toJSON then fromJSON, subject, trigger and notes null] {Return same object}',
+            () {
+          final reminder = Reminder(
+            id: 'I',
+            name: 'N',
+            enabled: true,
+            subject: null,
+            trigger: null,
+            notes: null,
+          );
+
+          expect(Reminder.fromJSON(reminder.toJSON()), reminder);
+        });
       });
     });
   });

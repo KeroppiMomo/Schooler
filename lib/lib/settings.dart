@@ -29,6 +29,7 @@ class Settings {
   static Settings instance = Settings._();
   Settings._() {
     assignmentListener = ValueNotifier(assignments);
+    reminderListener = ValueNotifier(reminders);
     timetableListener = ValueNotifier(timetable);
   }
   factory Settings() => Settings.instance;
@@ -38,14 +39,26 @@ class Settings {
   CycleConfig cycleConfig;
   WeekConfig weekConfig;
   Timetable timetable;
-  List<Subject> subjects;
+  List<Subject> subjects = [];
   bool isSetupCompleted = false;
 
-  List<Assignment> assignments;
-  List<Reminder> reminders;
+  Map<LocationReminderLocation, String> savedLocations = {
+    LocationReminderLocation(
+      latitude: 22.3873397,
+      longitude: 114.1938946,
+    ): 'Home',
+    LocationReminderLocation(
+      latitude: 22.3823154,
+      longitude: 114.1896223,
+    ): 'School',
+  };
+
+  List<Assignment> assignments = [];
+  List<Reminder> reminders = [];
 
   // Value Listener ----------------------------------------------------------
   ValueNotifier<List<Assignment>> assignmentListener;
+  ValueNotifier<List<Reminder>> reminderListener;
   ValueNotifier<Timetable> timetableListener;
 
   // Serilization & File -----------------------------------------------------
@@ -61,6 +74,7 @@ class Settings {
       'setup_completed': isSetupCompleted,
       'assignments':
           assignments?.map((assignment) => assignment.toJSON())?.toList(),
+      'reminders': reminders?.map((reminder) => reminder.toJSON())?.toList(),
     });
   }
 
@@ -88,7 +102,9 @@ class Settings {
               'isSetupCompleted type mismatch: ${decoded["setup_completed"].runtimeType} found; bool expected');
     }
 
-    Settings().assignments = Assignment.fromJSONList(decoded['assignments']) ?? [];
+    Settings().assignments =
+        Assignment.fromJSONList(decoded['assignments']) ?? [];
+    Settings().reminders = Reminder.fromJSONList(decoded['reminders']) ?? [];
 
     return Settings();
   }

@@ -360,6 +360,23 @@ void main() {
 
           expect(location, fromJSONed);
         });
+        test('[saved locatoins toJSON then fromJSON] {Return same object}', () {
+          final locations = {
+            LocationReminderLocation(latitude: 123.456, longitude: 2.0): 'L1',
+            LocationReminderLocation(latitude: 0, longitude: 0): 'L2',
+            LocationReminderLocation(latitude: -34, longitude: -50): 'L3',
+          };
+
+          final toJSONed =
+              LocationReminderLocation.savedLocationsToJSON(locations);
+          final fromJSONed =
+              LocationReminderLocation.savedLocationsFromJSON(toJSONed);
+
+          expect(fromJSONed.length, locations.length);
+          for (var key in fromJSONed.keys) {
+            expect(fromJSONed[key], locations[key]);
+          }
+        });
       });
       group('(TimeReminderRepeat)', () {
         test('[toJSON then fromJSON, day, month and year] {Return same object}',

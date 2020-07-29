@@ -49,6 +49,7 @@ class Resources {
 
   final suggestionTextField = SuggestionTextFieldResources();
   final regionPicker = RegionPickerResources();
+  final locationScreen = LocationScreenResources();
 }
 
 class TimetableEditorResources {
@@ -977,4 +978,36 @@ class RegionPickerResources {
   final myLocationFailedContent =
       "Make sure locations are enabled for this app.";
   final myLocationFailedOKText = "OK";
+}
+
+class LocationScreenResources {
+  String getNewLocationName(int count) => 'My Location $count';
+
+  final appBarTitle = 'Location';
+  final cancelIcon = Icons.clear;
+  final cancelText = 'Cancel';
+  final doneIcon = Icons.done;
+  final doneText = 'Done';
+
+  final instructionPadding = EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0.0);
+  final instructionText = 'Rename this location:';
+
+  final textFieldPadding =
+      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+  final textFieldLabelText = 'Location Name';
+  final textFieldClearIcon = Icons.clear;
+  final textFieldTooltip = 'Clear';
+
+  final removeIcon = Icons.delete;
+  final removeText = 'Remove Location';
+
+  final cancelDoneButtonHeight = 40.0;
+
+  final mapDefaultZoom = 16.0;
+
+  final removeAlertTitle = 'Remove Location?';
+  final removeAlertContent =
+      'This location will not appear in the location list.';
+  final removeAlertCancelText = 'CANCEL';
+  final removeAlertConfirmText = 'REMOVE';
 }

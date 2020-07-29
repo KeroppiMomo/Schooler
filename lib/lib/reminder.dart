@@ -95,6 +95,55 @@ class LocationReminderLocation {
     }
   }
 
+  static List<Map<String, Object>> savedLocationsToJSON(
+      Map<LocationReminderLocation, String> savedLocations) {
+    return savedLocations?.entries
+        ?.map((entry) => {
+              'location': entry.key.toJSON(),
+              'name': entry.value,
+            })
+        ?.toList();
+  }
+
+  static Map<LocationReminderLocation, String> savedLocationsFromJSON(
+      Object json) {
+    if (json == null) return null;
+
+    bool isStringObjectMapList(dynamic obj) {
+      if (obj is! List) return false;
+      try {
+        obj.cast<Map<String, Object>>();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    if (!isStringObjectMapList(json)) {
+      throw ParseJSONException(
+          message:
+              'Saved locations type mismatch: ${json.runtimeType} found; List<Map<String, Object>> expected.');
+    }
+
+    final jsonList = (json as List).cast<Map<String, Object>>();
+
+    final result = Map<LocationReminderLocation, String>();
+    for (final map in jsonList) {
+      final locationJSON = map['location'];
+      final name = map['name'];
+
+      if (name is! String) {
+        throw ParseJSONException(
+            message:
+                'Saved locations type mismatch: name type ${json.runtimeType} found; String expected.');
+      }
+
+      result[LocationReminderLocation.fromJSON(locationJSON)] = name;
+    }
+
+    return result;
+  }
+
   // Equality
   operator ==(other) =>
       other is LocationReminderLocation &&

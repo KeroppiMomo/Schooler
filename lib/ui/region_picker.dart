@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/res/resources.dart';
+import 'package:schooler/ui/location_screen.dart';
 
 RegionPickerResources _R = R.regionPicker;
 
@@ -441,7 +442,13 @@ class RegionPickerState extends State<RegionPicker> {
   }
 
   void _renamePressed() {
-    // TODO: Implement this
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (context) =>
+                LocationScreen(location: _trigger.region.location)))
+        .then((_) {
+      setState(() {});
+    });
   }
 
   void _mapOnMove(CameraPosition camPos) {

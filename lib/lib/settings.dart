@@ -42,16 +42,7 @@ class Settings {
   List<Subject> subjects = [];
   bool isSetupCompleted = false;
 
-  Map<LocationReminderLocation, String> savedLocations = {
-    LocationReminderLocation(
-      latitude: 22.3873397,
-      longitude: 114.1938946,
-    ): 'Home',
-    LocationReminderLocation(
-      latitude: 22.3823154,
-      longitude: 114.1896223,
-    ): 'School',
-  };
+  Map<LocationReminderLocation, String> savedLocations = {};
 
   List<Assignment> assignments = [];
   List<Reminder> reminders = [];
@@ -72,6 +63,8 @@ class Settings {
       'timetable': timetable?.toJSON(),
       'subjects': subjects?.map((subject) => subject.toJSON())?.toList(),
       'setup_completed': isSetupCompleted,
+      'saved_locations':
+          LocationReminderLocation.savedLocationsToJSON(savedLocations),
       'assignments':
           assignments?.map((assignment) => assignment.toJSON())?.toList(),
       'reminders': reminders?.map((reminder) => reminder.toJSON())?.toList(),
@@ -101,6 +94,10 @@ class Settings {
           message:
               'isSetupCompleted type mismatch: ${decoded["setup_completed"].runtimeType} found; bool expected');
     }
+
+    Settings().savedLocations = LocationReminderLocation.savedLocationsFromJSON(
+            decoded['saved_locations']) ??
+        {};
 
     Settings().assignments =
         Assignment.fromJSONList(decoded['assignments']) ?? [];

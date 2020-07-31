@@ -17,7 +17,6 @@ class TimetableWWidget extends StatefulWidget {
 
   TimetableWWidget({Key key, @required this.now, @required this.dayInfo})
       : assert(now != null),
-        assert(dayInfo != null),
         super(key: key);
 
   @override
@@ -31,6 +30,8 @@ class TimetableWWidgetState extends State<TimetableWWidget> {
       valueListenable: Settings().timetableListener,
       builder: (context, _, __) {
         final timetableDay = () {
+          if (widget.dayInfo == null) return null;
+
           final existingDays = Settings().timetable.days;
           for (final holiday in widget.dayInfo.holidays?.split(', ') ?? []) {
             final day = TimetableOccasionDay(holiday);

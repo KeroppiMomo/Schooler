@@ -1,12 +1,13 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:infinite_listview/infinite_listview.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/assignment.dart';
-import 'package:schooler/lib/subject.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/ui/assignment_screen.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 AssignmentDayScreenResources _R = R.assignmentDayScreen;
 
@@ -21,26 +22,40 @@ class AssignmentsDayScreen extends StatefulWidget {
 
 class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
   final now = DateTime.now();
+  DateTime clippedNow;
 
   Map<DateTime, CalendarDayInfo> _calendar;
-  InfiniteScrollController _controller;
+  DateTime _startSchoolYear;
+  DateTime _endSchoolYear;
+  ItemScrollController _controller;
 
   @override
   void initState() {
     super.initState();
 
-    _calendar = () {
-      if (Settings().calendarType == CalendarType.week) {
-        return Settings().weekConfig.getCalendar();
-      } else if (Settings().calendarType == CalendarType.cycle) {
-        return Settings().cycleConfig.getCalendar();
-      } else {
-        assert(false, 'Unexpected CalendarType value');
-        return null;
-      }
-    }();
+    if (Settings().calendarType == CalendarType.week) {
+      _calendar = Settings().weekConfig.getCalendar();
+      _startSchoolYear = Settings().weekConfig.startSchoolYear;
+      _endSchoolYear = Settings().weekConfig.endSchoolYear;
+    } else if (Settings().calendarType == CalendarType.cycle) {
+      _calendar = Settings().cycleConfig.getCalendar();
+      _startSchoolYear = Settings().cycleConfig.startSchoolYear;
+      _endSchoolYear = Settings().cycleConfig.endSchoolYear;
+    } else {
+      assert(false, 'Unexpected CalendarType value');
+    }
 
-    _controller = InfiniteScrollController(initialScrollOffset: _R.todayOffset);
+    clippedNow = now;
+    if (removeTimeFrom(now).isBefore(removeTimeFrom(_startSchoolYear))) {
+      clippedNow = _startSchoolYear;
+    } else if (removeTimeFrom(now).isAfter(removeTimeFrom(_endSchoolYear))) {
+      clippedNow = _endSchoolYear;
+    }
+
+    _controller = ItemScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToToday(animated: false);
+    });
   }
 
   @override
@@ -51,11 +66,7 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
         leading: IconButton(
           icon: Icon(_R.goToTodayIcon),
           tooltip: _R.goToTodayTooltip,
-          onPressed: () => _controller.animateTo(
-            _R.todayOffset,
-            duration: _R.goToTodayDuration,
-            curve: _R.goToTodayCurve,
-          ),
+          onPressed: () => _scrollToToday(animated: true),
         ),
         actions: widget.onSwitchView == null
             ? null
@@ -75,11 +86,18 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
       ),
       body: ValueListenableBuilder(
         valueListenable: Settings().assignmentListener,
-        builder: (context, assignments, _) => InfiniteListView.separated(
-          controller: _controller,
+        builder: (context, assignments, _) =>
+            ScrollablePositionedList.separated(
+          itemScrollController: _controller,
+          // 1: end-start+1
+          // 2: Start and end message
+          itemCount: removeTimeFrom(_endSchoolYear)
+                  .difference(removeTimeFrom(_startSchoolYear))
+                  .inDays +
+              1 +
+              2,
           itemBuilder: (context, i) => _buildDay(
-              DateTime.utc(now.year, now.month, now.day)
-                  .add(Duration(days: i))),
+              removeTimeFrom(_startSchoolYear).add(Duration(days: i - 1))),
           separatorBuilder: (context, i) => Divider(
             height: _R.dayDividerHeight,
             indent: _R.dayDividerIndent,
@@ -104,23 +122,17 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
         assert(false, 'Unexpected CalendarType value');
       }
 
-      if (date.isBefore(startSchoolYear)) {
-        return Column(children: [
-          Container(height: 1000000.0),
-          Text(
-            _R.startReachedMessage,
+      return Padding(
+        padding: _R.startEndMessagePadding,
+        child: Center(
+          child: Text(
+            date.isBefore(startSchoolYear)
+                ? _R.startReachedMessage
+                : _R.endReachedMessage,
             style: _R.startEndMessageStyle(context),
           ),
-        ]);
-      } else {
-        return Column(children: [
-          Text(
-            _R.endReachedMessage,
-            style: _R.startEndMessageStyle(context),
-          ),
-          Container(height: 1000000.0),
-        ]);
-      }
+        ),
+      );
     }
 
     final isToday = date == DateTime.utc(now.year, now.month, now.day);
@@ -350,6 +362,26 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
       ),
       onTap: () => _assignmentPressed(assignment),
     );
+  }
+
+  void _scrollToToday({@required bool animated}) async {
+    final index = max(
+        removeTimeFrom(now)
+                .difference(removeTimeFrom(_startSchoolYear))
+                .inDays +
+            1,
+        0);
+
+    if (animated) {
+      await _controller.scrollTo(
+        index: index,
+        alignment: _R.goToTodayAlignment,
+        duration: _R.goToTodayDuration,
+        curve: _R.goToTodayCurve,
+      );
+    } else {
+      _controller.jumpTo(index: index, alignment: _R.goToTodayAlignment);
+    }
   }
 
   void _assignmentCompletionChanged(Assignment assignment, bool newValue) {

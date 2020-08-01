@@ -603,9 +603,10 @@ class AssignmentDayScreenResources {
   final switchViewTooltip = 'Switch to List View';
   final addFABIcon = Icons.add;
   final addFABTooltip = 'Add Assignment';
-  final todayOffset = -100.0;
+
   final goToTodayDuration = const Duration(milliseconds: 400);
   final goToTodayCurve = Curves.easeInOut;
+  final goToTodayAlignment = 0.2;
 
   final dayDividerHeight = 32.0;
   final dayDividerIndent = 90.0;
@@ -616,6 +617,7 @@ class AssignmentDayScreenResources {
 
   final dayWidth = 90.0;
 
+  final startEndMessagePadding = EdgeInsets.symmetric(vertical: 48.0);
   final startReachedMessage = 'Start of School Year Reached.';
   final endReachedMessage = 'End of School Year Reached.';
   TextStyle startEndMessageStyle(BuildContext context) =>

@@ -27,7 +27,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
     super.initState();
 
     if (widget.isSetup) {
-      if (Settings().subjects != null) {
+      if (Settings().timetable != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _donePressed();
         });

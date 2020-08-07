@@ -424,7 +424,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     DatePicker.showPicker(
       context,
       showTitleActions: true,
-      pickerModel: TimePicker(currentTime: widget.assignment.dueDate),
+      pickerModel: TimePicker.normal(currentTime: widget.assignment.dueDate),
       onConfirm: (DateTime time) {
         final dueDate = widget.assignment.dueDate;
         widget.assignment.dueDate = DateTime(

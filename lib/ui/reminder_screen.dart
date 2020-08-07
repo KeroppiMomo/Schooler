@@ -516,7 +516,7 @@ class ReminderScreenState extends State<ReminderScreen> {
   void _timeTriggerTimePressed() {
     DatePicker.showPicker(context,
         showTitleActions: true,
-        pickerModel: TimePicker(
+        pickerModel: TimePicker.normal(
             currentTime: (widget.reminder.trigger as TimeReminderTrigger)
                 .dateTime), onConfirm: (DateTime time) {
       final curDateTime =

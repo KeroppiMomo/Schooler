@@ -170,7 +170,7 @@ class TimetableEditorState extends State<TimetableEditor> {
             onTap: () => DatePicker.showPicker(
               context,
               showTitleActions: true,
-              pickerModel: TimePicker(currentTime: session.startTime),
+              pickerModel: TimePicker.fiveMin(currentTime: session.startTime),
               onConfirm: (DateTime time) =>
                   _sessionStartOnChange(sessionIndex, time),
             ),
@@ -188,7 +188,7 @@ class TimetableEditorState extends State<TimetableEditor> {
             onTap: () => DatePicker.showPicker(
               context,
               showTitleActions: true,
-              pickerModel: TimePicker(currentTime: session.endTime),
+              pickerModel: TimePicker.fiveMin(currentTime: session.endTime),
               onConfirm: (DateTime time) =>
                   _sessionEndOnChange(sessionIndex, time),
             ),

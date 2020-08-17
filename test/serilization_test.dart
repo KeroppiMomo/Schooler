@@ -304,7 +304,6 @@ void main() {
             () {
           final trigger = LocationReminderTrigger(
             geofenceEvent: GeofenceEvent.enter,
-            id: 'id',
             region: LocationReminderRegion(
               radius: 100,
               location: LocationReminderLocation(
@@ -321,7 +320,6 @@ void main() {
         });
         test('[toJSON then fromJSON, region is null] {Return same object}', () {
           final trigger = LocationReminderTrigger(
-            id: 'id',
             geofenceEvent: GeofenceEvent.exit,
             region: null,
           );
@@ -405,7 +403,6 @@ void main() {
         test('[toJSON then fromJSON, all fields non-null] {Return same object}',
             () {
           final trigger = TimeReminderTrigger(
-            id: 'id',
             dateTime: DateTime(2020, 2, 29, 15, 05),
             repeat: TimeReminderRepeat.timetableDay(TimetableCycleDay(3)),
           );
@@ -415,7 +412,6 @@ void main() {
         test('[toJSON then fromJSON, id and repeat null] {Return same object}',
             () {
           final trigger = TimeReminderTrigger(
-            id: null,
             dateTime: DateTime(2020, 2, 29, 15, 05),
             repeat: null,
           );
@@ -427,12 +423,11 @@ void main() {
         test('[toJSON then fromJSON, all fields non-null] {Return same object}',
             () {
           final reminder1 = Reminder(
-            id: 'I',
+            id: 234234,
             name: 'N',
             enabled: false,
             subject: Subject('S', color: Color(0x12345678)),
             trigger: TimeReminderTrigger(
-              id: 'ID',
               dateTime: DateTime(2020, 2, 29, 15, 05),
               repeat: TimeReminderRepeat.day,
             ),
@@ -442,12 +437,11 @@ void main() {
           expect(Reminder.fromJSON(reminder1.toJSON()), reminder1);
 
           final reminder2 = Reminder(
-            id: 'I',
+            id: 234234,
             name: 'N',
             enabled: false,
             subject: Subject('S', color: Color(0x12345678)),
             trigger: LocationReminderTrigger(
-              id: 'id',
               region: LocationReminderRegion(
                 location: LocationReminderLocation(
                   latitude: 100,
@@ -466,7 +460,7 @@ void main() {
             '[toJSON then fromJSON, subject, trigger and notes null] {Return same object}',
             () {
           final reminder = Reminder(
-            id: 'I',
+            id: 234234,
             name: 'N',
             enabled: true,
             subject: null,

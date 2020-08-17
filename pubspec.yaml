@@ -37,6 +37,13 @@ dependencies:
   google_maps_flutter: ^0.5.28+1
   geolocator: ^5.3.2+2
   geocoder: ^0.2.1
+  # flutter_local_notifications: ^1.4.4+2 # Wait for https://github.com/MaikuB/flutter_local_notifications/pull/730 to merge
+  flutter_local_notifications:
+    git:
+      url: https://github.com/MaikuB/flutter_local_notifications.git
+      ref: fc55a16
+      path: flutter_local_notifications
+  # workmanager: ^0.2.3
 
 dev_dependencies:
   flutter_test:

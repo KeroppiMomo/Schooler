@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geofencing/geofencing.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
@@ -380,6 +383,7 @@ class ReminderScreenState extends State<ReminderScreen> {
         locationDescription =
             location.getUserDescription(geocoderCompletion: (addresses) {
           setState(() {
+            widget.reminder.register();
             Settings().reminderListener.notifyListeners();
             _triggerOptionsWidget = _buildTriggerOptions();
           });
@@ -436,6 +440,7 @@ class ReminderScreenState extends State<ReminderScreen> {
   void _nameOnChanged(String value) {
     widget.reminder.name = value;
     _triggerOptionsWidget = _buildTriggerOptions();
+    widget.reminder.register();
     Settings().reminderListener.notifyListeners();
     Settings().saveSettings();
   }
@@ -443,6 +448,7 @@ class ReminderScreenState extends State<ReminderScreen> {
   void _enabledOnChanged(bool value) {
     widget.reminder.enabled = value;
     _triggerOptionsWidget = _buildTriggerOptions();
+    widget.reminder.register();
     Settings().reminderListener.notifyListeners();
     Settings().saveSettings();
   }
@@ -450,6 +456,7 @@ class ReminderScreenState extends State<ReminderScreen> {
   void _subjectRemoved() {
     widget.reminder.subject = null;
     _triggerOptionsWidget = _buildTriggerOptions();
+    widget.reminder.register();
     Settings().reminderListener.notifyListeners();
     Settings().saveSettings();
   }
@@ -463,6 +470,7 @@ class ReminderScreenState extends State<ReminderScreen> {
       onDone: (subject) {
         widget.reminder.subject = subject;
         _triggerOptionsWidget = _buildTriggerOptions();
+        widget.reminder.register();
         Settings().reminderListener.notifyListeners();
         Settings().saveSettings();
       },
@@ -482,6 +490,7 @@ class ReminderScreenState extends State<ReminderScreen> {
       assert(false, 'Unknown triggerType');
     }
     _triggerOptionsWidget = _buildTriggerOptions();
+    widget.reminder.register();
     Settings().reminderListener.notifyListeners();
     Settings().saveSettings();
   }
@@ -507,6 +516,7 @@ class ReminderScreenState extends State<ReminderScreen> {
             curDateTime.hour,
             curDateTime.minute);
         _triggerOptionsWidget = _buildTriggerOptions();
+        widget.reminder.register();
         Settings().reminderListener.notifyListeners();
         Settings().saveSettings();
       },
@@ -529,6 +539,7 @@ class ReminderScreenState extends State<ReminderScreen> {
           time.hour,
           time.minute);
       _triggerOptionsWidget = _buildTriggerOptions();
+      widget.reminder.register();
       Settings().reminderListener.notifyListeners();
       Settings().saveSettings();
     });
@@ -618,6 +629,7 @@ class ReminderScreenState extends State<ReminderScreen> {
 
     (widget.reminder.trigger as TimeReminderTrigger).repeat = repeat;
     _triggerOptionsWidget = _buildTriggerOptions();
+    widget.reminder.register();
     Settings().reminderListener.notifyListeners();
     Settings().saveSettings();
   }
@@ -629,6 +641,7 @@ class ReminderScreenState extends State<ReminderScreen> {
       if (trigger != null) {
         widget.reminder.trigger = trigger;
         _triggerOptionsWidget = _buildTriggerOptions();
+        widget.reminder.register();
         Settings().reminderListener.notifyListeners();
         Settings().saveSettings();
       }
@@ -659,6 +672,7 @@ class ReminderScreenState extends State<ReminderScreen> {
               onDone: (text) {
                 widget.reminder.notes = text;
                 _triggerOptionsWidget = _buildTriggerOptions();
+                widget.reminder.register();
                 Settings().reminderListener.notifyListeners();
                 Settings().saveSettings();
               },
@@ -686,6 +700,7 @@ class ReminderScreenState extends State<ReminderScreen> {
       // Not `if (shouldDelete)` because it might be null
       if (shouldDelete == true) {
         Settings().reminders.remove(widget.reminder);
+        widget.reminder.unregister();
         Settings().reminderListener.notifyListeners();
         Settings().saveSettings();
 

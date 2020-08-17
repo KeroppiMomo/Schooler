@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:quiver/core.dart';
 import 'package:uuid/uuid.dart';
@@ -9,8 +10,9 @@ import 'package:geofencing/geofencing.dart';
 import 'package:schooler/lib/timetable.dart';
 
 abstract class ReminderTrigger {
-  String id;
-  void register(String title, String description);
+  void register(
+      {@required int id, @required bool enabled, @required String title});
+  void unregister({int id});
 
   // Serilization
   String get jsonType;
@@ -201,60 +203,64 @@ class LocationReminderRegion {
 }
 
 class LocationReminderTrigger implements ReminderTrigger {
-  String id;
   LocationReminderRegion region;
   GeofenceEvent geofenceEvent;
 
   LocationReminderTrigger({
-    this.id,
     this.region,
     @required this.geofenceEvent,
   });
-  void register(String title, String description) {}
+
+  void register(
+      {@required int id, @required bool enabled, @required String title}) {
+    // TODO: Implement this
+    throw UnimplementedError(
+        'Not yet implemented LocationReminderTrigger.register');
+  }
+
+  void unregister({int id}) {
+    // TODO: Implement this
+    throw UnimplementedError(
+        'Not yet implemented LocationReminderTrigger.unregister');
+  }
 
   // Serilization -------------------------------------
   String get jsonType => 'location';
   Map<String, Object> toJSON() {
     return {
-      'id': id,
       'geofence_event': geofenceEvent.index,
       'region': region?.toJSON(),
     };
   }
 
   static LocationReminderTrigger fromJSON(Map<String, Object> json) {
-    final id = json['id'];
     final geofenceEvent = json['geofence_event'];
     final region = json['region'];
 
-    if ((id is String || id == null) &&
-        (region is Map<String, Object> || region == null) &&
+    if ((region is Map<String, Object> || region == null) &&
         geofenceEvent is int) {
       return LocationReminderTrigger(
-        id: id,
         region: region == null ? null : LocationReminderRegion.fromJSON(region),
         geofenceEvent: GeofenceEvent.values[geofenceEvent],
       );
     } else {
       final curTypeMessage = [
-        'id',
         'geofence_event',
         'region',
       ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
       throw ParseJSONException(
           message:
-              'LocationReminderTrigger type mismatch: $curTypeMessage found; String, int, Map<String, Object> expected');
+              'LocationReminderTrigger type mismatch: $curTypeMessage found; int, Map<String, Object> expected');
     }
   }
 
   // Equality
   operator ==(other) =>
       other is LocationReminderTrigger &&
-      other.id == this.id &&
       other.region == this.region &&
       other.geofenceEvent == this.geofenceEvent;
 
-  int get hashCode => hashObjects([id, region, geofenceEvent]);
+  int get hashCode => hashObjects([region, geofenceEvent]);
 }
 
 // ---------------------------------------------------------------------------------
@@ -356,22 +362,59 @@ class TimeReminderRepeat {
 }
 
 class TimeReminderTrigger implements ReminderTrigger {
-  String id;
   DateTime dateTime;
   TimeReminderRepeat repeat;
 
   TimeReminderTrigger({
-    this.id,
     @required this.dateTime,
     this.repeat,
   });
-  void register(String title, String description) {}
+
+  void register(
+      {@required int id, @required bool enabled, @required String title}) {
+    // iOS imposes restrictions which only allow 64 scheduled notifications.
+    // So, only schedule 64 notifications per reminder and let iOS filter the earlier ones.
+
+    unregister(id: id);
+
+    if (!enabled) return;
+
+    if (repeat == null) {
+      FlutterLocalNotificationsPlugin().schedule(
+        id % (1 << 16) * 64,
+        title,
+        'Schooler Reminder',
+        dateTime,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'reminders',
+            'Reminders',
+            null,
+            priority: Priority.high,
+            importance: Importance.high,
+            visibility: NotificationVisibility.private,
+            category: 'reminder',
+          ),
+          iOS: IOSNotificationDetails(),
+        ),
+      );
+    } else {
+      throw UnimplementedError(
+          'Not yet implemented TimeReminderTrigger.register with repeat');
+    }
+  }
+
+  void unregister({@required int id}) {
+    // Remove scheduled notifications of this reminder
+    for (int i = 0; i < 64; i++) {
+      FlutterLocalNotificationsPlugin().cancel(id % (1 << 16) * 64 + i);
+    }
+  }
 
   // Serilization
   String get jsonType => 'time';
   Map<String, Object> toJSON() {
     return {
-      'id': id,
       'date_time': dateTime.millisecondsSinceEpoch,
       'repeat': repeat?.toJSON(),
     };
@@ -379,43 +422,38 @@ class TimeReminderTrigger implements ReminderTrigger {
 
   static TimeReminderTrigger fromJSON(Map<String, Object> json) {
     if (json == null) return null;
-    final id = json['id'];
     final dateTimeMS = json['date_time'];
     final repeat = json['repeat'];
 
-    if ((id is String || id == null) &&
-        (dateTimeMS is int) &&
+    if ((dateTimeMS is int) &&
         (repeat is Map<String, Object> || repeat == null)) {
       return TimeReminderTrigger(
-        id: id,
         dateTime: DateTime.fromMillisecondsSinceEpoch(dateTimeMS),
         repeat: TimeReminderRepeat.fromJSON(repeat),
       );
     } else {
       final curTypeMessage = [
-        'id',
         'date_time',
         'repeat',
       ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
       throw ParseJSONException(
           message:
-              'TimeReminderTrigger type mismatch: $curTypeMessage found; String, non-null int, Map<String, Object> expected');
+              'TimeReminderTrigger type mismatch: $curTypeMessage found; non-null int, Map<String, Object> expected');
     }
   }
 
   // Equality
   bool operator ==(o) =>
       o is TimeReminderTrigger &&
-      o.id == this.id &&
       o.dateTime == this.dateTime &&
       o.repeat == this.repeat;
-  int get hashCode => hashObjects([id, dateTime, repeat]);
+  int get hashCode => hashObjects([dateTime, repeat]);
 }
 
 // ---------------------------------------------------------------------------------
 
 class Reminder {
-  String id;
+  int id;
   String name;
   bool enabled;
   Subject subject;
@@ -431,7 +469,17 @@ class Reminder {
     this.notes,
   });
 
-  static String generateID() => Uuid().v1();
+  static int generateID() => Uuid().v1().hashCode;
+
+  void register() {
+    final notificationTitle =
+        (subject == null ? '' : '[${subject.name}]') + name;
+    trigger?.register(id: id, enabled: enabled, title: notificationTitle);
+  }
+
+  void unregister() {
+    trigger?.unregister(id: id);
+  }
 
   // Serilization
   Map<String, Object> toJSON() {
@@ -457,7 +505,7 @@ class Reminder {
     final trigger = json['trigger'];
     final notes = json['notes'];
 
-    if ((id is String) &&
+    if ((id is int) &&
         (name is String) &&
         (enabled is bool) &&
         (subject is Map<String, Object> || subject == null) &&
@@ -484,7 +532,7 @@ class Reminder {
       ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
       throw ParseJSONException(
           message:
-              'TimeReminderTrigger type mismatch: $curTypeMessage found; non-null String, non-null String, non-null bool, Map<String, Object>, String, Map<String, Object>, String expected');
+              'Reminder type mismatch: $curTypeMessage found; non-null int, non-null String, non-null bool, Map<String, Object>, String, Map<String, Object>, String expected');
     }
   }
 
@@ -516,3 +564,39 @@ class Reminder {
 
   int get hashCode => hashObjects([id, name, enabled, subject, trigger, notes]);
 }
+
+void initializeLocalNotifications() {
+  final androidSettings = AndroidInitializationSettings('notification_icon');
+  final iOSSettings = IOSInitializationSettings();
+  FlutterLocalNotificationsPlugin().initialize(InitializationSettings(
+    android: androidSettings,
+    iOS: iOSSettings,
+  ));
+}
+
+// Wait for https://github.com/fluttercommunity/flutter_workmanager/issues/189
+//
+// void reminderBackgroundCallback() {
+//   Workmanager.executeTask((_, __) => reminderBackgroundRegister());
+// }
+// Future<bool> reminderBackgroundRegister() {
+//   initializeLocalNotifications();
+//   FlutterLocalNotificationsPlugin().show(
+//     DateTime.now().millisecondsSinceEpoch,
+//     'Testing Title',
+//     'Testing Body',
+//     NotificationDetails(
+//       android: AndroidNotificationDetails(
+//         'reminders',
+//         'Reminders',
+//         null,
+//         priority: Priority.high,
+//         importance: Importance.high,
+//         visibility: NotificationVisibility.private,
+//         category: 'reminder',
+//       ),
+//       iOS: IOSNotificationDetails(),
+//     ),
+//   );
+//   return Future.value(true);
+// }

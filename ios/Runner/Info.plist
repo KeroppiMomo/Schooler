@@ -23,8 +23,8 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
-  <!-- Start of Geofence Contents -->
-  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <!-- Start of Geofence Contents -->
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Schooler uses your location to trigger location-based reminders. </string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Schooler uses your location to trigger location-based reminders. </string>
@@ -32,15 +32,15 @@
 	<array>
 		<string>location</string>
 	</array>
-  <!-- End of Geofence Contents -->
+    <!-- End of Geofence Contents -->
 
-  <!-- Start of Google Maps Contents -->
-  <key>io.flutter.embedded_views_preview</key>
-  <true/>
-  <!-- End of Google Maps Contents -->
+    <!-- Start of Google Maps Contents -->
+    <key>io.flutter.embedded_views_preview</key>
+    <true/>
+    <!-- End of Google Maps Contents -->
 
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>

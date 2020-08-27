@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:geofencing/geofencing.dart';
 import 'package:intl/intl.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
+import 'package:schooler/lib/geofencing.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
@@ -882,6 +882,22 @@ class ReminderScreenResources {
   final deleteContent = 'This action cannot be undone.';
   final deleteCancelText = 'CANCEL';
   final deleteConfirmText = 'DELETE';
+
+  final geofenceErrorConfirmText = 'GOT IT';
+  final geofenceErrorPermissionTitle = 'Could not access your location';
+  final geofenceErrorPermissionContent =
+      'Location-based reminders require "Always"/"All the time" location permission. \nGo to Settings to change the permission.';
+  final geofenceErrorPermissionSettingsText = 'TURN ON LOCATION';
+  final geofenceErrorUnavailableTitle =
+      'Location-based reminders are unavailable';
+  final geofenceErrorUnavailableContent =
+      'Try turning on location services, or checking whether your device supports geofencing.';
+  final geofenceErrorRadiusTitle = 'Region radius is too large';
+  final geofenceErrorRadiusContent = 'Try a smaller region radius.';
+  final geofenceErrorGeofencesNoTitle = 'Too many location-based reminders';
+  final geofenceErrorGeofencesNoContent =
+      'The number of location-based reminders has exceeded the limit of your device.\nTry disabling other location-based reminders.';
+  final geofenceUnknownTitle = 'Unknown error occurred';
 }
 
 class TimetableScreenResources {

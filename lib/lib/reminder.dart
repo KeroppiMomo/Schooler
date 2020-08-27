@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:schooler/lib/geocoder_results.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/subject.dart';
-import 'package:geofencing/geofencing.dart';
 import 'package:schooler/lib/timetable.dart';
+import 'package:schooler/lib/geofencing.dart';
 
 abstract class ReminderTrigger {
-  void register(
+  Future<void> register(
       {@required int id, @required bool enabled, @required String title});
-  void unregister({int id});
+  Future<void> unregister({int id});
 
   // Serilization
   String get jsonType;
@@ -211,17 +211,22 @@ class LocationReminderTrigger implements ReminderTrigger {
     @required this.geofenceEvent,
   });
 
-  void register(
-      {@required int id, @required bool enabled, @required String title}) {
-    // TODO: Implement this
-    throw UnimplementedError(
-        'Not yet implemented LocationReminderTrigger.register');
+  Future<void> register({@required int id, @required bool enabled, @required String title}) async {
+    await unregister(id: id);
+
+    if (!enabled) return;
+    if (region == null) return;
+
+    await Geofencing.startMonitoring(
+      id: id.toString(),
+      title: title,
+      geofenceEvent: geofenceEvent,
+      region: region,
+    );
   }
 
-  void unregister({int id}) {
-    // TODO: Implement this
-    throw UnimplementedError(
-        'Not yet implemented LocationReminderTrigger.unregister');
+  Future<void> unregister({int id}) async {
+    await Geofencing.stopMonitoring(id: id.toString());
   }
 
   // Serilization -------------------------------------
@@ -370,8 +375,8 @@ class TimeReminderTrigger implements ReminderTrigger {
     this.repeat,
   });
 
-  void register(
-      {@required int id, @required bool enabled, @required String title}) {
+  Future<void> register(
+      {@required int id, @required bool enabled, @required String title}) async {
     // iOS imposes restrictions which only allow 64 scheduled notifications.
     // So, only schedule 64 notifications per reminder and let iOS filter the earlier ones.
 
@@ -404,7 +409,7 @@ class TimeReminderTrigger implements ReminderTrigger {
     }
   }
 
-  void unregister({@required int id}) {
+  Future<void> unregister({@required int id}) async {
     // Remove scheduled notifications of this reminder
     for (int i = 0; i < 64; i++) {
       FlutterLocalNotificationsPlugin().cancel(id % (1 << 16) * 64 + i);
@@ -471,14 +476,14 @@ class Reminder {
 
   static int generateID() => Uuid().v1().hashCode;
 
-  void register() {
+  Future<void> register() async {
     final notificationTitle =
-        (subject == null ? '' : '[${subject.name}]') + name;
-    trigger?.register(id: id, enabled: enabled, title: notificationTitle);
+        (subject == null ? '' : '[${subject.name}] ') + name;
+    await trigger?.register(id: id, enabled: enabled, title: notificationTitle);
   }
 
-  void unregister() {
-    trigger?.unregister(id: id);
+  Future<void> unregister() async {
+    await trigger?.unregister(id: id);
   }
 
   // Serilization

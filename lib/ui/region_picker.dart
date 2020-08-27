@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:geofencing/geofencing.dart';
+import 'package:schooler/lib/geofencing.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -249,8 +249,12 @@ class RegionPickerState extends State<RegionPicker> {
   }
 
   Widget _buildMap() {
-    double circleRadius = _trigger.region.radius /
-        zoomLevel2MeterPerPx(_mapZoomLevel, _trigger.region.location.latitude);
+    // Set a hard limit to the circle size. Flutter freezes when a widget is too big.
+    double circleRadius = min(
+        MediaQuery.of(context).size.width * 5,
+        _trigger.region.radius /
+            zoomLevel2MeterPerPx(
+                _mapZoomLevel, _trigger.region.location.latitude));
     return SizedBox(
       height: _R.mapHeight,
       child: Stack(

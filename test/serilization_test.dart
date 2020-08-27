@@ -2,13 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
-import 'package:geofencing/geofencing.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
+import 'package:schooler/lib/geofencing.dart';
 
 void main() {
   group('(serilization)', () {

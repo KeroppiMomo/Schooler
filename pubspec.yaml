@@ -31,9 +31,6 @@ dependencies:
   scrollable_positioned_list: ^0.1.7
   flutter_linkify: ^3.1.0
   url_launcher: ^5.4.2
-  geofencing:
-    git:
-      url: git://github.com/bkonyi/FlutterGeofencing.git
   google_maps_flutter: ^0.5.28+1
   geolocator: ^5.3.2+2
   geocoder: ^0.2.1

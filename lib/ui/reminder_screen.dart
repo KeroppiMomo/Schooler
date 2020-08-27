@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:geofencing/geofencing.dart';
+import 'package:schooler/lib/geofencing.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
@@ -446,11 +446,23 @@ class ReminderScreenState extends State<ReminderScreen> {
   }
 
   void _enabledOnChanged(bool value) {
+    final oriEnabled = widget.reminder.enabled;
     widget.reminder.enabled = value;
     _triggerOptionsWidget = _buildTriggerOptions();
-    widget.reminder.register();
-    Settings().reminderListener.notifyListeners();
-    Settings().saveSettings();
+    widget.reminder.register().then((_) {
+      Settings().reminderListener.notifyListeners();
+      Settings().saveSettings();
+    }).catchError((error) {
+      widget.reminder.enabled = oriEnabled;
+      Settings().reminderListener.notifyListeners();
+      _showGeofenceError(error).then((_) {
+        if (error is GeofenceMaximumRadiusReachedException ||
+            error is GeofenceUnknownException ||
+            error is! GeofenceException) {
+          _locationTriggerSelectPressed();
+        }
+      });
+    });
   }
 
   void _subjectRemoved() {
@@ -484,6 +496,17 @@ class ReminderScreenState extends State<ReminderScreen> {
     } else if (triggerType == TimeReminderTrigger) {
       widget.reminder.trigger = TimeReminderTrigger(dateTime: DateTime.now());
     } else if (triggerType == LocationReminderTrigger) {
+      bool showingDialog = false;
+      Geofencing.requestPermission(iOSAlwaysPermissionCallback: () {
+        if (showingDialog) Navigator.of(context).pop();
+      }).then((permission) {
+        if (!permission) {
+          showingDialog = true;
+          _showGeofenceError(GeofencePermissionDeniedException(''))
+              .then((_) => showingDialog = false);
+        }
+      });
+
       widget.reminder.trigger =
           LocationReminderTrigger(geofenceEvent: GeofenceEvent.enter);
     } else {
@@ -639,11 +662,24 @@ class ReminderScreenState extends State<ReminderScreen> {
     RegionPicker.showPicker(context, trigger: widget.reminder.trigger)
         .then((trigger) {
       if (trigger != null) {
+        final oriTrigger =
+            LocationReminderTrigger.fromJSON(widget.reminder.trigger.toJSON());
         widget.reminder.trigger = trigger;
         _triggerOptionsWidget = _buildTriggerOptions();
-        widget.reminder.register();
-        Settings().reminderListener.notifyListeners();
-        Settings().saveSettings();
+        widget.reminder.register().then((_) {
+          Settings().reminderListener.notifyListeners();
+          Settings().saveSettings();
+        }).catchError((error) {
+          widget.reminder.trigger = oriTrigger;
+          Settings().reminderListener.notifyListeners();
+          _showGeofenceError(error).then((_) {
+            if (error is GeofenceMaximumRadiusReachedException ||
+                error is GeofenceUnknownException ||
+                error is! GeofenceException) {
+              _locationTriggerSelectPressed();
+            }
+          });
+        });
       }
     });
   }
@@ -708,5 +744,80 @@ class ReminderScreenState extends State<ReminderScreen> {
         Navigator.pop(context);
       }
     });
+  }
+
+  Future<void> _showGeofenceError(dynamic exception) async {
+    Future<void> showAlert({
+      @required String title,
+      @required String content,
+      @required List<Widget> actions,
+    }) =>
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: actions,
+          ),
+        );
+
+    Widget buildOKButton() => FlatButton(
+          child: Text(_R.geofenceErrorConfirmText),
+          onPressed: () => Navigator.pop(context),
+        );
+
+    switch (exception.runtimeType) {
+      case GeofencePermissionDeniedException:
+        await showAlert(
+          title: _R.geofenceErrorPermissionTitle,
+          content: _R.geofenceErrorPermissionContent,
+          actions: <Widget>[
+            FlatButton(
+              child: Text(_R.geofenceErrorPermissionSettingsText),
+              onPressed: () {
+                Geofencing.openAppsSettings();
+                Navigator.pop(context);
+              },
+            ),
+            buildOKButton(),
+          ],
+        );
+        break;
+      case GeofenceUnavailableException:
+        await showAlert(
+          title: _R.geofenceErrorUnavailableTitle,
+          content: _R.geofenceErrorUnavailableContent,
+          actions: [buildOKButton()],
+        );
+        break;
+      case GeofenceMaximumRadiusReachedException:
+        await showAlert(
+          title: _R.geofenceErrorRadiusTitle,
+          content: _R.geofenceErrorRadiusContent,
+          actions: [buildOKButton()],
+        );
+        break;
+      case GeofenceMaximumGeofencesReachedException:
+        await showAlert(
+          title: _R.geofenceErrorGeofencesNoTitle,
+          content: _R.geofenceErrorGeofencesNoContent,
+          actions: [buildOKButton()],
+        );
+        break;
+      case GeofenceUnknownException:
+        await showAlert(
+          title: _R.geofenceUnknownTitle,
+          content: (exception as GeofenceUnknownException).message ?? '',
+          actions: [buildOKButton()],
+        );
+        break;
+      default:
+        await showAlert(
+          title: _R.geofenceUnknownTitle,
+          content: exception.toString(),
+          actions: [buildOKButton()],
+        );
+        break;
+    }
   }
 }

@@ -49,6 +49,9 @@ class ReminderScreenState extends State<ReminderScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_R.appBarTitle),
+        leading: BackButton(
+          onPressed: _onBackPressed,
+        ),
         actions: [
           IconButton(
             icon: Icon(_R.deleteIcon),
@@ -819,5 +822,20 @@ class ReminderScreenState extends State<ReminderScreen> {
         );
         break;
     }
+  }
+
+  void _onBackPressed() {
+    bool isEmptyOrNull(String str) => str == null || str == '';
+    if (isEmptyOrNull(widget.reminder.name) &&
+        isEmptyOrNull(widget.reminder.notes) &&
+        widget.reminder.subject == null &&
+        widget.reminder.trigger == null) {
+      // Reminder is considered empty. Remove it.
+      Settings().reminders.remove(widget.reminder);
+      widget.reminder.unregister();
+      Settings().reminderListener.notifyListeners();
+      Settings().saveSettings();
+    }
+    Navigator.pop(context);
   }
 }

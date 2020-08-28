@@ -70,6 +70,9 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_R.appBarTitle),
+        leading: BackButton(
+          onPressed: _onBackPressed,
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.delete),
@@ -495,5 +498,19 @@ class AssignmentScreenState extends State<AssignmentScreen> {
         Navigator.pop(context);
       }
     });
+  }
+
+  void _onBackPressed() {
+    bool isEmptyOrNull(String str) => str == null || str == '';
+    if (isEmptyOrNull(widget.assignment.name) &&
+        isEmptyOrNull(widget.assignment.description) &&
+        isEmptyOrNull(widget.assignment.notes) &&
+        widget.assignment.subject == null) {
+      // Assignment is considered empty. Remove it.
+      Settings().assignments.remove(widget.assignment);
+      Settings().assignmentListener.notifyListeners();
+      Settings().saveSettings();
+    }
+    Navigator.pop(context);
   }
 }

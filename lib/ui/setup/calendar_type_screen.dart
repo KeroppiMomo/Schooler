@@ -29,22 +29,79 @@ class CalendarTypeScreenState extends State<CalendarTypeScreen> {
       appBar: AppBar(
         title: Text(_R.appBarTitle),
       ),
-      body: Padding(
-        padding: _R.padding,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: CalendarType.values
-              .map((type) => RaisedButton(
-                    child: Text(_R.buttonTextForTypes[type]),
-                    onPressed: () =>
-                        _typeButtonPressed(context, selectedType: type),
-                  ))
-              .toList(),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text(
+                      'Choose your calendar type.',
+                      style: Theme.of(context).textTheme.headline6,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16.0),
+                    _buildChoice(
+                      title: 'By Week',
+                      description: 'Timetable for Monday, Tuesday, etc.',
+                      image: AssetImage('lib/res/calendar_type_week_icon.png'),
+                      onTap: () => _typeButtonPressed(context, selectedType: CalendarType.week),
+                    ),
+                    SizedBox(height: 16.0),
+                    _buildChoice(
+                      title: 'By Cycle',
+                      description: 'Timetable for Day 1, Day 2, etc.',
+                      image: AssetImage('lib/res/calendar_type_cycle_icon.png'),
+                      onTap: () => _typeButtonPressed(context, selectedType: CalendarType.cycle),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildChoice({
+    String title,
+    String description,
+    ImageProvider image,
+    void Function() onTap,
+  }) =>
+      Card(
+        elevation: 3.0,
+        child: InkWell(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              SizedBox(height: 32.0),
+              Image(
+                image: image,
+                height: 100.0,
+              ),
+              SizedBox(height: 32.0),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headline5,
+              ),
+              SizedBox(height: 8.0),
+              Text(
+                description,
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+              SizedBox(height: 32.0),
+            ],
+          ),
+          onTap: onTap,
+        ),
+      );
 
   void _typeButtonPressed(BuildContext context,
       {@required CalendarType selectedType}) {

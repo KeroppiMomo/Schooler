@@ -120,11 +120,32 @@ class SetupWelcomeScreenResources {
 
 class CalendarTypeScreenResources {
   final appBarTitle = 'Calendar Type';
-  final padding = const EdgeInsets.all(16.0);
-  final buttonTextForTypes = {
-    CalendarType.week: 'By Weeks',
-    CalendarType.cycle: 'By Cycles',
-  };
+  final padding = EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0);
+
+  final headerText = 'Choose your calendar type.';
+  TextStyle getHeaderStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline6;
+  final headerChoicesSpacing = 16.0;
+
+  final weekTitle = 'By Week';
+  final weekDescription = 'Timetable for Monday, Tuesday, etc.';
+  final weekImage = AssetImage('lib/res/calendar_type_week_icon.png');
+
+  final weekCycleSpacing = 16.0;
+  final cycleTitle = 'By Cycle';
+  final cycleDescription = 'Timetable for Day 1, Day 2, etc.';
+  final cycleImage = AssetImage('lib/res/calendar_type_cycle_icon.png');
+
+  final cardElevation = 3.0;
+  final cardImageSpacing = 32.0;
+  final cardImageHeight = 100.0;
+  final cardImageTitleSpacing = 32.0;
+  TextStyle getTitleStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline5;
+  final cardTitleDescriptionSpacing = 8.0;
+  TextStyle getDescriptionStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1;
+  final cardDescriptionSpacing = 32.0;
 }
 
 class CalendarEditorResources {

@@ -29,22 +29,81 @@ class CalendarTypeScreenState extends State<CalendarTypeScreen> {
       appBar: AppBar(
         title: Text(_R.appBarTitle),
       ),
-      body: Padding(
-        padding: _R.padding,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: CalendarType.values
-              .map((type) => RaisedButton(
-                    child: Text(_R.buttonTextForTypes[type]),
-                    onPressed: () =>
-                        _typeButtonPressed(context, selectedType: type),
-                  ))
-              .toList(),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: _R.padding,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text(
+                      _R.headerText,
+                      style: _R.getHeaderStyle(context),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: _R.headerChoicesSpacing),
+                    _buildChoice(
+                      title: _R.weekTitle,
+                      description: _R.weekDescription,
+                      image: _R.weekImage,
+                      onTap: () => _typeButtonPressed(context,
+                          selectedType: CalendarType.week),
+                    ),
+                    SizedBox(height: _R.weekCycleSpacing),
+                    _buildChoice(
+                      title: _R.cycleTitle,
+                      description: _R.cycleDescription,
+                      image: _R.cycleImage,
+                      onTap: () => _typeButtonPressed(context,
+                          selectedType: CalendarType.cycle),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
+
+  Widget _buildChoice({
+    String title,
+    String description,
+    ImageProvider image,
+    void Function() onTap,
+  }) =>
+      Card(
+        elevation: _R.cardElevation,
+        child: InkWell(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              SizedBox(height: _R.cardImageSpacing),
+              Image(
+                image: image,
+                height: _R.cardImageHeight,
+              ),
+              SizedBox(height: _R.cardImageTitleSpacing),
+              Text(
+                title,
+                style: _R.getTitleStyle(context),
+              ),
+              SizedBox(height: _R.cardTitleDescriptionSpacing),
+              Text(
+                description,
+                style: _R.getDescriptionStyle(context),
+              ),
+              SizedBox(height: _R.cardDescriptionSpacing),
+            ],
+          ),
+          onTap: onTap,
+        ),
+      );
 
   void _typeButtonPressed(BuildContext context,
       {@required CalendarType selectedType}) {

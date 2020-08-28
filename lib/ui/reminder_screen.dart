@@ -46,191 +46,194 @@ class ReminderScreenState extends State<ReminderScreen> {
   @override
   Widget build(BuildContext context) {
     _triggerOptionsWidget ??= _buildTriggerOptions();
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_R.appBarTitle),
-        leading: BackButton(
-          onPressed: _onBackPressed,
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(_R.deleteIcon),
-            tooltip: _R.deleteTooltip,
-            onPressed: _deletePressed,
-          ),
-        ],
-      ),
-      body: ValueListenableBuilder(
-        valueListenable: Settings().reminderListener,
-        builder: (context, _, __) => ListView(
-          padding: _R.listViewPadding,
-          children: <Widget>[
-            _buildRow(
-              // Name
-              leading: Icon(
-                _R.reminderIcon,
-                size: _R.reminderIconSize,
-              ),
-              child: TextField(
-                style: _R.getNameTextStyle(context),
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: _R.nameHintText,
-                ),
-                onChanged: _nameOnChanged,
-              ),
-            ),
-            SizedBox(height: _R.nameEnabledSpacing),
-            _buildRow(
-              leading: Container(),
-              child: Row(children: [
-                Expanded(
-                  child: Text(_R.enabledText),
-                ),
-                Switch(
-                  value: widget.reminder.enabled,
-                  onChanged: _enabledOnChanged,
-                ),
-              ]),
-            ),
-            SizedBox(height: _R.enabledSubjectSpacing),
-            _buildRow(
-              // Subject
-              leading: Icon(
-                _R.subjectIcon,
-                color: _R.iconColor,
-              ),
-              child: InkWell(
-                child: widget.reminder.subject == null
-                    ? Container(
-                        height: _R.subjectHeight,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: _R.subjectPlaceholderPadding,
-                            child: Text(
-                              _R.subjectPlaceholder,
-                              style: _R.subjectPlaceholderTextStyle(context),
-                            ),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        height: _R.subjectHeight,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Expanded(
-                              child: SubjectBlock(
-                                name: widget.reminder.subject.name,
-                                color: widget.reminder.subject.color,
-                              ),
-                            ),
-                            SizedBox(width: _R.subjectBlockEditSpacing),
-                            Icon(
-                              _R.subjectEditIcon,
-                              color: _R.subjectIconColor,
-                            ),
-                            SizedBox(width: _R.subjectEditRemoveSpacing),
-                            InkWell(
-                              child: Icon(
-                                _R.subjectRemoveIcon,
-                                color: _R.subjectIconColor,
-                              ),
-                              onTap: _subjectRemoved,
-                            ),
-                          ],
-                        ),
-                      ),
-                onTap: _subjectTapped,
-              ),
-            ),
-            SizedBox(height: _R.subjectTriggerSpacing),
-            _buildRow(
-              // Trigger type
-              leading: Container(),
-              child: Wrap(
-                runSpacing: _R.triggerTypeVerticalSpacing,
-                spacing: _R.triggerTypeHorizontalSpacing,
-                children: <Widget>[
-                  ChoiceChip(
-                    label: Text(_R.triggerTypeNullText),
-                    selected: widget.reminder.trigger == null,
-                    onSelected: (value) {
-                      if (value) _triggerTypeChanged(null);
-                    },
-                  ),
-                  ChoiceChip(
-                    avatar: Icon(
-                      _R.triggerTypeTimeIcon,
-                      size: _R.triggerTypeIconSize,
-                    ),
-                    label: Text(_R.triggerTypeTimeText),
-                    selected: widget.reminder.trigger is TimeReminderTrigger,
-                    onSelected: (value) {
-                      if (value) _triggerTypeChanged(TimeReminderTrigger);
-                    },
-                  ),
-                  ChoiceChip(
-                    avatar: Icon(
-                      _R.triggerTypeLocationIcon,
-                      size: _R.triggerTypeIconSize,
-                    ),
-                    label: Text(_R.triggerTypeLocationText),
-                    selected:
-                        widget.reminder.trigger is LocationReminderTrigger,
-                    onSelected: (value) {
-                      if (value) _triggerTypeChanged(LocationReminderTrigger);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: _R.triggerTypeOptionsSpacing),
-            AnimatedSwitcher(
-              duration: _R.triggerOptionsSwitchDuration,
-              switchInCurve: _R.triggerOptionsSwitchCurve,
-              switchOutCurve: _R.triggerOptionsSwitchCurve,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SizeTransition(
-                    child: child,
-                    sizeFactor: animation,
-                  ),
-                );
-              },
-              child: _triggerOptionsWidget,
-            ),
-            SizedBox(height: _R.triggerOptionsNotesSpacing),
-            _buildRow(
-              leading: Icon(
-                _R.notesIcon,
-                color: _R.iconColor,
-              ),
-              child: InkWell(
-                onTap: _notesTapped,
-                child: Padding(
-                  padding: _R.notesPadding,
-                  child: widget.reminder.notes == null ||
-                          widget.reminder.notes == ''
-                      ? Text(
-                          _R.notesPlaceholder,
-                          style: _R.getNotesPlaceholderTextStyle(context),
-                        )
-                      : Builder(
-                          builder: (context) => Linkify(
-                            onOpen: (link) => _notesURLTapped(context, link),
-                            text: widget.reminder.notes,
-                            options: LinkifyOptions(humanize: false),
-                          ),
-                        ),
-                ),
-              ),
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_R.appBarTitle),
+          actions: [
+            IconButton(
+              icon: Icon(_R.deleteIcon),
+              tooltip: _R.deleteTooltip,
+              onPressed: _deletePressed,
             ),
           ],
         ),
+        body: ValueListenableBuilder(
+          valueListenable: Settings().reminderListener,
+          builder: (context, _, __) => ListView(
+            padding: _R.listViewPadding,
+            children: <Widget>[
+              _buildRow(
+                // Name
+                leading: Icon(
+                  _R.reminderIcon,
+                  size: _R.reminderIconSize,
+                ),
+                child: TextField(
+                  style: _R.getNameTextStyle(context),
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    hintText: _R.nameHintText,
+                  ),
+                  onChanged: _nameOnChanged,
+                ),
+              ),
+              SizedBox(height: _R.nameEnabledSpacing),
+              _buildRow(
+                leading: Container(),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(_R.enabledText),
+                  ),
+                  Switch(
+                    value: widget.reminder.enabled,
+                    onChanged: _enabledOnChanged,
+                  ),
+                ]),
+              ),
+              SizedBox(height: _R.enabledSubjectSpacing),
+              _buildRow(
+                // Subject
+                leading: Icon(
+                  _R.subjectIcon,
+                  color: _R.iconColor,
+                ),
+                child: InkWell(
+                  child: widget.reminder.subject == null
+                      ? Container(
+                          height: _R.subjectHeight,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: _R.subjectPlaceholderPadding,
+                              child: Text(
+                                _R.subjectPlaceholder,
+                                style: _R.subjectPlaceholderTextStyle(context),
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          height: _R.subjectHeight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Expanded(
+                                child: SubjectBlock(
+                                  name: widget.reminder.subject.name,
+                                  color: widget.reminder.subject.color,
+                                ),
+                              ),
+                              SizedBox(width: _R.subjectBlockEditSpacing),
+                              Icon(
+                                _R.subjectEditIcon,
+                                color: _R.subjectIconColor,
+                              ),
+                              SizedBox(width: _R.subjectEditRemoveSpacing),
+                              InkWell(
+                                child: Icon(
+                                  _R.subjectRemoveIcon,
+                                  color: _R.subjectIconColor,
+                                ),
+                                onTap: _subjectRemoved,
+                              ),
+                            ],
+                          ),
+                        ),
+                  onTap: _subjectTapped,
+                ),
+              ),
+              SizedBox(height: _R.subjectTriggerSpacing),
+              _buildRow(
+                // Trigger type
+                leading: Container(),
+                child: Wrap(
+                  runSpacing: _R.triggerTypeVerticalSpacing,
+                  spacing: _R.triggerTypeHorizontalSpacing,
+                  children: <Widget>[
+                    ChoiceChip(
+                      label: Text(_R.triggerTypeNullText),
+                      selected: widget.reminder.trigger == null,
+                      onSelected: (value) {
+                        if (value) _triggerTypeChanged(null);
+                      },
+                    ),
+                    ChoiceChip(
+                      avatar: Icon(
+                        _R.triggerTypeTimeIcon,
+                        size: _R.triggerTypeIconSize,
+                      ),
+                      label: Text(_R.triggerTypeTimeText),
+                      selected: widget.reminder.trigger is TimeReminderTrigger,
+                      onSelected: (value) {
+                        if (value) _triggerTypeChanged(TimeReminderTrigger);
+                      },
+                    ),
+                    ChoiceChip(
+                      avatar: Icon(
+                        _R.triggerTypeLocationIcon,
+                        size: _R.triggerTypeIconSize,
+                      ),
+                      label: Text(_R.triggerTypeLocationText),
+                      selected:
+                          widget.reminder.trigger is LocationReminderTrigger,
+                      onSelected: (value) {
+                        if (value) _triggerTypeChanged(LocationReminderTrigger);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: _R.triggerTypeOptionsSpacing),
+              AnimatedSwitcher(
+                duration: _R.triggerOptionsSwitchDuration,
+                switchInCurve: _R.triggerOptionsSwitchCurve,
+                switchOutCurve: _R.triggerOptionsSwitchCurve,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SizeTransition(
+                      child: child,
+                      sizeFactor: animation,
+                    ),
+                  );
+                },
+                child: _triggerOptionsWidget,
+              ),
+              SizedBox(height: _R.triggerOptionsNotesSpacing),
+              _buildRow(
+                leading: Icon(
+                  _R.notesIcon,
+                  color: _R.iconColor,
+                ),
+                child: InkWell(
+                  onTap: _notesTapped,
+                  child: Padding(
+                    padding: _R.notesPadding,
+                    child: widget.reminder.notes == null ||
+                            widget.reminder.notes == ''
+                        ? Text(
+                            _R.notesPlaceholder,
+                            style: _R.getNotesPlaceholderTextStyle(context),
+                          )
+                        : Builder(
+                            builder: (context) => Linkify(
+                              onOpen: (link) => _notesURLTapped(context, link),
+                              text: widget.reminder.notes,
+                              options: LinkifyOptions(humanize: false),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+      onWillPop: () async {
+        _onWillPop();
+        return true;
+      },
     );
   }
 
@@ -824,7 +827,7 @@ class ReminderScreenState extends State<ReminderScreen> {
     }
   }
 
-  void _onBackPressed() {
+  void _onWillPop() {
     bool isEmptyOrNull(String str) => str == null || str == '';
     if (isEmptyOrNull(widget.reminder.name) &&
         isEmptyOrNull(widget.reminder.notes) &&

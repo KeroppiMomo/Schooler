@@ -67,197 +67,200 @@ class AssignmentScreenState extends State<AssignmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_R.appBarTitle),
-        leading: BackButton(
-          onPressed: _onBackPressed,
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.delete),
-            tooltip: 'Delete Assignment',
-            onPressed: _deletePressed,
-          ),
-        ],
-      ),
-      body: ValueListenableBuilder(
-        valueListenable: Settings().assignmentListener,
-        builder: (context, value, _) => ListView(
-          padding: _R.listViewPadding,
-          children: [
-            Table(
-              columnWidths: {0: FixedColumnWidth(_R.iconColumnWidth)},
-              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-              children: [
-                _buildRow(
-                  // Title and isCompleted
-                  leading: SizedBox(
-                    width: _R.checkboxSize,
-                    height: _R.checkboxSize,
-                    child: Checkbox(
-                      value: widget.assignment.isCompleted,
-                      onChanged: _isCompletedTapped,
-                    ),
-                  ),
-                  child: TextField(
-                    style: Theme.of(context).textTheme.headline5,
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      hintText: _R.titleHintText,
-                    ),
-                    onChanged: _nameOnChanged,
-                  ),
-                ),
-                _buildRow(
-                  // Description
-                  leading: Container(),
-                  child: TextField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(
-                      hintText: _R.descriptionHintText,
-                      isDense: true,
-                    ),
-                    onChanged: _descriptionOnChanged,
-                  ),
-                ),
-                _buildRow(
-                  // Spacing
-                  leading: SizedBox(height: _R.descriptionSubjectSpacing),
-                  child: Container(),
-                ),
-                _buildRow(
-                  // Select Subject
-                  leading: Icon(
-                    _R.subjectIcon,
-                    color: _R.leftIconColor,
-                  ),
-                  child: InkWell(
-                    child: widget.assignment.subject == null
-                        ? Container(
-                            height: _R.subjectRow,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: _R.subjectPlaceholderPadding,
-                                child: Text(
-                                  _R.subjectPlaceholder,
-                                  style: _R.placeholderStyle(context),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Container(
-                            height: _R.subjectRow,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Expanded(
-                                  child: SubjectBlock(
-                                    name: widget.assignment.subject.name,
-                                    color: widget.assignment.subject.color,
-                                  ),
-                                ),
-                                SizedBox(width: _R.subjectRowSpacing),
-                                Icon(
-                                  _R.editIcon,
-                                  color: _R.rightIconColor,
-                                ),
-                                SizedBox(width: _R.subjectRowSpacing),
-                                InkWell(
-                                  child: Icon(
-                                    _R.subjectRemoveIcon,
-                                    color: _R.rightIconColor,
-                                  ),
-                                  onTap: _subjectRemoved,
-                                ),
-                              ],
-                            ),
-                          ),
-                    onTap: _subjectTapped,
-                  ),
-                ),
-                _buildRow(
-                  // Spacing
-                  leading: SizedBox(height: _R.subjectDueTypeSpacing),
-                  child: Container(),
-                ),
-                _buildRow(
-                  // Select withTime
-                  leading: Container(),
-                  child: Wrap(
-                    runSpacing: _R.dueTypeRunSpacing,
-                    spacing: _R.dueTypeSpacing,
-                    children: <Widget>[
-                      ChoiceChip(
-                        label: Text(_R.dueTypeNoDueDate),
-                        selected: widget.assignment.dueDate == null,
-                        onSelected: (value) {
-                          if (value) _dueDateTypeChanged(null);
-                        },
-                      ),
-                      ChoiceChip(
-                        label: Text(_R.dueTypeDueDate),
-                        selected: widget.assignment.dueDate != null &&
-                            !widget.assignment.withDueTime,
-                        onSelected: (value) {
-                          if (value) _dueDateTypeChanged(false);
-                        },
-                      ),
-                      ChoiceChip(
-                        label: Text(_R.dueTypeDueTime),
-                        selected: widget.assignment.dueDate != null &&
-                            widget.assignment.withDueTime,
-                        onSelected: (value) {
-                          if (value) _dueDateTypeChanged(true);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                _buildRow(
-                  leading: AnimatedSwitcher(
-                    duration: _R.dueDateAnimationDuration,
-                    child: _dueDateRowLeading,
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: _R.dueDateAnimationDuration,
-                    child: _dueDateRowChild,
-                  ),
-                ),
-                _buildRow(
-                  leading: Container(),
-                  child: SizedBox(height: _R.dueDateNotesSpacing),
-                ),
-                _buildRow(
-                  leading: Icon(
-                    _R.notesIcon,
-                    color: _R.leftIconColor,
-                  ),
-                  child: InkWell(
-                    onTap: _notesTapped,
-                    child: Padding(
-                      padding: _R.notesPadding,
-                      child: widget.assignment.notes == null ||
-                              widget.assignment.notes == ''
-                          ? Text(_R.notesPlaceholder,
-                              style: _R.placeholderStyle(context))
-                          : Builder(
-                              builder: (context) => Linkify(
-                                onOpen: (link) =>
-                                    _notesURLTapped(context, link),
-                                text: widget.assignment.notes,
-                                options: LinkifyOptions(humanize: false),
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(_R.appBarTitle),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.delete),
+              tooltip: 'Delete Assignment',
+              onPressed: _deletePressed,
             ),
           ],
         ),
+        body: ValueListenableBuilder(
+          valueListenable: Settings().assignmentListener,
+          builder: (context, value, _) => ListView(
+            padding: _R.listViewPadding,
+            children: [
+              Table(
+                columnWidths: {0: FixedColumnWidth(_R.iconColumnWidth)},
+                defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                children: [
+                  _buildRow(
+                    // Title and isCompleted
+                    leading: SizedBox(
+                      width: _R.checkboxSize,
+                      height: _R.checkboxSize,
+                      child: Checkbox(
+                        value: widget.assignment.isCompleted,
+                        onChanged: _isCompletedTapped,
+                      ),
+                    ),
+                    child: TextField(
+                      style: Theme.of(context).textTheme.headline5,
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        hintText: _R.titleHintText,
+                      ),
+                      onChanged: _nameOnChanged,
+                    ),
+                  ),
+                  _buildRow(
+                    // Description
+                    leading: Container(),
+                    child: TextField(
+                      controller: _descriptionController,
+                      decoration: InputDecoration(
+                        hintText: _R.descriptionHintText,
+                        isDense: true,
+                      ),
+                      onChanged: _descriptionOnChanged,
+                    ),
+                  ),
+                  _buildRow(
+                    // Spacing
+                    leading: SizedBox(height: _R.descriptionSubjectSpacing),
+                    child: Container(),
+                  ),
+                  _buildRow(
+                    // Select Subject
+                    leading: Icon(
+                      _R.subjectIcon,
+                      color: _R.leftIconColor,
+                    ),
+                    child: InkWell(
+                      child: widget.assignment.subject == null
+                          ? Container(
+                              height: _R.subjectRow,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: _R.subjectPlaceholderPadding,
+                                  child: Text(
+                                    _R.subjectPlaceholder,
+                                    style: _R.placeholderStyle(context),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              height: _R.subjectRow,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Expanded(
+                                    child: SubjectBlock(
+                                      name: widget.assignment.subject.name,
+                                      color: widget.assignment.subject.color,
+                                    ),
+                                  ),
+                                  SizedBox(width: _R.subjectRowSpacing),
+                                  Icon(
+                                    _R.editIcon,
+                                    color: _R.rightIconColor,
+                                  ),
+                                  SizedBox(width: _R.subjectRowSpacing),
+                                  InkWell(
+                                    child: Icon(
+                                      _R.subjectRemoveIcon,
+                                      color: _R.rightIconColor,
+                                    ),
+                                    onTap: _subjectRemoved,
+                                  ),
+                                ],
+                              ),
+                            ),
+                      onTap: _subjectTapped,
+                    ),
+                  ),
+                  _buildRow(
+                    // Spacing
+                    leading: SizedBox(height: _R.subjectDueTypeSpacing),
+                    child: Container(),
+                  ),
+                  _buildRow(
+                    // Select withTime
+                    leading: Container(),
+                    child: Wrap(
+                      runSpacing: _R.dueTypeRunSpacing,
+                      spacing: _R.dueTypeSpacing,
+                      children: <Widget>[
+                        ChoiceChip(
+                          label: Text(_R.dueTypeNoDueDate),
+                          selected: widget.assignment.dueDate == null,
+                          onSelected: (value) {
+                            if (value) _dueDateTypeChanged(null);
+                          },
+                        ),
+                        ChoiceChip(
+                          label: Text(_R.dueTypeDueDate),
+                          selected: widget.assignment.dueDate != null &&
+                              !widget.assignment.withDueTime,
+                          onSelected: (value) {
+                            if (value) _dueDateTypeChanged(false);
+                          },
+                        ),
+                        ChoiceChip(
+                          label: Text(_R.dueTypeDueTime),
+                          selected: widget.assignment.dueDate != null &&
+                              widget.assignment.withDueTime,
+                          onSelected: (value) {
+                            if (value) _dueDateTypeChanged(true);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildRow(
+                    leading: AnimatedSwitcher(
+                      duration: _R.dueDateAnimationDuration,
+                      child: _dueDateRowLeading,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: _R.dueDateAnimationDuration,
+                      child: _dueDateRowChild,
+                    ),
+                  ),
+                  _buildRow(
+                    leading: Container(),
+                    child: SizedBox(height: _R.dueDateNotesSpacing),
+                  ),
+                  _buildRow(
+                    leading: Icon(
+                      _R.notesIcon,
+                      color: _R.leftIconColor,
+                    ),
+                    child: InkWell(
+                      onTap: _notesTapped,
+                      child: Padding(
+                        padding: _R.notesPadding,
+                        child: widget.assignment.notes == null ||
+                                widget.assignment.notes == ''
+                            ? Text(_R.notesPlaceholder,
+                                style: _R.placeholderStyle(context))
+                            : Builder(
+                                builder: (context) => Linkify(
+                                  onOpen: (link) =>
+                                      _notesURLTapped(context, link),
+                                  text: widget.assignment.notes,
+                                  options: LinkifyOptions(humanize: false),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
+      onWillPop: () async {
+        _onWillPop();
+        return true;
+      },
     );
   }
 
@@ -500,7 +503,7 @@ class AssignmentScreenState extends State<AssignmentScreen> {
     });
   }
 
-  void _onBackPressed() {
+  void _onWillPop() {
     bool isEmptyOrNull(String str) => str == null || str == '';
     if (isEmptyOrNull(widget.assignment.name) &&
         isEmptyOrNull(widget.assignment.description) &&

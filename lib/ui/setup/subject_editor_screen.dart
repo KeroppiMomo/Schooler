@@ -4,6 +4,7 @@ import 'package:schooler/lib/subject.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
 import 'package:schooler/ui/setup/setup_completed_screen.dart';
+import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/res/resources.dart';
 
 SubjectEditorScreenResources _R = R.subjectEditorScreen;
@@ -35,24 +36,26 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        final dismiss = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(_R.popConfirmTitle),
-            content: Text(_R.popConfirmMessage),
-            actions: <Widget>[
-              FlatButton(
-                child: Text(_R.popConfirmCancelText),
-                onPressed: () => Navigator.of(context).pop(false),
-              ),
-              FlatButton(
-                child: Text(_R.popConfirmDiscardText),
-                onPressed: () => Navigator.of(context).pop(true),
-              ),
-            ],
-          ),
-        );
-        if (!(dismiss ?? false)) return false;
+        if (Settings().subjects.isNotEmpty) {
+          final dismiss = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(_R.popConfirmTitle),
+              content: Text(_R.popConfirmMessage),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text(_R.popConfirmCancelText),
+                  onPressed: () => Navigator.of(context).pop(false),
+                ),
+                FlatButton(
+                  child: Text(_R.popConfirmDiscardText),
+                  onPressed: () => Navigator.of(context).pop(true),
+                ),
+              ],
+            ),
+          );
+          if (!(dismiss ?? false)) return false;
+        }
         widget.onPop?.call();
         return true;
       },
@@ -63,25 +66,74 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
         ),
         body: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: AnimatedList(
-                  key: _listKey,
-                  padding: _R.listPadding,
-                  initialItemCount: Settings().subjects.length +
-                      1, // +1 is the "Add Subject" button
-                  itemBuilder: (context, i, animation) {
-                    if (i == Settings().subjects.length) {
-                      return FlatButton.icon(
-                        label: Text(_R.addSubjectText),
-                        icon: Icon(_R.addSubjectIcon),
-                        onPressed: () => _addSubject(context),
-                      );
-                    } else {
-                      return _buildSubject(context, i, animation: animation);
-                    }
-                  },
+                child: Stack(
+                  children: [
+                    AnimatedList(
+                      key: _listKey,
+                      padding: _R.listPadding,
+                      initialItemCount: Settings().subjects.length +
+                          1, // +1 is the "Add Subject" button
+                      itemBuilder: (context, i, animation) {
+                        if (i == Settings().subjects.length) {
+                          return FlatButton.icon(
+                            label: Text(_R.addSubjectText),
+                            icon: Icon(_R.addSubjectIcon),
+                            onPressed: () => _addSubject(context),
+                          );
+                        } else {
+                          return _buildSubject(context,
+                              i: i, animation: animation);
+                        }
+                      },
+                    ),
+                    IgnorePointer(
+                      ignoring: Settings().subjects?.isNotEmpty ?? false,
+                      child: AnimatedOpacity(
+                        duration: _R.emptyStatesAnimationDuration,
+                        opacity:
+                            (Settings().subjects?.isEmpty ?? true) ? 1.0 : 0.0,
+                        child: Container(
+                          padding: _R.emptyStatesPadding,
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _R.subjectIcon,
+                                size: _R.emptyStatesIconSize,
+                              ),
+                              SizedBox(height: _R.emptyStatesIconTitleSpacing),
+                              Text(
+                                _R.emptyStatesTitle,
+                                style: _R.getEmptyStatesTitleStyle(context),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(
+                                height: _R.emptyStatesTitleDescriptionSpacing,
+                              ),
+                              Text(
+                                _R.emptyStatesDescription,
+                                style:
+                                    _R.getEmptyStatesDescriptionStyle(context),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(
+                                  height:
+                                      _R.emptyStatesDescriptionBUttonSpacing),
+                              RaisedButton.icon(
+                                icon: Icon(_R.addSubjectIcon),
+                                label: Text(_R.addSubjectText),
+                                onPressed: () => _addSubject(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Divider(),
@@ -96,8 +148,11 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
     );
   }
 
-  Widget _buildSubject(BuildContext context, int i, {Animation animation}) {
-    Subject subject = Settings().subjects[i];
+  /// Build a subject widget with its index [i] in settings, or provide a [Subject] directly.
+  Widget _buildSubject(BuildContext context,
+      {int i, Subject subject, Animation animation}) {
+    if (subject == null) subject = Settings().subjects[i];
+
     final listTile = Builder(
       // To get the context for Scaffold.of
       builder: (context) => ListTile(
@@ -107,7 +162,10 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
         ),
         title: subject.name == ''
             ? Text(_R.subjectPlaceholderText, style: R.placeholderTextStyle)
-            : Text(subject.name),
+            : SubjectBlock(
+                name: subject.name,
+                color: subject.color,
+              ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -121,7 +179,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
                   subject.color,
                   (selectedColor) {
                     setState(() {
-                      Settings().subjects[i].color = selectedColor;
+                      subject.color = selectedColor;
                       Settings().saveSettings();
                     });
                   },
@@ -185,20 +243,24 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
     Settings().subjects.add(_R.defaultNewSubject);
     Settings().saveSettings();
 
-    _listKey.currentState.insertItem(Settings().subjects.length - 1);
+    _listKey?.currentState?.insertItem(Settings().subjects.length - 1);
+    setState(() {});
   }
 
   void _removeSubject(BuildContext context, int i) {
+    final subject = Settings().subjects[i];
+    Settings().subjects.removeAt(i);
+    Settings().saveSettings();
     _listKey.currentState.removeItem(
       i,
       (context, animation) {
         final widget = AbsorbPointer(
-            child: _buildSubject(context, i, animation: animation));
-        Settings().subjects.removeAt(i);
-        Settings().saveSettings();
+            child:
+                _buildSubject(context, subject: subject, animation: animation));
         return widget;
       },
     );
+    setState(() {});
   }
 
   void _onEditName(BuildContext context, int i) {

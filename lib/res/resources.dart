@@ -311,6 +311,20 @@ class SubjectEditorScreenResources {
   final addSubjectText = 'Add Subject';
   final addSubjectIcon = Icons.add;
 
+  final emptyStatesAnimationDuration = Duration(milliseconds: 250);
+  final emptyStatesPadding = EdgeInsets.all(32.0);
+  final emptyStatesIconSize = 100.0;
+  final emptyStatesIconTitleSpacing = 32.0;
+  final emptyStatesTitle = 'No Subjects';
+  TextStyle getEmptyStatesTitleStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline5;
+  final emptyStatesTitleDescriptionSpacing = 8.0;
+  final emptyStatesDescription =
+      'Categorize your assignments and other things into subjects.';
+  TextStyle getEmptyStatesDescriptionStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1;
+  final emptyStatesDescriptionBUttonSpacing = 32.0;
+
   final doneButtonText = 'Done';
 
   final subjectIcon = Icons.book;

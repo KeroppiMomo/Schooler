@@ -27,7 +27,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
     super.initState();
 
     if (widget.isSetup) {
-      if (Settings().timetable != null) {
+      if (Settings().subjects != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _donePressed();
         });
@@ -340,6 +340,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
         builder: (context) => SubjectEditorScreen(
           onPop: () {
             Settings().subjects = null;
+            Settings().saveSettings();
           },
         ),
       ));

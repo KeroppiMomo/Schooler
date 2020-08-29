@@ -86,7 +86,7 @@ class Settings {
     Settings().cycleConfig = CycleConfig.fromJSON(decoded['cycle_config']);
     Settings().weekConfig = WeekConfig.fromJSON(decoded['week_config']);
     Settings().timetable = Timetable.fromJSON(decoded['timetable']);
-    Settings().subjects = Subject.fromJSONList(decoded['subjects']) ?? [];
+    Settings().subjects = Subject.fromJSONList(decoded['subjects']);
     if (decoded['setup_completed'] is bool) {
       Settings().isSetupCompleted = decoded['setup_completed'];
     } else {

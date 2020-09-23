@@ -5,7 +5,6 @@ import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/geofencing.dart';
 import 'package:schooler/lib/reminder.dart';
-import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/ui/main_tabs/assignments_tab.dart';
@@ -96,7 +95,7 @@ class SubjectBlockResources {
   final margin = EdgeInsets.symmetric(vertical: 2.0);
   final textPadding = EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
   TextStyle getTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.body2;
+      Theme.of(context).textTheme.bodyText1;
 }
 
 class SetupWelcomeScreenResources {
@@ -108,10 +107,10 @@ class SetupWelcomeScreenResources {
   final itemSpacing = 16.0;
 
   TextStyle getTitleTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.title;
+      Theme.of(context).textTheme.headline6;
   final titleText = 'Welcome to Schooler!';
   TextStyle getMessageTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.subhead;
+      Theme.of(context).textTheme.subtitle1;
   final messageText = 'Help you easily manage your school life.';
   Color getButtonSplashColor(BuildContext context) =>
       Theme.of(context).primaryColor.withOpacity(0.2);
@@ -174,7 +173,7 @@ class CalendarEditorResources {
   final tipFadeDuration = Duration(milliseconds: 250);
 
   final getCalendarDayTextTheme =
-      (BuildContext context) => Theme.of(context).textTheme.body1;
+      (BuildContext context) => Theme.of(context).textTheme.bodyText2;
   final calendarHolidayTextColor = Colors.red;
   final calendarHolidayFillColor = Colors.red.shade50;
   final calendarOccasionFillColor = Colors.grey.shade200;
@@ -299,14 +298,14 @@ class TimetableEditorScreenResources {
 
   final addTabButtonsCardPadding = EdgeInsets.only(top: 8.0);
   TextStyle getAddTabButtonsCardTitleStyle(BuildContext context) =>
-      Theme.of(context).textTheme.body1.copyWith(color: Colors.grey);
+      Theme.of(context).textTheme.bodyText2.copyWith(color: Colors.grey);
   final addTabButtonsIcon = Icons.add;
 
   final addTabNoEventMessage =
       'No available events. All holidays and occasions are with a timetable.';
   TextStyle getAddTabNoEventTextStyle(BuildContext context) => Theme.of(context)
       .textTheme
-      .body1
+      .bodyText2
       .copyWith(color: Colors.grey, fontStyle: FontStyle.italic);
 
   final addTabWidgetSpacing = 16.0; // Spacing between each widgets in ListView
@@ -385,10 +384,10 @@ class SetupCompletedScreenResources {
   final itemSpacing = 16.0;
 
   TextStyle getTitleTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.title;
+      Theme.of(context).textTheme.headline6;
   final titleText = 'Setup Completed';
   TextStyle getMessageTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.subhead;
+      Theme.of(context).textTheme.subtitle1;
   final messageText = 'You can always change these settings later.';
   Color getButtonSplashColor(BuildContext context) =>
       Theme.of(context).primaryColor.withOpacity(0.2);
@@ -434,10 +433,10 @@ class TodayTabResources {
   final dateFormat = DateFormat('dd MMMM yyyy');
   TextStyle getDateTextStyle(BuildContext context) => Theme.of(context)
       .textTheme
-      .headline
+      .headline5
       .copyWith(fontWeight: FontWeight.bold);
   TextStyle getDayDescriptionTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.subhead;
+      Theme.of(context).textTheme.subtitle1;
 
   final dayWWidgetsSpacing = 16.0;
 }
@@ -450,7 +449,7 @@ class WWidgetResources {
   final titleItemsSpacing = 16.0;
   final titleIconSize = 20.0;
   TextStyle titleTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.subhead;
+      Theme.of(context).textTheme.subtitle1;
   final titleActionIconPadding =
       EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   final settingsIcon = Icons.settings;
@@ -461,12 +460,12 @@ class WWidgetResources {
 class TimetableWWidgetResources {
   final timestampFormat = DateFormat('hh:mm');
   TextStyle currentTimestampTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.body1.copyWith(
+      Theme.of(context).textTheme.bodyText2.copyWith(
           fontWeight: FontWeight.bold, decoration: TextDecoration.underline);
   TextStyle afterTimestampTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.body1;
+      Theme.of(context).textTheme.bodyText2;
   TextStyle beforeTimestampTextStyle(BuildContext context) =>
-      Theme.of(context).textTheme.body1.copyWith(color: Colors.grey);
+      Theme.of(context).textTheme.bodyText2.copyWith(color: Colors.grey);
 
   String Function(TimetableDay day) get dayDisplayName =>
       R.timetableEditor.dayTabName;

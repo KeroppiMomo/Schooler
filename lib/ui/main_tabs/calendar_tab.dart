@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:schooler/res/resources.dart';
 
 class CalendarTab extends StatefulWidget {
   @override

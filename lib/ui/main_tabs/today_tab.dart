@@ -52,11 +52,13 @@ class TodayTabState extends State<TodayTab> {
           if (dayInfo.holidays.isNotEmpty) {
             dayDescriptionComponents.add(_R.descriptionWeekendText);
           } else {
-            dayDescriptionComponents.add(dayInfo.holidays.map((e) => e.name).join(', '));
+            dayDescriptionComponents
+                .add(dayInfo.holidays.map((e) => e.name).join(', '));
           }
         }
         if (dayInfo.occasions != null && dayInfo.occasions.isNotEmpty) {
-          dayDescriptionComponents.add(dayInfo.occasions.map((e) => e.name).join(', '));
+          dayDescriptionComponents
+              .add(dayInfo.occasions.map((e) => e.name).join(', '));
         }
         return dayDescriptionComponents.join(', ');
       }

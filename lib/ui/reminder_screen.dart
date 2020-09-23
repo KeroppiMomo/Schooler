@@ -1,24 +1,18 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:schooler/lib/geofencing.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
-import 'package:schooler/lib/geocoder_results.dart';
 import 'package:schooler/res/resources.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:schooler/ui/region_picker.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
 import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
 import 'package:schooler/ui/time_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:geolocator/geolocator.dart';
 
 final ReminderScreenResources _R = R.reminderScreen;
 

@@ -7,7 +7,6 @@ import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/ui/timetable_screen.dart';
-import 'package:intl/intl.dart';
 
 TimetableWWidgetResources _R = R.timetableWWidget;
 
@@ -144,8 +143,6 @@ class TimetableWWidgetState extends State<TimetableWWidget> {
 
         final nowTime = DateTime(
             1970, 1, 1, widget.now.hour, widget.now.minute, widget.now.second);
-        final startTime = DateTime(1970, 1, 1, session.startTime.hour,
-            session.startTime.minute, session.startTime.second);
         final endTime = DateTime(1970, 1, 1, session.endTime.hour,
             session.endTime.minute, session.endTime.second);
 

@@ -124,7 +124,9 @@ class WeekCalendarState extends State<WeekCalendar> {
           );
         } else {
           return Ink(
-            color: calendarInfo.occasions == null ? null : _R.calendarOccasionFillColor,
+            color: calendarInfo.occasions == null
+                ? null
+                : _R.calendarOccasionFillColor,
             child: Column(
               children: <Widget>[
                 Spacer(),
@@ -179,7 +181,8 @@ class WeekCalendarState extends State<WeekCalendar> {
             Spacer(),
             Text(
               dateTime.day.toString(),
-              style: changeColorIfOutside(Theme.of(context).textTheme.body1),
+              style:
+                  changeColorIfOutside(Theme.of(context).textTheme.bodyText2),
             ),
             Text(''),
             Spacer(),

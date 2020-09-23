@@ -111,13 +111,11 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
     final dayInfo = _calendar[date];
 
     if (dayInfo == null) {
-      DateTime startSchoolYear, endSchoolYear;
+      DateTime startSchoolYear;
       if (Settings().calendarType == CalendarType.week) {
         startSchoolYear = Settings().weekConfig.startSchoolYear;
-        endSchoolYear = Settings().weekConfig.endSchoolYear;
       } else if (Settings().calendarType == CalendarType.cycle) {
         startSchoolYear = Settings().cycleConfig.startSchoolYear;
-        endSchoolYear = Settings().cycleConfig.endSchoolYear;
       } else {
         assert(false, 'Unexpected CalendarType value');
       }

@@ -17,8 +17,7 @@ class _TimePickerNormal extends TimePicker {
     this.setLeftIndex(this.currentTime.hour);
     this.setMiddleIndex(
         0); // Prevent initialItem != null (error from the package)
-    this.setRightIndex((this.currentTime.minute)
-        .round());
+    this.setRightIndex((this.currentTime.minute).round());
   }
 
   @override
@@ -48,6 +47,7 @@ class _TimePickerNormal extends TimePicker {
         1970, 1, 1, this.currentLeftIndex(), this.currentRightIndex());
   }
 }
+
 class _TimePicker5Min extends TimePicker {
   _TimePicker5Min({DateTime currentTime, LocaleType locale})
       : super._(locale: locale) {

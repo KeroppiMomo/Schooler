@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/settings.dart';
-import 'package:schooler/lib/subject.dart';
 import 'package:schooler/ui/assignment_screen.dart';
 import 'package:schooler/ui/assignments_list_screen.dart';
 import 'package:schooler/ui/main_tabs/wwidgets/wwidget.dart';
@@ -125,8 +124,7 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
                   icon: Icon(_R.viewAssignmentsIcon),
                   label: Text(_R.getViewAssignmentsText(
                       ((Settings().assignments ?? [])
-                              .where((a) => !a.isCompleted))
-                          .length)),
+                          .where((a) => !a.isCompleted)).length)),
                   onPressed: _viewAssignmentsPressed,
                 );
               } else {

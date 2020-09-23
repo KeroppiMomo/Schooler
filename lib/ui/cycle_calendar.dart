@@ -124,7 +124,9 @@ class CycleCalendarState extends State<CycleCalendar> {
           );
         } else {
           return Ink(
-            color: calendarInfo.occasions == null ? null : _R.calendarOccasionFillColor,
+            color: calendarInfo.occasions == null
+                ? null
+                : _R.calendarOccasionFillColor,
             child: Column(
               children: <Widget>[
                 Spacer(),
@@ -179,7 +181,8 @@ class CycleCalendarState extends State<CycleCalendar> {
             Spacer(),
             Text(
               dateTime.day.toString(),
-              style: changeColorIfOutside(Theme.of(context).textTheme.body1),
+              style:
+                  changeColorIfOutside(Theme.of(context).textTheme.bodyText2),
             ),
             Text(
               (calendarInfo.cycleDay == '1' ? '[${calendarInfo.cycle}] ' : '') +

@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:schooler/lib/assignment.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
+import 'package:schooler/lib/external_value_notifier.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/lib/reminder.dart';
@@ -28,9 +27,9 @@ class Settings {
   // Singleton ---------------------------------------------------------------
   static Settings instance = Settings._();
   Settings._() {
-    assignmentListener = ValueNotifier(assignments);
-    reminderListener = ValueNotifier(reminders);
-    timetableListener = ValueNotifier(timetable);
+    assignmentListener = ExternalValueNotifier(assignments);
+    reminderListener = ExternalValueNotifier(reminders);
+    timetableListener = ExternalValueNotifier(timetable);
   }
   factory Settings() => Settings.instance;
 
@@ -48,9 +47,9 @@ class Settings {
   List<Reminder> reminders = [];
 
   // Value Listener ----------------------------------------------------------
-  ValueNotifier<List<Assignment>> assignmentListener;
-  ValueNotifier<List<Reminder>> reminderListener;
-  ValueNotifier<Timetable> timetableListener;
+  ExternalValueNotifier<List<Assignment>> assignmentListener;
+  ExternalValueNotifier<List<Reminder>> reminderListener;
+  ExternalValueNotifier<Timetable> timetableListener;
 
   // Serilization & File -----------------------------------------------------
 

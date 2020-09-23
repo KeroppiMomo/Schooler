@@ -211,7 +211,10 @@ class LocationReminderTrigger implements ReminderTrigger {
     @required this.geofenceEvent,
   });
 
-  Future<void> register({@required int id, @required bool enabled, @required String title}) async {
+  Future<void> register(
+      {@required int id,
+      @required bool enabled,
+      @required String title}) async {
     await unregister(id: id);
 
     if (!enabled) return;
@@ -376,7 +379,9 @@ class TimeReminderTrigger implements ReminderTrigger {
   });
 
   Future<void> register(
-      {@required int id, @required bool enabled, @required String title}) async {
+      {@required int id,
+      @required bool enabled,
+      @required String title}) async {
     // iOS imposes restrictions which only allow 64 scheduled notifications.
     // So, only schedule 64 notifications per reminder and let iOS filter the earlier ones.
 

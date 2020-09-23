@@ -557,8 +557,8 @@ class WeeksEditorScreenState extends State<WeeksEditorScreen>
                 return Opacity(
                   opacity: data.opacity,
                   child: Material(
-                    shape:
-                        CircleBorder(side: BorderSide(color: _R.tipCircleBorderColor)),
+                    shape: CircleBorder(
+                        side: BorderSide(color: _R.tipCircleBorderColor)),
                     animationDuration: Duration.zero,
                     elevation: data.elevation,
                     color: _R.tipCircleFillColor,
@@ -623,7 +623,8 @@ class WeeksEditorScreenState extends State<WeeksEditorScreen>
               child: Opacity(
                 opacity: data.opacity,
                 child: Material(
-                  shape: CircleBorder(side: BorderSide(color: _R.tipCircleBorderColor)),
+                  shape: CircleBorder(
+                      side: BorderSide(color: _R.tipCircleBorderColor)),
                   animationDuration: Duration.zero,
                   elevation: data.elevation,
                   color: _R.tipCircleFillColor,

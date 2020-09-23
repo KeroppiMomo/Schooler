@@ -13,31 +13,37 @@ abstract class GeofenceException implements Exception {
   @override
   String toString() => '$code: $message';
 }
+
 class GeofenceBadArgumentException implements GeofenceException {
   final String code = 'BAD_ARGUMENT';
   final String message;
   GeofenceBadArgumentException([this.message]);
 }
+
 class GeofenceUnavailableException implements GeofenceException {
   final String code = 'UNAVAILABLE';
   final String message;
   GeofenceUnavailableException([this.message]);
 }
+
 class GeofencePermissionDeniedException implements GeofenceException {
   final String code = 'PERMISSION_DENIED';
   final String message;
   GeofencePermissionDeniedException([this.message]);
 }
+
 class GeofenceMaximumGeofencesReachedException implements GeofenceException {
   final String code = 'MAX_GEOFENCES_REACHED';
   final String message;
   GeofenceMaximumGeofencesReachedException([this.message]);
 }
+
 class GeofenceMaximumRadiusReachedException implements GeofenceException {
   final String code = 'MAX_RADIUS_REACHED';
   final String message;
   GeofenceMaximumRadiusReachedException([this.message]);
 }
+
 class GeofenceUnknownException implements GeofenceException {
   final String code = 'UNKNOWN';
   final String message;
@@ -72,7 +78,8 @@ class Geofencing {
   /// - Android: returns whether "Always" location permission is granted after prompts.
   /// - iOS: returns whether "Always" location permission is granted BEFORE prompts.
   ///   Use `iOSAlwaysPermissionCallback` to listen for "Always" location permission being granted.
-  static Future<bool> requestPermission({@required void Function() iOSAlwaysPermissionCallback}) async {
+  static Future<bool> requestPermission(
+      {@required void Function() iOSAlwaysPermissionCallback}) async {
     final bool result = await _channel.invokeMethod('requestPermission');
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'iOSAlwaysPermissionGranted') {

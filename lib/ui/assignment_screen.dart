@@ -1,23 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:schooler/lib/assignment.dart';
-import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/lib/settings.dart';
-import 'package:schooler/lib/subject.dart';
-import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
 import 'package:schooler/ui/subject_block.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart'
     show DatePicker;
 import 'package:schooler/ui/time_picker.dart';
-import 'package:schooler/ui/cycle_calendar.dart';
-import 'package:schooler/ui/week_calendar.dart';
 
 AssignmentScreenResources _R = R.assignmentScreen;
 

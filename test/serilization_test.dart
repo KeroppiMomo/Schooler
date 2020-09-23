@@ -21,7 +21,6 @@ void main() {
           name: 'name',
           startDate: DateTime(2000, 1, 1),
           endDate: DateTime(2000, 12, 31),
-          skipDay: false,
         );
         final toJSONed = event.toJSON();
         final fromJSONed = Event.fromJSON(toJSONed);
@@ -36,7 +35,6 @@ void main() {
           name: null,
           startDate: null,
           endDate: null,
-          skipDay: null,
         );
         final toJSONed = event.toJSON();
         final fromJSONed = Event.fromJSON(toJSONed);
@@ -64,6 +62,12 @@ void main() {
             Event(id: 'O2'),
             Event(id: 'O3'),
           ],
+          skippedDays: [
+            DateTime(2000, 2, 3),
+            DateTime(2000, 3, 19),
+            DateTime(2000, 9, 9),
+            DateTime(2000, 9, 1),
+          ],
         );
 
         final toJSONed = config.toJSON();
@@ -82,6 +86,7 @@ void main() {
           isSundayHoliday: null,
           holidays: null,
           occasions: null,
+          skippedDays: null,
         );
 
         final toJSONed = config.toJSON();
@@ -97,6 +102,7 @@ void main() {
             isSundayHoliday: null,
             holidays: [],
             occasions: [],
+            skippedDays: [],
           ),
         );
       });

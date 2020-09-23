@@ -155,16 +155,16 @@ class AssignmentsDayScreenState extends State<AssignmentsDayScreen> {
         return '';
       }
 
-      if (dayInfo.holidays != null && dayInfo.holidays != '') {
-        for (final holiday in dayInfo.holidays.split(', ')) {
+      if (dayInfo.holidays != null && dayInfo.holidays.isNotEmpty) {
+        for (final holiday in dayInfo.holidays) {
           lines.add('');
-          lines.add(holiday);
+          lines.add(holiday.name);
         }
       }
       if (dayInfo.occasions != null) {
-        for (final occasion in dayInfo.occasions.split(', ')) {
+        for (final occasion in dayInfo.occasions) {
           lines.add('');
-          lines.add(occasion);
+          lines.add(occasion.name);
         }
       }
       return lines.join('\n');

@@ -49,14 +49,14 @@ class TodayTabState extends State<TodayTab> {
           assert(false, 'Unexpected CalendarType value');
         }
         if (dayInfo.holidays != null) {
-          if (dayInfo.holidays == '') {
+          if (dayInfo.holidays.isNotEmpty) {
             dayDescriptionComponents.add(_R.descriptionWeekendText);
           } else {
-            dayDescriptionComponents.add(dayInfo.holidays);
+            dayDescriptionComponents.add(dayInfo.holidays.map((e) => e.name).join(', '));
           }
         }
-        if (dayInfo.occasions != null && dayInfo.occasions != '') {
-          dayDescriptionComponents.add(dayInfo.occasions);
+        if (dayInfo.occasions != null && dayInfo.occasions.isNotEmpty) {
+          dayDescriptionComponents.add(dayInfo.occasions.map((e) => e.name).join(', '));
         }
         return dayDescriptionComponents.join(', ');
       }

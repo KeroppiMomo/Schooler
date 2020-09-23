@@ -20,15 +20,11 @@ class Event {
   DateTime startDate;
   DateTime endDate;
 
-  /// For `CalendarType.week`, this value should be `false`.
-  bool skipDay;
-
   Event({
     this.id,
     this.name,
     this.startDate,
     this.endDate,
-    this.skipDay,
   });
 
   static String generateID() => Uuid().v1();
@@ -40,7 +36,6 @@ class Event {
       'name': name,
       'start_date_epoch_ms': startDate?.millisecondsSinceEpoch,
       'end_date_epoch_ms': endDate?.millisecondsSinceEpoch,
-      'skip_day': skipDay,
     };
   }
 
@@ -51,18 +46,15 @@ class Event {
     final name = json['name'];
     final startDateEpochMS = json['start_date_epoch_ms'];
     final endDateEpochMS = json['end_date_epoch_ms'];
-    final skipDay = json['skip_day'];
     if ((id is String || id == null) &&
         (name is String || name == null) &&
         (startDateEpochMS is int || startDateEpochMS == null) &&
-        (endDateEpochMS is int || endDateEpochMS == null) &&
-        (skipDay is bool || skipDay == null)) {
+        (endDateEpochMS is int || endDateEpochMS == null)) {
       return Event(
         id: id,
         name: name,
         startDate: nullableUnixEpochToDateTime(startDateEpochMS),
         endDate: nullableUnixEpochToDateTime(endDateEpochMS),
-        skipDay: skipDay,
       );
     } else {
       final curTypeMessage = [
@@ -70,11 +62,10 @@ class Event {
         'name',
         'start_date_epoch_ms',
         'end_date_epoch_ms',
-        'skip_day'
       ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
       throw ParseJSONException(
           message:
-              'Event type mismatch: $curTypeMessage found; String, String, int, int, bool expected');
+              'Event type mismatch: $curTypeMessage found; String, String, int, int expected');
     }
   }
 
@@ -84,11 +75,10 @@ class Event {
         other.id == this.id &&
         other.name == this.name &&
         other.startDate == this.startDate &&
-        other.endDate == this.endDate &&
-        other.skipDay == this.skipDay;
+        other.endDate == this.endDate;
   }
 
-  int get hashCode => hashObjects([id, name, startDate, endDate, skipDay]);
+  int get hashCode => hashObjects([id, name, startDate, endDate]);
 }
 
 /// Information in a calendar for a day.
@@ -105,11 +95,14 @@ class CalendarDayInfo {
   /// Number of cycle of the day.
   int cycle;
 
-  /// `null` if not a holiday. `""` if weekend. Name of the holidays separated by commas if otherwise.
-  String holidays;
+  /// List of holiday events of the day.
+  ///
+  /// If the day is not a holiday, the value is `null`.
+  /// If the day is a weekend, the value is `[]`.
+  List<Event> holidays;
 
   /// `null` if not a occasion. Name of the occasions separated by commas if otherwise.
-  String occasions;
+  List<Event> occasions;
 
   CalendarDayInfo({
     this.isStartSchoolYear = false,
@@ -129,6 +122,7 @@ class CycleConfig {
   bool isSundayHoliday;
   List<Event> holidays;
   List<Event> occasions;
+  List<DateTime> skippedDays;
 
   CycleConfig({
     this.startSchoolYear,
@@ -138,6 +132,7 @@ class CycleConfig {
     this.isSundayHoliday,
     this.holidays,
     this.occasions,
+    this.skippedDays,
   });
 
   Map<DateTime, CalendarDayInfo> getCalendar() {
@@ -149,11 +144,12 @@ class CycleConfig {
     while (!curDate.isAfter(removeTimeFrom(endSchoolYear))) {
       results[curDate] = CalendarDayInfo();
 
-      bool isSkipDay = false;
+      bool isSkipDay = skippedDays.any(
+          (d) => d.millisecondsSinceEpoch == curDate.millisecondsSinceEpoch);
 
       if ((isSaturdayHoliday && curDate.weekday == DateTime.saturday) ||
           (isSundayHoliday && curDate.weekday == DateTime.sunday)) {
-        results[curDate].holidays = '';
+        results[curDate].holidays = [];
         isSkipDay = true;
       }
 
@@ -165,20 +161,12 @@ class CycleConfig {
 
       List<Event> curHolidays = getCurrentEvents(holidays);
       if (curHolidays != null && curHolidays.length != 0) {
-        results[curDate].holidays =
-            curHolidays.map((event) => event.name).join(', ');
-        if (curHolidays.any((event) => event.skipDay)) {
-          isSkipDay = true;
-        }
+        results[curDate].holidays = curHolidays;
       }
 
       List<Event> curOccasions = getCurrentEvents(occasions);
       if (curOccasions != null && curOccasions.length != 0) {
-        results[curDate].occasions =
-            curOccasions.map((event) => event.name).join(', ');
-        if (curOccasions.any((event) => event.skipDay)) {
-          isSkipDay = true;
-        }
+        results[curDate].occasions = curOccasions;
       }
 
       if (!isSkipDay) {
@@ -214,6 +202,9 @@ class CycleConfig {
       'is_sun_holiday': isSundayHoliday,
       'holidays': (holidays ?? []).map((event) => event.toJSON()).toList(),
       'occasions': (occasions ?? []).map((event) => event.toJSON()).toList(),
+      'skipped_days': (skippedDays ?? [])
+          .map((dateTime) => dateTime.millisecondsSinceEpoch)
+          .toList(),
     };
   }
 
@@ -227,11 +218,22 @@ class CycleConfig {
     final dynamic isSunHoliday = json['is_sun_holiday'];
     final dynamic holidays = json['holidays'];
     final dynamic occasions = json['occasions'];
+    final dynamic skippedDays = json['skipped_days'];
 
     bool isStringObjectMapList(dynamic obj) {
       if (obj is! List) return false;
       try {
         obj.cast<Map<String, Object>>();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    bool isIntList(dynamic obj) {
+      if (obj is! List) return false;
+      try {
+        obj.cast<int>();
         return true;
       } catch (e) {
         return false;
@@ -244,7 +246,8 @@ class CycleConfig {
         (isSatHoliday is bool || isSatHoliday == null) &&
         (isSunHoliday is bool || isSunHoliday == null) &&
         (isStringObjectMapList(holidays) || holidays == null) &&
-        (isStringObjectMapList(occasions) || occasions == null)) {
+        (isStringObjectMapList(occasions) || occasions == null) &&
+        (isIntList(skippedDays) || skippedDays == null)) {
       return CycleConfig(
         startSchoolYear: nullableUnixEpochToDateTime(startSchoolYearEpochMS),
         endSchoolYear: nullableUnixEpochToDateTime(endSchoolYearEpochMS),
@@ -259,6 +262,11 @@ class CycleConfig {
             .map((event) => Event.fromJSON(event))
             .toList()
             .cast<Event>(),
+        skippedDays: skippedDays
+            .map((epochMS) =>
+                removeTimeFrom(nullableUnixEpochToDateTime(epochMS)))
+            .toList()
+            .cast<DateTime>(),
       );
     } else {
       final curTypeMessage = [
@@ -269,10 +277,11 @@ class CycleConfig {
         'is_sun_holiday',
         'holidays',
         'occasions',
+        'skipped_days',
       ].map((key) => key + ': ' + json[key].runtimeType.toString()).join(', ');
       throw ParseJSONException(
           message:
-              'CycleConfig type mismatch: $curTypeMessage found; int, int, int, bool, bool, List<Map<String, Object>>, List<Map<String, Object>> expected');
+              'CycleConfig type mismatch: $curTypeMessage found; int, int, int, bool, bool, List<Map<String, Object>>, List<Map<String, Object>>, List<int> expected');
     }
   }
 
@@ -285,7 +294,8 @@ class CycleConfig {
         other.isSaturdayHoliday == this.isSaturdayHoliday &&
         other.isSundayHoliday == this.isSundayHoliday &&
         listEquals(other.holidays, this.holidays) &&
-        listEquals(other.occasions, this.occasions);
+        listEquals(other.occasions, this.occasions) &&
+        listEquals(other.skippedDays, this.skippedDays);
   }
 
   int get hashCode => hashObjects([
@@ -295,7 +305,8 @@ class CycleConfig {
         isSaturdayHoliday,
         isSundayHoliday,
         holidays,
-        occasions
+        occasions,
+        skippedDays
       ]);
 }
 
@@ -325,7 +336,7 @@ class WeekConfig {
 
       if ((isSaturdayHoliday && curDate.weekday == DateTime.saturday) ||
           (isSundayHoliday && curDate.weekday == DateTime.sunday)) {
-        results[curDate].holidays = '';
+        results[curDate].holidays = [];
       }
 
       List<Event> getCurrentEvents(List<Event> events) => events
@@ -336,14 +347,12 @@ class WeekConfig {
 
       List<Event> curHolidays = getCurrentEvents(holidays);
       if (curHolidays != null && curHolidays.length != 0) {
-        results[curDate].holidays =
-            curHolidays.map((event) => event.name).join(', ');
+        results[curDate].holidays = curHolidays;
       }
 
       List<Event> curOccasions = getCurrentEvents(occasions);
       if (curOccasions != null && curOccasions.length != 0) {
-        results[curDate].occasions =
-            curOccasions.map((event) => event.name).join(', ');
+        results[curDate].occasions = curOccasions;
       }
 
       results[curDate].cycleDay = curDate.weekday.toString();

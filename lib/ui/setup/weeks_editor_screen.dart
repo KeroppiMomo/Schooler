@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
+import 'package:schooler/ui/setup/calendar_tip_animation.dart';
 import 'package:schooler/ui/setup/timetable_editor_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
-import 'package:schooler/lib/settings.dart';
 import 'package:schooler/ui/week_calendar.dart';
+import 'package:schooler/lib/settings.dart';
+import 'package:intl/intl.dart';
 
 /// Local resources.
 final CalendarEditorResources _R = R.calendarEditor;
 
 /// Screen for editing week configuration.
 class WeeksEditorScreen extends StatefulWidget {
-  void Function() onPop;
+  final void Function() onPop;
 
   WeeksEditorScreen({this.onPop});
 
@@ -21,37 +23,31 @@ class WeeksEditorScreen extends StatefulWidget {
 }
 
 @visibleForTesting
-class WeeksEditorScreenState extends State<WeeksEditorScreen> {
+class WeeksEditorScreenState extends State<WeeksEditorScreen>
+    with TickerProviderStateMixin {
   /// Calendar controller for all `TableCalendar` instances.
   CalendarController _calendarController;
 
-  /// Scroll offset for the `ListView` in the selection view.
-  double _selectionScrollOffset = 0;
-
-  /// True if the `ExpansionTile` for holidays in the option view is expanded. Used for rebuilding the widget.
-  bool _isHolidaysExpanded = true;
-
-  /// The list of holiday `Event.id`s corresponding to the expanded `ExpansionTile`. Used for rebuilding the widget.
-  List<String> _holidayIDsExpanded = [];
-
-  /// True if the `ExpansionTile` for occasions in the option view is expanded. Used for rebuilding the widget.
-  bool _isOccasionsExpanded = true;
-
-  /// The list of occasion `Event.id`s corresponding to the expanded `ExpansionTile`. Used for rebuilding the widget.
-  List<String> _occasionIDsExpanded = [];
-
-  /// Current week config.
-  WeekConfig _weekConfig;
-
-  /// Calendar info for the current week config `_weekConfig`.
+  /// Calendar info for the current week config.
   Map<DateTime, CalendarDayInfo> _curCalendarInfo;
 
-  /// This screen has two "views": option view and selection view.
-  /// The option view shows all available settings for the week config,
-  /// while the selection view prompts the user to select a date from the calendar for a setting.
-  ///
-  /// The option view and the selection view can be made by calling `_buildOptionView` and `_buildSelectionView` respectively.
-  Widget _currentView;
+  /// Adding event tip widget.
+  Widget _tipWidget = null;
+
+  /// A [GlobalKey] for the calendar to get its position.
+  GlobalKey _calendarKey;
+
+  /// An [AnimationController] for the one-day tip animation.
+  AnimationController _oneDayTipController;
+
+  /// The [Animation] for the one-day tip animation.
+  Animation<double> _oneDayTipAnimation;
+
+  /// A [AnimationController] for the multi-day tip animation.
+  AnimationController _multiDayTipController;
+
+  /// The [Animation] for the multi-day tip animation.
+  Animation<double> _multiDayTipAnimation;
 
   @override
   void initState() {
@@ -65,430 +61,652 @@ class WeeksEditorScreenState extends State<WeeksEditorScreen> {
 
     _calendarController = CalendarController();
     if (Settings().weekConfig == null) {
-      _weekConfig = _R.defaultWeekConfig;
-      Settings().weekConfig = _weekConfig;
+      Settings().weekConfig = _R.defaultWeekConfig;
       Settings().saveSettings();
-    } else {
-      _weekConfig = Settings().weekConfig;
     }
-    _curCalendarInfo = _weekConfig.getCalendar();
+
+    _calendarKey = GlobalKey();
+
+    _oneDayTipController =
+        AnimationController(duration: _R.tipOneDayDuration, vsync: this);
+    _multiDayTipController =
+        AnimationController(duration: _R.tipMultiDayDuration, vsync: this);
   }
 
   @override
   void dispose() {
     _calendarController.dispose();
+    _oneDayTipController.dispose();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_currentView == null) _currentView = _buildOptionView();
-
-    // `AnimatedSwitcher` provides a fade transition when the `child` property is changed.
-    return AnimatedSwitcher(
-      duration: _R.fadeDuration,
-      child: _currentView,
+    _curCalendarInfo = Settings().weekConfig.getCalendar();
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(_R.weeksAppBarTitle),
+            leading: BackButton(),
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildCalendar(
+                    onSelected: _dateSelected,
+                    onRangeSelected: _dateRangeSelected),
+                Divider(),
+                Expanded(child: _buildOptions()),
+                Divider(),
+                FlatButton(
+                  child: Text(_R.doneButtonText),
+                  onPressed: _donePressed,
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            ignoring: _tipWidget == null,
+            child: GestureDetector(
+              child: Container(
+                color: Colors.transparent,
+                child: AnimatedSwitcher(
+                  duration: _R.tipFadeDuration,
+                  child: _tipWidget ?? Container(),
+                ),
+              ),
+              onTapDown: (_) {
+                _oneDayTipController.stop();
+                _multiDayTipController.stop();
+                setState(() => _tipWidget = null);
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   /// Create the main calendar.
   ///
   /// `onSelected` is called when a date is selected from the calendar.
-  Widget _buildCalendar({void Function(DateTime selected) onSelected}) {
+  Widget _buildCalendar(
+      {Future<void> Function(DateTime, Offset) onSelected,
+      Future<void> Function(DateTimeRange, Offset) onRangeSelected}) {
     return WeekCalendar(
+      key: _calendarKey,
       calendarController: _calendarController,
-      weekConfig: _weekConfig,
+      weekConfig: Settings().weekConfig,
       calendarInfo: _curCalendarInfo,
       onSelected: onSelected,
+      onRangeSelected: onRangeSelected,
     );
   }
 
-  /// Create a widget for the option view. See documentation for `_currentView`.
-  Widget _buildOptionView() {
-    return WillPopScope(
-      onWillPop: () async {
-        widget.onPop?.call();
-        return true;
-      },
-      child: Scaffold(
-        key: UniqueKey(),
-        appBar: AppBar(
-          title: Text(_R.weeksAppBarTitle),
-          leading: BackButton(),
-        ),
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _buildCalendar(),
-              Divider(),
-              Expanded(child: _buildOptions()),
-              Divider(),
-              FlatButton(
-                child: Text(_R.doneButtonText),
-                onPressed: _donePressed,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Create the option section of the option view.
+  /// Create the option section.
   Widget _buildOptions() {
-    /// Build an option with a type of `DateTime`.
-    ///
-    /// When a date is selected from the calendar, `onSelected` will be called.
-    /// If `onSelected` returns true, the selection view will be dismissed and return to the option view.
-    Widget buildDateOption({
-      @required String name,
-      @required DateTime dateTime,
-      @required bool Function(DateTime) onSelected,
-    }) {
-      return ListTile(
-        leading: Icon(_R.dateOptionIcon),
-        title: Text(name),
-        subtitle: Text(_R.dateOptionDateFormat.format(dateTime)),
-        trailing: Icon(_R.dateOptionEditIcon),
-        onTap: () {
+    return ListView(children: <Widget>[
+      CheckboxListTile(
+        secondary: Icon(_R.optionIcon),
+        title: Text(_R.saturdayHolidayOptionText),
+        value: Settings().weekConfig.isSaturdayHoliday,
+        onChanged: (value) {
           setState(() {
-            _currentView = _buildSelectionView(name, dateTime, onSelected);
+            Settings().weekConfig.isSaturdayHoliday = value;
+            Settings().saveSettings();
           });
         },
-      );
-    }
-
-    /// Build an option with a type of `bool`.
-    Widget buildCheckboxOption({
-      @required String name,
-      @required bool value,
-      @required void Function(bool) onChanged,
-    }) {
-      return CheckboxListTile(
-        secondary: Icon(Icons.list),
-        title: Text(name),
-        value: value,
-        onChanged: (bool newValue) {
+      ),
+      CheckboxListTile(
+        secondary: Icon(_R.optionIcon),
+        title: Text(_R.sundayHolidayOptionText),
+        value: Settings().weekConfig.isSundayHoliday,
+        onChanged: (value) {
           setState(() {
-            onChanged(newValue);
-            _curCalendarInfo = _weekConfig.getCalendar();
-            _currentView = _buildOptionView();
+            Settings().weekConfig.isSundayHoliday = value;
+            Settings().saveSettings();
           });
         },
-      );
-    }
-
-    /// Build an option with a type of `String`.
-    Widget buildTextOption({
-      @required String name,
-      @required String value,
-      @required void Function(String) onChanged,
-    }) {
-      return ListTile(
-        leading: Icon(_R.textOptionIcon),
-        title: Text(name),
-        subtitle: Text(value),
-        trailing: Icon(_R.textOptionEditIcon),
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => EditTextScreen(
-              title: name,
-              value: value,
-              onDone: (changed) {
-                setState(() {
-                  onChanged(changed);
-
-                  _curCalendarInfo = _weekConfig.getCalendar();
-                  _currentView = _buildOptionView();
-                });
-              },
-            ),
-          ));
-        },
-      );
-    }
-
-    /// Build the events options, i.e. holidays and occasions.
-    ///
-    /// `addNewText` and `onAddNewPressed` refer to the "Add Event" button.
-    /// `isTitleExpanded` and `onTitleExpansionChanged` refer to the `ExpansionTile` showing the `name`.
-    Widget buildEventsOption({
-      @required String name,
-      @required List<Event> events,
-      @required String addNewText,
-      @required void Function(DateTime eventDate) onAddNewPressed,
-      @required void Function(Event event) onEventDeleted,
-      @required bool isTitleExpanded,
-      @required void Function(bool isExpanded) onTitleExpansionChanged,
-      @required List<String> expandedEventIDs,
-      @required
-          void Function(String eventID, bool isExpanded)
-              onEventIDExpansionChanged,
-    }) {
-      return ExpansionTile(
-        leading: Icon(_R.eventTitleIcon),
-        title: Text(name),
-        initiallyExpanded: isTitleExpanded,
-        onExpansionChanged: onTitleExpansionChanged,
-        children: <Widget>[
-          ...events.map(
-            (event) => ExpansionTile(
-              title: Text(event.startDate == event.endDate
-                  ? '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)})'
-                  : '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)} – ${_R.eventTitleDateFormat.format(event.endDate)})'),
-              leading: Icon(_R.eventIcon),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(_R.eventEditIcon),
-                  IconButton(
-                    icon: Icon(_R.eventDeleteIcon),
-                    onPressed: () {
-                      setState(() {
-                        onEventDeleted(event);
-                        _curCalendarInfo = _weekConfig.getCalendar();
-                        _currentView = _buildOptionView();
-                      });
-                    },
-                  ),
-                ],
-              ),
-              initiallyExpanded: expandedEventIDs.contains(event.id),
-              onExpansionChanged: (isExpanded) =>
-                  onEventIDExpansionChanged(event.id, isExpanded),
-              children: <Widget>[
-                buildTextOption(
-                  name: _R.eventNameText,
-                  value: event.name,
-                  onChanged: (changed) {
-                    event.name = changed;
-                  },
-                ),
-                buildDateOption(
-                  name: _R.eventStartText,
-                  dateTime: event.startDate,
-                  onSelected: (selected) {
-                    if (!selected.isBefore(_weekConfig.startSchoolYear) &&
-                        !selected.isAfter(event.endDate)) {
-                      event.startDate = selected;
-                      return true;
-                    } else {
-                      return false;
-                    }
-                  },
-                ),
-                buildDateOption(
-                  name: _R.eventEndText,
-                  dateTime: event.endDate,
-                  onSelected: (selected) {
-                    if (!selected.isAfter(_weekConfig.endSchoolYear) &&
-                        !selected.isBefore(event.startDate)) {
-                      event.endDate = selected;
-                      return true;
-                    } else {
-                      return false;
-                    }
-                  },
-                ),
-              ],
-            ),
+      ),
+      InkWell(
+        child: GestureDetector(
+          child: ListTile(
+            leading: Icon(_R.addEventOptionIcon),
+            title: Text(_R.addEventOptionText),
+            trailing: Icon(_R.addEventOptionRightIcon),
           ),
-          FlatButton.icon(
-            icon: Icon(_R.addEventIcon),
-            label: Text(addNewText),
-            onPressed: () {
-              setState(() {
-                final eventDate = removeTimeFrom(() {
-                  // Want to set it to `_calendarController.focusedDay`
-                  // If it is before start of school year, set it to start of school year
-                  // If it is after end of school year, set it to end of school year
-                  if (_calendarController.focusedDay
-                      .isBefore(_weekConfig.startSchoolYear))
-                    return _weekConfig.startSchoolYear;
-                  if (_calendarController.focusedDay
-                      .isAfter(_weekConfig.endSchoolYear))
-                    return _weekConfig.endSchoolYear;
-
-                  return _calendarController.focusedDay;
-                }());
-                _calendarController.setFocusedDay(eventDate);
-                onAddNewPressed(eventDate);
-                _curCalendarInfo = _weekConfig.getCalendar();
-                _currentView = _buildOptionView();
-              });
-            },
-          ),
-        ],
-      );
-    }
-
-    final scrollController =
-        ScrollController(initialScrollOffset: _selectionScrollOffset);
-    scrollController
-        .addListener(() => _selectionScrollOffset = scrollController.offset);
-
-    return ListView(controller: scrollController, children: <Widget>[
-      buildDateOption(
-        name: _R.startSchoolYearOptionText,
-        dateTime: _weekConfig.startSchoolYear,
-        onSelected: (selected) {
-          if (selected.isBefore(_weekConfig.endSchoolYear)) {
-            _weekConfig.startSchoolYear = selected;
-            Settings().weekConfig = _weekConfig;
-            Settings().saveSettings();
-            return true;
-          } else {
-            return false;
-          }
-        },
-      ),
-      buildDateOption(
-        name: _R.endSchoolYearOptionText,
-        dateTime: _weekConfig.endSchoolYear,
-        onSelected: (selected) {
-          if (selected.isAfter(_weekConfig.startSchoolYear)) {
-            _weekConfig.endSchoolYear = selected;
-            Settings().weekConfig = _weekConfig;
-            Settings().saveSettings();
-            return true;
-          } else {
-            return false;
-          }
-        },
-      ),
-      buildCheckboxOption(
-        name: _R.saturdayHolidayOptionText,
-        value: _weekConfig.isSaturdayHoliday,
-        onChanged: (value) {
-          _weekConfig.isSaturdayHoliday = value;
-          Settings().weekConfig = _weekConfig;
-          Settings().saveSettings();
-        },
-      ),
-      buildCheckboxOption(
-        name: _R.sundayHolidayOptionText,
-        value: _weekConfig.isSundayHoliday,
-        onChanged: (value) {
-          _weekConfig.isSundayHoliday = value;
-          Settings().weekConfig = _weekConfig;
-          Settings().saveSettings();
-        },
-      ),
-      buildEventsOption(
-        name: _R.holidaysOptionText,
-        events: _weekConfig.holidays,
-        addNewText: _R.addHolidayText,
-        onAddNewPressed: (eventDate) {
-          _weekConfig.holidays.add(Event(
-            id: Event.generateID(),
-            name: _R.newHolidayName,
-            skipDay: _R.newHolidaySkipDay,
-            startDate: eventDate,
-            endDate: eventDate,
-          ));
-        },
-        onEventDeleted: (event) {
-          _holidayIDsExpanded.remove(event.id);
-          _weekConfig.holidays.remove(event);
-        },
-        isTitleExpanded: _isHolidaysExpanded,
-        onTitleExpansionChanged: (isExpanded) {
-          _isHolidaysExpanded = isExpanded;
-          _holidayIDsExpanded.clear();
-        },
-        expandedEventIDs: _holidayIDsExpanded,
-        onEventIDExpansionChanged: (eventID, isExpanded) {
-          (isExpanded
-              ? _holidayIDsExpanded.add
-              : _holidayIDsExpanded.remove)(eventID);
-        },
-      ),
-      buildEventsOption(
-        name: _R.occasionsOptionText,
-        events: _weekConfig.occasions,
-        addNewText: _R.addOccasionText,
-        onAddNewPressed: (eventDate) {
-          _weekConfig.occasions.add(Event(
-            id: Event.generateID(),
-            name: _R.newOccasionName,
-            skipDay: _R.newOccasionSkipDay,
-            startDate: eventDate,
-            endDate: eventDate,
-          ));
-        },
-        onEventDeleted: (event) {
-          _occasionIDsExpanded.remove(event.id);
-          _weekConfig.occasions.remove(event);
-        },
-        isTitleExpanded: _isOccasionsExpanded,
-        onTitleExpansionChanged: (isExpanded) {
-          _isOccasionsExpanded = isExpanded;
-          _occasionIDsExpanded.clear();
-        },
-        expandedEventIDs: _occasionIDsExpanded,
-        onEventIDExpansionChanged: (eventID, isExpanded) {
-          (isExpanded
-              ? _occasionIDsExpanded.add
-              : _occasionIDsExpanded.remove)(eventID);
-        },
+          onTapUp: (details) => _showAddEventTip(details.globalPosition),
+        ),
+        onTap: () {},
       ),
     ]);
   }
 
-  /// Create a widget for the selection view. See documentation for `_currentView`.
-  ///
-  /// When a date is selected from the calendar, `onSelected` will be called.
-  /// If `onSelected` returns true, the selection view will be dismissed and return to the option view.
-  Widget _buildSelectionView(String fieldName, DateTime currentSelection,
-      bool Function(DateTime selected) onSelected) {
-    return Scaffold(
-      key: UniqueKey(),
-      appBar: AppBar(
-        title: Text(_R.weeksAppBarTitle),
-        leading: IconButton(
-          icon: Icon(_R.selectionCloseIcon),
-          onPressed: _closeSelection,
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
+  Future<void> _dateSelected(DateTime dateTime, Offset touchOffset) async {
+    Widget contentWidget = StatefulBuilder(
+      builder: (context, setState) {
+        final dayInfo = _curCalendarInfo[removeTimeFrom(dateTime)];
+
+        final isBeforeSchoolYear = removeTimeFrom(dateTime)
+            .isBefore(Settings().weekConfig.startSchoolYear);
+        final isAfterSchoolYear = removeTimeFrom(dateTime)
+            .isAfter(Settings().weekConfig.endSchoolYear);
+
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _buildCalendar(onSelected: (selected) {
-              if (onSelected(removeTimeFrom(selected))) {
-                setState(() {
-                  _curCalendarInfo = _weekConfig.getCalendar();
-                  _currentView = _buildOptionView();
-                });
-              }
-            }),
-            Divider(),
-            Expanded(
-              child: Padding(
-                padding: _R.selectionMessagePadding,
-                child: Text(
-                  _R.getSelectionMessage(fieldName),
-                  textAlign: TextAlign.center,
-                ),
+          children: [
+            SizedBox(height: _R.popupTopSpacing),
+            Text(
+              _R.dateFormat.format(dateTime),
+              style: _R.getPopupDateStyle(context),
+            ),
+            Text(
+              '${DateFormat('EEEE').format(dateTime)}',
+              style: _R.getPopupDescriptionStyle(context),
+            ),
+            SizedBox(height: _R.popupDescriptionHolidaysSpacing),
+            if ((dayInfo?.holidays?.isNotEmpty ?? false) &&
+                dayInfo?.holidays != null)
+              Text(
+                _R.popupHolidayText,
+                style: _R.getPopupEventTitleStyle(context),
               ),
-            ),
+            if ((dayInfo?.holidays?.isNotEmpty ?? false) &&
+                dayInfo?.holidays != null)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...dayInfo.holidays
+                      .map((holiday) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(holiday.name),
+                              onDeleted: () =>
+                                  _removeHoliday(holiday, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () => _addHoliday(dateTime, dateTime, setState),
+                  ),
+                ],
+              ),
+            if ((dayInfo?.occasions?.isNotEmpty ?? false) &&
+                dayInfo?.occasions != null)
+              Text(
+                _R.popupOccasionText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if ((dayInfo?.occasions?.isNotEmpty ?? false) &&
+                dayInfo?.occasions != null)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...dayInfo.occasions
+                      .map((occasion) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(occasion.name),
+                              onDeleted: () =>
+                                  _removeOccasion(occasion, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () => _addOccasion(dateTime, dateTime, setState),
+                  ),
+                ],
+              ),
             Divider(),
-            FlatButton(
-              child: Text(_R.selectionCancelText),
-              onPressed: _closeSelection,
-            ),
+            if (!isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupStartOfYearText),
+                ),
+                onTap: () {
+                  _setStartSchoolYear(dateTime);
+                  Navigator.of(context).pop();
+                },
+              ),
+            if (!isBeforeSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupEndOfYearText),
+                ),
+                onTap: () {
+                  _setEndSchoolYear(dateTime);
+                  Navigator.of(context).pop();
+                },
+              ),
+            if (!isBeforeSchoolYear && !isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupAddHolidayText),
+                ),
+                onTap: () {
+                  _addHoliday(dateTime, dateTime, setState);
+                },
+              ),
+            if (!isBeforeSchoolYear && !isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupAddOccasionText),
+                ),
+                onTap: () {
+                  _addOccasion(dateTime, dateTime, setState);
+                },
+              ),
           ],
+        );
+      },
+    );
+
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(touchOffset.dx, touchOffset.dy, 0, 0),
+          Rect.fromLTWH(0, 0, 100000, 1000000)),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.subtitle1,
+            child: contentWidget,
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  /// Close the selection view and return to the option view.
-  void _closeSelection() {
+  Future<void> _dateRangeSelected(
+      DateTimeRange range, Offset touchOffset) async {
+    final contentWidget = StatefulBuilder(
+      builder: (context, setState) {
+        final Set<Event> holidays = () {
+          Set<Event> result = _curCalendarInfo[removeTimeFrom(range.start)]
+                  ?.holidays
+                  ?.toSet() ??
+              {};
+          for (DateTime dateTime = removeTimeFrom(range.start);
+              !dateTime.isAfter(range.end);
+              dateTime = dateTime.add(Duration(days: 1))) {
+            result = result.intersection(
+                _curCalendarInfo[dateTime]?.holidays?.toSet() ?? {});
+            if (result.isEmpty) break;
+          }
+          return result;
+        }();
+
+        final Set<Event> occasions = () {
+          Set<Event> result = _curCalendarInfo[removeTimeFrom(range.start)]
+                  ?.occasions
+                  ?.toSet() ??
+              {};
+          for (DateTime dateTime = removeTimeFrom(range.start);
+              !dateTime.isAfter(range.end);
+              dateTime = dateTime.add(Duration(days: 1))) {
+            result = result.intersection(
+                _curCalendarInfo[dateTime]?.occasions?.toSet() ?? {});
+            if (result.isEmpty) break;
+          }
+          return result;
+        }();
+
+        final isBeforeSchoolYear = removeTimeFrom(range.start)
+            .isBefore(Settings().weekConfig.startSchoolYear);
+        final isAfterSchoolYear = removeTimeFrom(range.end)
+            .isAfter(Settings().weekConfig.endSchoolYear);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(height: _R.popupTopSpacing),
+            Text(
+              _R.getPopupRangeDescription(range),
+              style: _R.getPopupDateStyle(context),
+            ),
+            SizedBox(height: _R.popupDescriptionHolidaysSpacing),
+            if (holidays.isNotEmpty)
+              Text(
+                _R.popupHolidayText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if (holidays.isNotEmpty)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...holidays
+                      .map((holiday) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(holiday.name),
+                              onDeleted: () =>
+                                  _removeHoliday(holiday, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () =>
+                        _addHoliday(range.start, range.end, setState),
+                  ),
+                ],
+              ),
+            if (occasions.isNotEmpty)
+              Text(
+                _R.popupOccasionText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if (occasions.isNotEmpty)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...occasions
+                      .map((occasion) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(occasion.name),
+                              onDeleted: () =>
+                                  _removeOccasion(occasion, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () =>
+                        _addOccasion(range.start, range.end, setState),
+                  ),
+                ],
+              ),
+            ...((isBeforeSchoolYear || isAfterSchoolYear)
+                ? [SizedBox(height: _R.popupNoOptionBottomSpacing)]
+                : [
+                    Divider(),
+                    InkWell(
+                      child: Container(
+                        height: _R.popupButtonHeight,
+                        alignment: Alignment.centerLeft,
+                        child: Text(_R.popupAddHolidayText),
+                      ),
+                      onTap: () {
+                        _addHoliday(range.start, range.end, setState);
+                      },
+                    ),
+                    InkWell(
+                      child: Container(
+                        height: _R.popupButtonHeight,
+                        alignment: Alignment.centerLeft,
+                        child: Text(_R.popupAddOccasionText),
+                      ),
+                      onTap: () {
+                        _addOccasion(range.start, range.end, setState);
+                      },
+                    ),
+                  ]),
+          ],
+        );
+      },
+    );
+
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(touchOffset.dx, touchOffset.dy, 0, 0),
+          Rect.fromLTWH(0, 0, 100000, 1000000)),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.subtitle1,
+            child: contentWidget,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAddEventTip(Offset touchOffset) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(touchOffset.dx, touchOffset.dy, 0, 0),
+          Rect.fromLTWH(0, 0, 100000, 1000000)),
+      items: [
+        PopupMenuItem(
+          child: Text(_R.addEventPopupOneText),
+          value: 'one',
+        ),
+        PopupMenuItem(
+          child: Text(_R.addEventPopupMultiText),
+          value: 'multi',
+        ),
+      ],
+    ).then((val) {
+      if (val == null) return;
+
+      if (val == 'one') {
+        _setOneDayTip();
+      } else if (val == 'multi') {
+        _setMultiDayTip();
+      }
+      setState(() {});
+    });
+  }
+
+  void _setOneDayTip() {
+    final RenderBox calendarBox =
+        _calendarKey.currentContext.findRenderObject();
+    final calendarPos = calendarBox.localToGlobal(Offset.zero);
+    final calendarSize = calendarBox.size;
+
+    _oneDayTipController.reset();
+    _oneDayTipController.repeat();
+    _oneDayTipAnimation =
+        Tween(begin: 0.0, end: 1.0).animate(_oneDayTipController);
+    _tipWidget = Stack(
+      key: UniqueKey(),
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: calendarPos.dy,
+          child: Center(
+            child: Material(
+              elevation: _R.tipElevation,
+              child: Padding(
+                padding: _R.tipPadding,
+                child: Text(
+                  _R.tipOneDayText,
+                  textAlign: TextAlign.center,
+                  style: _R.getTipStyle(context),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: calendarPos.dy,
+          height: calendarSize.height,
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _oneDayTipAnimation,
+              builder: (context, _) {
+                final data = CalendarOneDayTipAnimation.fromTime(
+                    _oneDayTipAnimation.value);
+
+                return Opacity(
+                  opacity: data.opacity,
+                  child: Material(
+                    shape:
+                        CircleBorder(side: BorderSide(color: _R.tipCircleBorderColor)),
+                    animationDuration: Duration.zero,
+                    elevation: data.elevation,
+                    color: _R.tipCircleFillColor,
+                    child: Container(
+                      width: data.size,
+                      height: data.size,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _setMultiDayTip() {
+    final RenderBox calendarBox =
+        _calendarKey.currentContext.findRenderObject();
+    final calendarPos = calendarBox.localToGlobal(Offset.zero);
+    final calendarSize = calendarBox.size;
+
+    _multiDayTipController.reset();
+    _multiDayTipController.repeat();
+    _multiDayTipAnimation =
+        Tween(begin: 0.0, end: 1.0).animate(_multiDayTipController);
+    _tipWidget = Stack(
+      key: UniqueKey(),
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: calendarPos.dy,
+          child: Center(
+            child: Material(
+              elevation: _R.tipElevation,
+              child: Padding(
+                padding: _R.tipPadding,
+                child: Text(
+                  _R.tipMultiDayText,
+                  textAlign: TextAlign.center,
+                  style: _R.getTipStyle(context),
+                ),
+              ),
+            ),
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _multiDayTipAnimation,
+          builder: (context, _) {
+            final data = CalendarMultiDayTipAnimation.fromTime(
+                _multiDayTipAnimation.value);
+
+            return Positioned(
+              left: calendarSize.width * data.posX - data.size / 2,
+              top: calendarPos.dy +
+                  calendarSize.height * data.posY -
+                  data.size / 2,
+              width: data.size,
+              height: data.size,
+              child: Opacity(
+                opacity: data.opacity,
+                child: Material(
+                  shape: CircleBorder(side: BorderSide(color: _R.tipCircleBorderColor)),
+                  animationDuration: Duration.zero,
+                  elevation: data.elevation,
+                  color: _R.tipCircleFillColor,
+                  child: Container(
+                    width: data.size,
+                    height: data.size,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _addHoliday(DateTime start, DateTime end, StateSetter setState) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => EditTextScreen(
+        title: _R.eventNameText,
+        value: _R.newHolidayName,
+        onDone: (name) {
+          _calendarController.setFocusedDay(removeTimeFrom(start));
+          Settings().weekConfig.holidays.add(Event(
+                id: Event.generateID(),
+                name: name,
+                startDate: removeTimeFrom(start),
+                endDate: removeTimeFrom(end),
+              ));
+          Settings().saveSettings();
+          setState(() {});
+          this.setState(() {});
+        },
+      ),
+    ));
+  }
+
+  void _addOccasion(DateTime start, DateTime end, StateSetter setState) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => EditTextScreen(
+        title: _R.eventNameText,
+        value: _R.newOccasionName,
+        onDone: (name) {
+          _calendarController.setFocusedDay(removeTimeFrom(start));
+          Settings().weekConfig.occasions.add(Event(
+                id: Event.generateID(),
+                name: name,
+                startDate: removeTimeFrom(start),
+                endDate: removeTimeFrom(end),
+              ));
+          Settings().saveSettings();
+          setState(() {});
+          this.setState(() {});
+        },
+      ),
+    ));
+  }
+
+  void _removeHoliday(Event holiday, StateSetter setState) {
+    Settings().weekConfig.holidays.remove(holiday);
+    Settings().saveSettings();
+    setState(() {});
+    this.setState(() {});
+  }
+
+  void _removeOccasion(Event occasion, StateSetter setState) {
+    Settings().weekConfig.occasions.remove(occasion);
+    Settings().saveSettings();
+    setState(() {});
+    this.setState(() {});
+  }
+
+  void _setStartSchoolYear(DateTime dateTime) {
     setState(() {
-      _currentView = _buildOptionView();
+      Settings().weekConfig.startSchoolYear = removeTimeFrom(dateTime);
+      Settings().saveSettings();
+    });
+  }
+
+  void _setEndSchoolYear(DateTime dateTime) {
+    setState(() {
+      Settings().weekConfig.endSchoolYear = removeTimeFrom(dateTime);
+      Settings().saveSettings();
     });
   }
 

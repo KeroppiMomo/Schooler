@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
+import 'package:schooler/ui/setup/calendar_tip_animation.dart';
 import 'package:schooler/ui/setup/timetable_editor_screen.dart';
 import 'package:spinner_input/spinner_input.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -13,7 +14,7 @@ final CalendarEditorResources _R = R.calendarEditor;
 
 /// Screen for editing cycle configuration.
 class CyclesEditorScreen extends StatefulWidget {
-  void Function() onPop;
+  final void Function() onPop;
 
   CyclesEditorScreen({this.onPop});
 
@@ -22,37 +23,31 @@ class CyclesEditorScreen extends StatefulWidget {
 }
 
 @visibleForTesting
-class CyclesEditorScreenState extends State<CyclesEditorScreen> {
+class CyclesEditorScreenState extends State<CyclesEditorScreen>
+    with TickerProviderStateMixin {
   /// Calendar controller for all `TableCalendar` instances.
   CalendarController _calendarController;
 
-  /// Scroll offset for the `ListView` in the selection view.
-  double _selectionScrollOffset = 0;
-
-  /// True if the `ExpansionTile` for holidays in the option view is expanded. Used for rebuilding the widget.
-  bool _isHolidaysExpanded = true;
-
-  /// The list of holiday `Event.id`s corresponding to the expanded `ExpansionTile`. Used for rebuilding the widget.
-  List<String> _holidayIDsExpanded = [];
-
-  /// True if the `ExpansionTile` for occasions in the option view is expanded. Used for rebuilding the widget.
-  bool _isOccasionsExpanded = true;
-
-  /// The list of occasion `Event.id`s corresponding to the expanded `ExpansionTile`. Used for rebuilding the widget.
-  List<String> _occasionIDsExpanded = [];
-
-  /// Current cycle config.
-  CycleConfig _cycleConfig;
-
-  /// Calendar info for the current cycle config `_cycleConfig`.
+  /// Calendar info for the current cycle config.
   Map<DateTime, CalendarDayInfo> _curCalendarInfo;
 
-  /// This screen has two "views": option view and selection view.
-  /// The option view shows all available settings for the cycle config,
-  /// while the selection view prompts the user to select a date from the calendar for a setting.
-  ///
-  /// The option view and the selection view can be made by calling `_buildOptionView` and `_buildSelectionView` respectively.
-  Widget _currentView;
+  /// Adding event tip widget.
+  Widget _tipWidget = null;
+
+  /// A [GlobalKey] for the calendar to get its position.
+  GlobalKey _calendarKey;
+
+  /// An [AnimationController] for the one-day tip animation.
+  AnimationController _oneDayTipController;
+
+  /// The [Animation] for the one-day tip animation.
+  Animation<double> _oneDayTipAnimation;
+
+  /// A [AnimationController] for the multi-day tip animation.
+  AnimationController _multiDayTipController;
+
+  /// The [Animation] for the multi-day tip animation.
+  Animation<double> _multiDayTipAnimation;
 
   @override
   void initState() {
@@ -66,484 +61,773 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen> {
 
     _calendarController = CalendarController();
     if (Settings().cycleConfig == null) {
-      _cycleConfig = _R.defaultCycleConfig;
-      Settings().cycleConfig = _cycleConfig;
+      Settings().cycleConfig = _R.defaultCycleConfig;
       Settings().saveSettings();
-    } else {
-      _cycleConfig = Settings().cycleConfig;
     }
-    _curCalendarInfo = _cycleConfig.getCalendar();
+
+    _calendarKey = GlobalKey();
+
+    _oneDayTipController =
+        AnimationController(duration: _R.tipOneDayDuration, vsync: this);
+    _multiDayTipController =
+        AnimationController(duration: _R.tipMultiDayDuration, vsync: this);
   }
 
   @override
   void dispose() {
     _calendarController.dispose();
+    _oneDayTipController.dispose();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_currentView == null) _currentView = _buildOptionView();
-
-    // `AnimatedSwitcher` provides a fade transition when the `child` property is changed.
-    return AnimatedSwitcher(
-      duration: _R.fadeDuration,
-      child: _currentView,
+    _curCalendarInfo = Settings().cycleConfig.getCalendar();
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(_R.cyclesAppBarTitle),
+            leading: BackButton(),
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildCalendar(
+                    onSelected: _dateSelected,
+                    onRangeSelected: _dateRangeSelected),
+                Divider(),
+                Expanded(child: _buildOptions()),
+                Divider(),
+                FlatButton(
+                  child: Text(_R.doneButtonText),
+                  onPressed: _donePressed,
+                ),
+              ],
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            ignoring: _tipWidget == null,
+            child: GestureDetector(
+              child: Container(
+                color: Colors.transparent,
+                child: AnimatedSwitcher(
+                  duration: _R.tipFadeDuration,
+                  child: _tipWidget ?? Container(),
+                ),
+              ),
+              onTapDown: (_) {
+                _oneDayTipController.stop();
+                _multiDayTipController.stop();
+                setState(() => _tipWidget = null);
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   /// Create the main calendar.
   ///
   /// `onSelected` is called when a date is selected from the calendar.
-  Widget _buildCalendar({void Function(DateTime selected) onSelected}) {
+  Widget _buildCalendar(
+      {Future<void> Function(DateTime, Offset) onSelected,
+      Future<void> Function(DateTimeRange, Offset) onRangeSelected}) {
     return CycleCalendar(
+      key: _calendarKey,
       calendarController: _calendarController,
-      cycleConfig: _cycleConfig,
+      cycleConfig: Settings().cycleConfig,
       calendarInfo: _curCalendarInfo,
       onSelected: onSelected,
+      onRangeSelected: onRangeSelected,
     );
   }
 
-  /// Create a widget for the option view. See documentation for `_currentView`.
-  Widget _buildOptionView() {
-    return WillPopScope(
-      onWillPop: () async {
-        widget.onPop?.call();
-        return true;
-      },
-      child: Scaffold(
-        key: UniqueKey(),
-        appBar: AppBar(
-          title: Text(_R.cyclesAppBarTitle),
-          leading: BackButton(),
-        ),
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _buildCalendar(),
-              Divider(),
-              Expanded(child: _buildOptions()),
-              Divider(),
-              FlatButton(
-                child: Text(_R.doneButtonText),
-                onPressed: _donePressed,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Create the option section of the option view.
+  /// Create the option section.
   Widget _buildOptions() {
-    /// Build an option with a type of `DateTime`.
-    ///
-    /// When a date is selected from the calendar, `onSelected` will be called.
-    /// If `onSelected` returns true, the selection view will be dismissed and return to the option view.
-    Widget buildDateOption({
-      @required String name,
-      @required DateTime dateTime,
-      @required bool Function(DateTime) onSelected,
-    }) {
-      return ListTile(
-        leading: Icon(_R.dateOptionIcon),
-        title: Text(name),
-        subtitle: Text(_R.dateOptionDateFormat.format(dateTime)),
-        trailing: Icon(_R.dateOptionEditIcon),
-        onTap: () {
+    return ListView(children: <Widget>[
+      CheckboxListTile(
+        secondary: Icon(_R.optionIcon),
+        title: Text(_R.saturdayHolidayOptionText),
+        value: Settings().cycleConfig.isSaturdayHoliday,
+        onChanged: (value) {
           setState(() {
-            _currentView = _buildSelectionView(name, dateTime, onSelected);
+            Settings().cycleConfig.isSaturdayHoliday = value;
+            Settings().saveSettings();
           });
         },
-      );
-    }
-
-    /// Build an option with a type of `bool`.
-    Widget buildCheckboxOption({
-      @required String name,
-      @required bool value,
-      @required void Function(bool) onChanged,
-    }) {
-      return CheckboxListTile(
-        secondary: Icon(Icons.list),
-        title: Text(name),
-        value: value,
-        onChanged: (bool newValue) {
+      ),
+      CheckboxListTile(
+        secondary: Icon(_R.optionIcon),
+        title: Text(_R.sundayHolidayOptionText),
+        value: Settings().cycleConfig.isSundayHoliday,
+        onChanged: (value) {
           setState(() {
-            onChanged(newValue);
-            _curCalendarInfo = _cycleConfig.getCalendar();
-            _currentView = _buildOptionView();
+            Settings().cycleConfig.isSundayHoliday = value;
+            Settings().saveSettings();
           });
         },
-      );
-    }
-
-    /// Build an option with a type of `int`.
-    Widget buildSpinnerOption({
-      @required String name,
-      @required int value,
-      @required void Function(int) onChanged,
-    }) {
-      return ListTile(
-        leading: Icon(Icons.list),
-        title: Text(name),
+      ),
+      ListTile(
+        leading: Icon(_R.optionIcon),
+        title: Text(_R.noOfDaysInCycleOptionText),
         trailing: SpinnerInput(
-          disabledLongPress: true,
-          spinnerValue: value.toDouble(),
-          minValue: 1,
-
-          minusButton: SpinnerButtonStyle(
-            color: Theme.of(context).accentColor,
-            textColor:
-                Theme.of(context).accentColorBrightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-          ),
-          plusButton: SpinnerButtonStyle(
-            color: Theme.of(context).accentColor,
-            textColor:
-                Theme.of(context).accentColorBrightness == Brightness.light
-                    ? Colors.black
-                    : Colors.white,
-          ), // Different instance for `minusButton` and `plusButton` because `SpinnerButtonStyle.child` changes during the initialize of `SpinnerInput`
-
-          onChange: (newValue) {
-            setState(() {
-              onChanged(newValue.toInt());
-              _curCalendarInfo = _cycleConfig.getCalendar();
-              _currentView = _buildOptionView();
-            });
-          },
-        ),
-      );
-    }
-
-    /// Build an option with a type of `String`.
-    Widget buildTextOption({
-      @required String name,
-      @required String value,
-      @required void Function(String) onChanged,
-    }) {
-      return ListTile(
-        leading: Icon(_R.textOptionIcon),
-        title: Text(name),
-        subtitle: Text(value),
-        trailing: Icon(_R.textOptionEditIcon),
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => EditTextScreen(
-              title: name,
-              value: value,
-              onDone: (changed) {
-                setState(() {
-                  onChanged(changed);
-
-                  _curCalendarInfo = _cycleConfig.getCalendar();
-                  _currentView = _buildOptionView();
-                });
-              },
+            disabledLongPress: true,
+            spinnerValue: Settings().cycleConfig.noOfDaysInCycle.toDouble(),
+            minValue: 1,
+            minusButton: SpinnerButtonStyle(
+              color: Theme.of(context).accentColor,
+              textColor:
+                  Theme.of(context).accentColorBrightness == Brightness.light
+                      ? Colors.black
+                      : Colors.white,
             ),
-          ));
-        },
-      );
-    }
-
-    /// Build the events options, i.e. holidays and occasions.
-    ///
-    /// `addNewText` and `onAddNewPressed` refer to the "Add Event" button.
-    /// `isTitleExpanded` and `onTitleExpansionChanged` refer to the `ExpansionTile` showing the `name`.
-    Widget buildEventsOption({
-      @required String name,
-      @required List<Event> events,
-      @required String addNewText,
-      @required void Function(DateTime eventDate) onAddNewPressed,
-      @required void Function(Event event) onEventDeleted,
-      @required bool isTitleExpanded,
-      @required void Function(bool isExpanded) onTitleExpansionChanged,
-      @required List<String> expandedEventIDs,
-      @required
-          void Function(String eventID, bool isExpanded)
-              onEventIDExpansionChanged,
-    }) {
-      return ExpansionTile(
-        leading: Icon(_R.eventTitleIcon),
-        title: Text(name),
-        initiallyExpanded: isTitleExpanded,
-        onExpansionChanged: onTitleExpansionChanged,
-        children: <Widget>[
-          ...events.map(
-            (event) => ExpansionTile(
-              title: Text(event.startDate == event.endDate
-                  ? '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)})'
-                  : '${event.name} (${_R.eventTitleDateFormat.format(event.startDate)} – ${_R.eventTitleDateFormat.format(event.endDate)})'),
-              leading: Icon(_R.eventIcon),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(_R.eventEditIcon),
-                  IconButton(
-                    icon: Icon(_R.eventDeleteIcon),
-                    onPressed: () {
-                      setState(() {
-                        onEventDeleted(event);
-                        _curCalendarInfo = _cycleConfig.getCalendar();
-                        _currentView = _buildOptionView();
-                      });
-                    },
-                  ),
-                ],
-              ),
-              initiallyExpanded: expandedEventIDs.contains(event.id),
-              onExpansionChanged: (isExpanded) =>
-                  onEventIDExpansionChanged(event.id, isExpanded),
-              children: <Widget>[
-                buildTextOption(
-                  name: _R.eventNameText,
-                  value: event.name,
-                  onChanged: (changed) {
-                    event.name = changed;
-                  },
-                ),
-                buildDateOption(
-                  name: _R.eventStartText,
-                  dateTime: event.startDate,
-                  onSelected: (selected) {
-                    if (!selected.isBefore(_cycleConfig.startSchoolYear) &&
-                        !selected.isAfter(event.endDate)) {
-                      event.startDate = selected;
-                      return true;
-                    } else {
-                      return false;
-                    }
-                  },
-                ),
-                buildDateOption(
-                  name: _R.eventEndText,
-                  dateTime: event.endDate,
-                  onSelected: (selected) {
-                    if (!selected.isAfter(_cycleConfig.endSchoolYear) &&
-                        !selected.isBefore(event.startDate)) {
-                      event.endDate = selected;
-                      return true;
-                    } else {
-                      return false;
-                    }
-                  },
-                ),
-                buildCheckboxOption(
-                  name: _R.eventSkipDayText,
-                  value: event.skipDay,
-                  onChanged: (changed) => event.skipDay = changed,
-                ),
-              ],
+            plusButton: SpinnerButtonStyle(
+              color: Theme.of(context).accentColor,
+              textColor:
+                  Theme.of(context).accentColorBrightness == Brightness.light
+                      ? Colors.black
+                      : Colors.white,
             ),
-          ),
-          FlatButton.icon(
-            icon: Icon(_R.addEventIcon),
-            label: Text(addNewText),
-            onPressed: () {
+            onChange: (value) {
               setState(() {
-                final eventDate = removeTimeFrom(() {
-                  // Want to set it to `_calendarController.focusedDay`
-                  // If it is before start of school year, set it to start of school year
-                  // If it is after end of school year, set it to end of school year
-                  if (_calendarController.focusedDay
-                      .isBefore(_cycleConfig.startSchoolYear))
-                    return _cycleConfig.startSchoolYear;
-                  if (_calendarController.focusedDay
-                      .isAfter(_cycleConfig.endSchoolYear))
-                    return _cycleConfig.endSchoolYear;
-
-                  return _calendarController.focusedDay;
-                }());
-                _calendarController.setFocusedDay(eventDate);
-                onAddNewPressed(eventDate);
-                _curCalendarInfo = _cycleConfig.getCalendar();
-                _currentView = _buildOptionView();
+                Settings().cycleConfig.noOfDaysInCycle = value.toInt();
+                Settings().saveSettings();
               });
-            },
+            }),
+      ),
+      InkWell(
+        child: GestureDetector(
+          child: ListTile(
+            leading: Icon(_R.addEventOptionIcon),
+            title: Text(_R.addEventOptionText),
+            trailing: Icon(_R.addEventOptionRightIcon),
           ),
-        ],
-      );
-    }
-
-    final scrollController =
-        ScrollController(initialScrollOffset: _selectionScrollOffset);
-    scrollController
-        .addListener(() => _selectionScrollOffset = scrollController.offset);
-
-    return ListView(controller: scrollController, children: <Widget>[
-      buildDateOption(
-        name: _R.startSchoolYearOptionText,
-        dateTime: _cycleConfig.startSchoolYear,
-        onSelected: (selected) {
-          if (selected.isBefore(_cycleConfig.endSchoolYear)) {
-            _cycleConfig.startSchoolYear = selected;
-            Settings().cycleConfig = _cycleConfig;
-            Settings().saveSettings();
-            return true;
-          } else {
-            return false;
-          }
-        },
-      ),
-      buildDateOption(
-        name: _R.endSchoolYearOptionText,
-        dateTime: _cycleConfig.endSchoolYear,
-        onSelected: (selected) {
-          if (selected.isAfter(_cycleConfig.startSchoolYear)) {
-            _cycleConfig.endSchoolYear = selected;
-            Settings().cycleConfig = _cycleConfig;
-            Settings().saveSettings();
-            return true;
-          } else {
-            return false;
-          }
-        },
-      ),
-      buildCheckboxOption(
-        name: _R.saturdayHolidayOptionText,
-        value: _cycleConfig.isSaturdayHoliday,
-        onChanged: (value) {
-          _cycleConfig.isSaturdayHoliday = value;
-          Settings().cycleConfig = _cycleConfig;
-          Settings().saveSettings();
-        },
-      ),
-      buildCheckboxOption(
-        name: _R.sundayHolidayOptionText,
-        value: _cycleConfig.isSundayHoliday,
-        onChanged: (value) {
-          _cycleConfig.isSundayHoliday = value;
-          Settings().cycleConfig = _cycleConfig;
-          Settings().saveSettings();
-        },
-      ),
-      buildSpinnerOption(
-        name: _R.noOfDaysInCycleOptionText,
-        value: _cycleConfig.noOfDaysInCycle,
-        onChanged: (value) {
-          _cycleConfig.noOfDaysInCycle = value;
-          Settings().cycleConfig = _cycleConfig;
-          Settings().saveSettings();
-        },
-      ),
-      buildEventsOption(
-        name: _R.holidaysOptionText,
-        events: _cycleConfig.holidays,
-        addNewText: _R.addHolidayText,
-        onAddNewPressed: (eventDate) {
-          _cycleConfig.holidays.add(Event(
-            id: Event.generateID(),
-            name: _R.newHolidayName,
-            skipDay: _R.newHolidaySkipDay,
-            startDate: eventDate,
-            endDate: eventDate,
-          ));
-        },
-        onEventDeleted: (event) {
-          _holidayIDsExpanded.remove(event.id);
-          _cycleConfig.holidays.remove(event);
-        },
-        isTitleExpanded: _isHolidaysExpanded,
-        onTitleExpansionChanged: (isExpanded) {
-          _isHolidaysExpanded = isExpanded;
-          _holidayIDsExpanded.clear();
-        },
-        expandedEventIDs: _holidayIDsExpanded,
-        onEventIDExpansionChanged: (eventID, isExpanded) {
-          (isExpanded
-              ? _holidayIDsExpanded.add
-              : _holidayIDsExpanded.remove)(eventID);
-        },
-      ),
-      buildEventsOption(
-        name: _R.occasionsOptionText,
-        events: _cycleConfig.occasions,
-        addNewText: _R.addOccasionText,
-        onAddNewPressed: (eventDate) {
-          _cycleConfig.occasions.add(Event(
-            id: Event.generateID(),
-            name: _R.newOccasionName,
-            skipDay: _R.newOccasionSkipDay,
-            startDate: eventDate,
-            endDate: eventDate,
-          ));
-        },
-        onEventDeleted: (event) {
-          _occasionIDsExpanded.remove(event.id);
-          _cycleConfig.occasions.remove(event);
-        },
-        isTitleExpanded: _isOccasionsExpanded,
-        onTitleExpansionChanged: (isExpanded) {
-          _isOccasionsExpanded = isExpanded;
-          _occasionIDsExpanded.clear();
-        },
-        expandedEventIDs: _occasionIDsExpanded,
-        onEventIDExpansionChanged: (eventID, isExpanded) {
-          (isExpanded
-              ? _occasionIDsExpanded.add
-              : _occasionIDsExpanded.remove)(eventID);
-        },
+          onTapUp: (details) => _showAddEventTip(details.globalPosition),
+        ),
+        onTap: () {},
       ),
     ]);
   }
 
-  /// Create a widget for the selection view. See documentation for `_currentView`.
-  ///
-  /// When a date is selected from the calendar, `onSelected` will be called.
-  /// If `onSelected` returns true, the selection view will be dismissed and return to the option view.
-  Widget _buildSelectionView(String fieldName, DateTime currentSelection,
-      bool Function(DateTime selected) onSelected) {
-    return Scaffold(
-      key: UniqueKey(),
-      appBar: AppBar(
-        title: Text(_R.cyclesAppBarTitle),
-        leading: IconButton(
-          icon: Icon(_R.selectionCloseIcon),
-          onPressed: _closeSelection,
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
+  Future<void> _dateSelected(DateTime dateTime, Offset touchOffset) async {
+    Widget contentWidget = StatefulBuilder(
+      builder: (context, setState) {
+        final dayInfo = _curCalendarInfo[removeTimeFrom(dateTime)];
+
+        final isBeforeSchoolYear = removeTimeFrom(dateTime)
+            .isBefore(Settings().cycleConfig.startSchoolYear);
+        final isAfterSchoolYear = removeTimeFrom(dateTime)
+            .isAfter(Settings().cycleConfig.endSchoolYear);
+
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _buildCalendar(onSelected: (selected) {
-              if (onSelected(removeTimeFrom(selected))) {
-                setState(() {
-                  _curCalendarInfo = _cycleConfig.getCalendar();
-                  _currentView = _buildOptionView();
-                });
-              }
-            }),
-            Divider(),
-            Expanded(
-              child: Padding(
-                padding: _R.selectionMessagePadding,
-                child: Text(
-                  _R.getSelectionMessage(fieldName),
-                  textAlign: TextAlign.center,
-                ),
+          children: [
+            SizedBox(height: _R.popupTopSpacing),
+            Text(
+              _R.dateFormat.format(dateTime),
+              style: _R.getPopupDateStyle(context),
+            ),
+            if (dayInfo?.cycleDay != null && dayInfo?.cycle != null)
+              Text(
+                _R.getPopupCycleDescription(dayInfo.cycleDay, dayInfo.cycle),
+                style: _R.getPopupDescriptionStyle(context),
               ),
-            ),
+            SizedBox(height: _R.popupDescriptionHolidaysSpacing),
+            if ((dayInfo?.holidays?.isNotEmpty ?? false) &&
+                dayInfo?.holidays != null)
+              Text(
+                _R.popupHolidayText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if ((dayInfo?.holidays?.isNotEmpty ?? false) &&
+                dayInfo?.holidays != null)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...dayInfo.holidays
+                      .map((holiday) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(holiday.name),
+                              onDeleted: () =>
+                                  _removeHoliday(holiday, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () => _addHoliday(dateTime, dateTime, setState),
+                  ),
+                ],
+              ),
+            if ((dayInfo?.occasions?.isNotEmpty ?? false) &&
+                dayInfo?.occasions != null)
+              Text(
+                _R.popupOccasionText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if ((dayInfo?.occasions?.isNotEmpty ?? false) &&
+                dayInfo?.occasions != null)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...dayInfo.occasions
+                      .map((occasion) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(occasion.name),
+                              onDeleted: () =>
+                                  _removeOccasion(occasion, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () => _addOccasion(dateTime, dateTime, setState),
+                  ),
+                ],
+              ),
             Divider(),
-            FlatButton(
-              child: Text(_R.selectionCancelText),
-              onPressed: _closeSelection,
-            ),
+            if (!isBeforeSchoolYear && !isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Row(children: [
+                    Expanded(child: Text(_R.popupSkipDayText)),
+                    Checkbox(
+                      value: Settings()
+                          .cycleConfig
+                          .skippedDays
+                          .contains(removeTimeFrom(dateTime)),
+                      onChanged: (_) => _toggleSkipDay(dateTime, setState),
+                    ),
+                  ]),
+                ),
+                onTap: () => _toggleSkipDay(dateTime, setState),
+              ),
+            if (!isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupStartOfYearText),
+                ),
+                onTap: () {
+                  _setStartSchoolYear(dateTime);
+                  Navigator.of(context).pop();
+                },
+              ),
+            if (!isBeforeSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupEndOfYearText),
+                ),
+                onTap: () {
+                  _setEndSchoolYear(dateTime);
+                  Navigator.of(context).pop();
+                },
+              ),
+            if (!isBeforeSchoolYear && !isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupAddHolidayText),
+                ),
+                onTap: () {
+                  _addHoliday(dateTime, dateTime, setState);
+                },
+              ),
+            if (!isBeforeSchoolYear && !isAfterSchoolYear)
+              InkWell(
+                child: Container(
+                  height: _R.popupButtonHeight,
+                  alignment: Alignment.centerLeft,
+                  child: Text(_R.popupAddOccasionText),
+                ),
+                onTap: () {
+                  _addOccasion(dateTime, dateTime, setState);
+                },
+              ),
           ],
+        );
+      },
+    );
+
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(touchOffset.dx, touchOffset.dy, 0, 0),
+          Rect.fromLTWH(0, 0, 100000, 1000000)),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.subtitle1,
+            child: contentWidget,
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  /// Close the selection view and return to the option view.
-  void _closeSelection() {
+  Future<void> _dateRangeSelected(
+      DateTimeRange range, Offset touchOffset) async {
+    final contentWidget = StatefulBuilder(
+      builder: (context, setState) {
+        final Set<Event> holidays = () {
+          Set<Event> result = _curCalendarInfo[removeTimeFrom(range.start)]
+                  ?.holidays
+                  ?.toSet() ??
+              {};
+          for (DateTime dateTime = removeTimeFrom(range.start);
+              !dateTime.isAfter(range.end);
+              dateTime = dateTime.add(Duration(days: 1))) {
+            result = result.intersection(
+                _curCalendarInfo[dateTime]?.holidays?.toSet() ?? {});
+            if (result.isEmpty) break;
+          }
+          return result;
+        }();
+
+        final Set<Event> occasions = () {
+          Set<Event> result = _curCalendarInfo[removeTimeFrom(range.start)]
+                  ?.occasions
+                  ?.toSet() ??
+              {};
+          for (DateTime dateTime = removeTimeFrom(range.start);
+              !dateTime.isAfter(range.end);
+              dateTime = dateTime.add(Duration(days: 1))) {
+            result = result.intersection(
+                _curCalendarInfo[dateTime]?.occasions?.toSet() ?? {});
+            if (result.isEmpty) break;
+          }
+          return result;
+        }();
+
+        final bool isSkipDay = () {
+          // If the day is out of the school year, it is not shown and handled in the `if` logic.
+          bool result = Settings()
+              .cycleConfig
+              .skippedDays
+              .contains(removeTimeFrom(range.start));
+          for (DateTime dateTime = removeTimeFrom(range.start);
+              !dateTime.isAfter(range.end);
+              dateTime = dateTime.add(Duration(days: 1))) {
+            if (result !=
+                Settings()
+                    .cycleConfig
+                    .skippedDays
+                    .contains(removeTimeFrom(dateTime))) {
+              return null;
+            }
+          }
+          return result;
+        }();
+
+        final isBeforeSchoolYear = removeTimeFrom(range.start)
+            .isBefore(Settings().cycleConfig.startSchoolYear);
+        final isAfterSchoolYear = removeTimeFrom(range.end)
+            .isAfter(Settings().cycleConfig.endSchoolYear);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(height: _R.popupTopSpacing),
+            Text(
+              _R.getPopupRangeDescription(range),
+              style: _R.getPopupDateStyle(context),
+            ),
+            SizedBox(height: _R.popupDescriptionHolidaysSpacing),
+            if (holidays.isNotEmpty)
+              Text(
+                _R.popupHolidayText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if (holidays.isNotEmpty)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...holidays
+                      .map((holiday) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(holiday.name),
+                              onDeleted: () =>
+                                  _removeHoliday(holiday, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () =>
+                        _addHoliday(range.start, range.end, setState),
+                  ),
+                ],
+              ),
+            if (occasions.isNotEmpty)
+              Text(
+                _R.popupOccasionText,
+                style: _R.getPopupEventTitleStyle(context),
+              ),
+            if (occasions.isNotEmpty)
+              Wrap(
+                spacing: _R.popupEventsWrapSpacing,
+                runSpacing: _R.popupEventsWrapRunSpacing,
+                children: [
+                  ...occasions
+                      .map((occasion) => Padding(
+                            padding: _R.popupEventPadding,
+                            child: Chip(
+                              label: Text(occasion.name),
+                              onDeleted: () =>
+                                  _removeOccasion(occasion, setState),
+                            ),
+                          ))
+                      .toList(),
+                  IconButton(
+                    icon: Icon(_R.popupEventAddIcon),
+                    onPressed: () =>
+                        _addOccasion(range.start, range.end, setState),
+                  ),
+                ],
+              ),
+            ...((isBeforeSchoolYear || isAfterSchoolYear)
+                ? [SizedBox(height: _R.popupNoOptionBottomSpacing)]
+                : [
+                    Divider(),
+                    InkWell(
+                      child: Container(
+                        height: _R.popupButtonHeight,
+                        alignment: Alignment.centerLeft,
+                        child: Row(children: [
+                          Expanded(child: Text(_R.popupSkipDayText)),
+                          Checkbox(
+                            tristate: true,
+                            value: isSkipDay,
+                            onChanged: (_) => _setRangeSkipDay(
+                                !(isSkipDay ?? false),
+                                range.start,
+                                range.end,
+                                setState),
+                          ),
+                        ]),
+                      ),
+                      onTap: () => _setRangeSkipDay(!(isSkipDay ?? false),
+                          range.start, range.end, setState),
+                    ),
+                    InkWell(
+                      child: Container(
+                        height: _R.popupButtonHeight,
+                        alignment: Alignment.centerLeft,
+                        child: Text(_R.popupAddHolidayText),
+                      ),
+                      onTap: () {
+                        _addHoliday(range.start, range.end, setState);
+                      },
+                    ),
+                    InkWell(
+                      child: Container(
+                        height: _R.popupButtonHeight,
+                        alignment: Alignment.centerLeft,
+                        child: Text(_R.popupAddOccasionText),
+                      ),
+                      onTap: () {
+                        _addOccasion(range.start, range.end, setState);
+                      },
+                    ),
+                  ]),
+          ],
+        );
+      },
+    );
+
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(touchOffset.dx, touchOffset.dy, 0, 0),
+          Rect.fromLTWH(0, 0, 100000, 1000000)),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: DefaultTextStyle(
+            style: Theme.of(context).textTheme.subtitle1,
+            child: contentWidget,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // TODO: Change name
+  void _showAddEventTip(Offset touchOffset) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+          Rect.fromLTWH(touchOffset.dx, touchOffset.dy, 0, 0),
+          Rect.fromLTWH(0, 0, 100000, 1000000)),
+      items: [
+        PopupMenuItem(
+          child: Text(_R.addEventPopupOneText),
+          value: 'one',
+        ),
+        PopupMenuItem(
+          child: Text(_R.addEventPopupMultiText),
+          value: 'multi',
+        ),
+      ],
+    ).then((val) {
+      if (val == null) return;
+
+      if (val == 'one') {
+        _setOneDayTip();
+      } else if (val == 'multi') {
+        _setMultiDayTip();
+      }
+      setState(() {});
+    });
+  }
+
+  void _setOneDayTip() {
+    final RenderBox calendarBox =
+        _calendarKey.currentContext.findRenderObject();
+    final calendarPos = calendarBox.localToGlobal(Offset.zero);
+    final calendarSize = calendarBox.size;
+
+    _oneDayTipController.reset();
+    _oneDayTipController.repeat();
+    _oneDayTipAnimation =
+        Tween(begin: 0.0, end: 1.0).animate(_oneDayTipController);
+    _tipWidget = Stack(
+      key: UniqueKey(),
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: calendarPos.dy,
+          child: Center(
+            child: Material(
+              elevation: _R.tipElevation,
+              child: Padding(
+                padding: _R.tipPadding,
+                child: Text(
+                  _R.tipOneDayText,
+                  textAlign: TextAlign.center,
+                  style: _R.getTipStyle(context),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: calendarPos.dy,
+          height: calendarSize.height,
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _oneDayTipAnimation,
+              builder: (context, _) {
+                final data = CalendarOneDayTipAnimation.fromTime(
+                    _oneDayTipAnimation.value);
+
+                return Opacity(
+                  opacity: data.opacity,
+                  child: Material(
+                    shape: CircleBorder(
+                        side: BorderSide(color: _R.tipCircleBorderColor)),
+                    animationDuration: Duration.zero,
+                    elevation: data.elevation,
+                    color: _R.tipCircleFillColor,
+                    child: Container(
+                      width: data.size,
+                      height: data.size,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _setMultiDayTip() {
+    final RenderBox calendarBox =
+        _calendarKey.currentContext.findRenderObject();
+    final calendarPos = calendarBox.localToGlobal(Offset.zero);
+    final calendarSize = calendarBox.size;
+
+    _multiDayTipController.reset();
+    _multiDayTipController.repeat();
+    _multiDayTipAnimation =
+        Tween(begin: 0.0, end: 1.0).animate(_multiDayTipController);
+    _tipWidget = Stack(
+      key: UniqueKey(),
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: calendarPos.dy,
+          child: Center(
+            child: Material(
+              elevation: _R.tipElevation,
+              child: Padding(
+                padding: _R.tipPadding,
+                child: Text(
+                  _R.tipMultiDayText,
+                  textAlign: TextAlign.center,
+                  style: _R.getTipStyle(context),
+                ),
+              ),
+            ),
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _multiDayTipAnimation,
+          builder: (context, _) {
+            final data = CalendarMultiDayTipAnimation.fromTime(
+                _multiDayTipAnimation.value);
+
+            return Positioned(
+              left: calendarSize.width * data.posX - data.size / 2,
+              top: calendarPos.dy +
+                  calendarSize.height * data.posY -
+                  data.size / 2,
+              width: data.size,
+              height: data.size,
+              child: Opacity(
+                opacity: data.opacity,
+                child: Material(
+                  shape: CircleBorder(
+                      side: BorderSide(color: _R.tipCircleBorderColor)),
+                  animationDuration: Duration.zero,
+                  elevation: data.elevation,
+                  color: _R.tipCircleFillColor,
+                  child: Container(
+                    width: data.size,
+                    height: data.size,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  void _toggleSkipDay(DateTime dateTime, StateSetter setState) {
+    // List.remove returns true if the item is in the list.
+    if (!Settings().cycleConfig.skippedDays.remove(removeTimeFrom(dateTime))) {
+      Settings().cycleConfig.skippedDays.add(removeTimeFrom(dateTime));
+    }
+    Settings().saveSettings();
+    setState(() {});
+    this.setState(() {});
+  }
+
+  void _setRangeSkipDay(
+      bool value, DateTime start, DateTime end, StateSetter setState) {
+    for (DateTime dateTime = removeTimeFrom(start);
+        !dateTime.isAfter(end);
+        dateTime = dateTime.add(Duration(days: 1))) {
+      if (value) {
+        if (!Settings()
+            .cycleConfig
+            .skippedDays
+            .contains(removeTimeFrom(dateTime))) {
+          Settings().cycleConfig.skippedDays.add(removeTimeFrom(dateTime));
+        }
+      } else {
+        Settings().cycleConfig.skippedDays.remove(removeTimeFrom(dateTime));
+      }
+    }
+
+    Settings().saveSettings();
+    setState(() {});
+    this.setState(() {});
+  }
+
+  void _addHoliday(DateTime start, DateTime end, StateSetter setState) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => EditTextScreen(
+        title: _R.eventNameText,
+        value: _R.newHolidayName,
+        onDone: (name) {
+          _calendarController.setFocusedDay(removeTimeFrom(start));
+          Settings().cycleConfig.holidays.add(Event(
+                id: Event.generateID(),
+                name: name,
+                startDate: removeTimeFrom(start),
+                endDate: removeTimeFrom(end),
+              ));
+          Settings().saveSettings();
+          setState(() {});
+          this.setState(() {});
+        },
+      ),
+    ));
+  }
+
+  void _addOccasion(DateTime start, DateTime end, StateSetter setState) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => EditTextScreen(
+        title: _R.eventNameText,
+        value: _R.newOccasionName,
+        onDone: (name) {
+          _calendarController.setFocusedDay(removeTimeFrom(start));
+          Settings().cycleConfig.occasions.add(Event(
+                id: Event.generateID(),
+                name: name,
+                startDate: removeTimeFrom(start),
+                endDate: removeTimeFrom(end),
+              ));
+          Settings().saveSettings();
+          setState(() {});
+          this.setState(() {});
+        },
+      ),
+    ));
+  }
+
+  void _removeHoliday(Event holiday, StateSetter setState) {
+    Settings().cycleConfig.holidays.remove(holiday);
+    Settings().saveSettings();
+    setState(() {});
+    this.setState(() {});
+  }
+
+  void _removeOccasion(Event occasion, StateSetter setState) {
+    Settings().cycleConfig.occasions.remove(occasion);
+    Settings().saveSettings();
+    setState(() {});
+    this.setState(() {});
+  }
+
+  void _setStartSchoolYear(DateTime dateTime) {
     setState(() {
-      _currentView = _buildOptionView();
+      Settings().cycleConfig.startSchoolYear = removeTimeFrom(dateTime);
+      Settings().saveSettings();
+    });
+  }
+
+  void _setEndSchoolYear(DateTime dateTime) {
+    setState(() {
+      Settings().cycleConfig.endSchoolYear = removeTimeFrom(dateTime);
+      Settings().saveSettings();
     });
   }
 

@@ -115,12 +115,12 @@ class SuggestionTextField extends StatefulWidget {
 
         final timetableDay = () {
           final existingDays = Settings().timetable.days;
-          for (final holiday in dayInfo.holidays?.split(', ') ?? []) {
-            final day = TimetableOccasionDay(holiday);
+          for (final holiday in dayInfo.holidays ?? <Event>[]) {
+            final day = TimetableOccasionDay(holiday.name);
             if (existingDays.contains(day)) return day;
           }
-          for (final occasion in dayInfo.holidays?.split(', ') ?? []) {
-            final day = TimetableOccasionDay(occasion);
+          for (final occasion in dayInfo.occasions ?? <Event>[]) {
+            final day = TimetableOccasionDay(occasion.name);
             if (existingDays.contains(day)) return day;
           }
 
@@ -157,14 +157,14 @@ class SuggestionTextField extends StatefulWidget {
           calendarController: calendarController,
           weekConfig: Settings().weekConfig,
           calendarInfo: Settings().weekConfig.getCalendar(),
-          onSelected: onDone,
+          onSelected: (dateTime, _) async => onDone(dateTime),
         );
       } else if (Settings().calendarType == CalendarType.cycle) {
         return CycleCalendar(
           calendarController: calendarController,
           cycleConfig: Settings().cycleConfig,
           calendarInfo: Settings().cycleConfig.getCalendar(),
-          onSelected: onDone,
+          onSelected: (dateTime, _) async => onDone(dateTime),
         );
       } else {
         assert(false, 'Unexpected CalendarType value');

@@ -33,12 +33,12 @@ class TimetableWWidgetState extends State<TimetableWWidget> {
           if (widget.dayInfo == null) return null;
 
           final existingDays = Settings().timetable.days;
-          for (final holiday in widget.dayInfo.holidays?.split(', ') ?? []) {
-            final day = TimetableOccasionDay(holiday);
+          for (final holiday in widget.dayInfo.holidays ?? <Event>[]) {
+            final day = TimetableOccasionDay(holiday.name);
             if (existingDays.contains(day)) return day;
           }
-          for (final occasion in widget.dayInfo.holidays?.split(', ') ?? []) {
-            final day = TimetableOccasionDay(occasion);
+          for (final occasion in widget.dayInfo.occasions ?? <Event>[]) {
+            final day = TimetableOccasionDay(occasion.name);
             if (existingDays.contains(day)) return day;
           }
 

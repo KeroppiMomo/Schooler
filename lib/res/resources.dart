@@ -157,6 +157,7 @@ class CalendarEditorResources {
     isSundayHoliday: true,
     holidays: [],
     occasions: [],
+    skippedDays: [],
   );
   final defaultWeekConfig = WeekConfig(
     startSchoolYear: DateTime.utc(DateTime.now().year, 9, 1),
@@ -167,11 +168,17 @@ class CalendarEditorResources {
     occasions: [],
   );
 
-  final fadeDuration = const Duration(milliseconds: 250);
+  final tipOneDayDuration = Duration(seconds: 2);
+  final tipMultiDayDuration = Duration(seconds: 4);
+
+  final tipFadeDuration = Duration(milliseconds: 250);
 
   final getCalendarDayTextTheme =
       (BuildContext context) => Theme.of(context).textTheme.body1;
-  final calendarHolidayColor = Colors.red;
+  final calendarHolidayTextColor = Colors.red;
+  final calendarHolidayFillColor = Colors.red.shade50;
+  final calendarOccasionFillColor = Colors.grey.shade200;
+  final calendarSelectedColor = Colors.black.withOpacity(0.1);
   final getCalendarDayInfoTextTheme =
       (BuildContext context) => Theme.of(context).textTheme.caption;
   final calendarStartColor = const Color(0xFFB5F0A5);
@@ -181,41 +188,59 @@ class CalendarEditorResources {
   final cyclesAppBarTitle = 'Cycles Editor';
   final weeksAppBarTitle = 'Weeks Editor';
 
+  final dateFormat = DateFormat('dd MMM');
+
   final doneButtonText = 'Done';
-  final dateOptionIcon = Icons.date_range;
-  final dateOptionEditIcon = Icons.edit;
-  final dateOptionDateFormat = DateFormat('dd MMMM yyyy');
-  final textOptionIcon = Icons.text_fields;
-  final textOptionEditIcon = Icons.edit;
-  final eventTitleDateFormat = DateFormat('dd MMM');
-  final eventTitleIcon = Icons.date_range;
-  final eventIcon = Icons.event;
-  final eventEditIcon = Icons.edit;
-  final eventDeleteIcon = Icons.delete;
   final eventNameText = 'Name';
-  final eventStartText = 'From';
-  final eventEndText = 'To';
-  final eventSkipDayText = 'Skip Day';
-  final addEventIcon = Icons.add;
-  final startSchoolYearOptionText = 'Start of School Year';
-  final endSchoolYearOptionText = 'End of School Year';
+
+  final optionIcon = Icons.list;
+  final addEventOptionIcon = Icons.add;
+  final addEventOptionText = 'Add Holiday/Occasion';
+  final addEventOptionRightIcon = Icons.chevron_right;
   final saturdayHolidayOptionText = 'Is Saturday Holiday';
   final sundayHolidayOptionText = 'Is Sunday Holiday';
   final noOfDaysInCycleOptionText = 'Number of Days in a Cycle';
-  final holidaysOptionText = 'Holiday';
-  final addHolidayText = 'Add Holiday';
-  final newHolidayName = 'New Holiday';
-  final newHolidaySkipDay = true;
-  final occasionsOptionText = 'Occasions';
-  final addOccasionText = 'Add Occasion';
-  final newOccasionName = 'New Occasion';
-  final newOccasionSkipDay = false;
 
-  final selectionCloseIcon = Icons.close;
-  final selectionMessagePadding = const EdgeInsets.all(16.0);
-  final getSelectionMessage =
-      (String fieldName) => 'Select "$fieldName" on the calendar.';
-  final selectionCancelText = 'Cancel';
+  final newHolidayName = 'New Holiday';
+  final newOccasionName = 'New Occasion';
+
+  final popupTopSpacing = 16.0;
+  TextStyle getPopupDateStyle(BuildContext context) =>
+      Theme.of(context).textTheme.headline6;
+  String getPopupCycleDescription(String cycleDay, int cycle) =>
+      'Day $cycleDay, Cycle $cycle';
+  TextStyle getPopupDescriptionStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1.copyWith(color: Colors.grey);
+  final popupDescriptionHolidaysSpacing = 8.0;
+  final popupHolidayText = 'Holidays';
+  final popupOccasionText = 'Occasions';
+  TextStyle getPopupEventTitleStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1.copyWith(color: Colors.grey);
+  final popupEventsWrapSpacing = 8.0;
+  final popupEventsWrapRunSpacing = -8.0;
+  final popupEventPadding = EdgeInsets.only(right: 8.0);
+  final popupEventAddIcon = Icons.add;
+  final popupButtonHeight = 48.0;
+  final popupSkipDayText = 'Skip Day in Cycle';
+  final popupStartOfYearText = 'Set as Start of School Year';
+  final popupEndOfYearText = 'Set as End of School Year';
+  final popupAddHolidayText = 'Add Holiday';
+  final popupAddOccasionText = 'Add Occasion';
+  String getPopupRangeDescription(DateTimeRange range) =>
+      '${dateFormat.format(range.start)} – ${dateFormat.format(range.end)}';
+  final popupNoOptionBottomSpacing = 8.0;
+
+  final addEventPopupOneText = 'Add One-Day Event';
+  final addEventPopupMultiText = 'Add Multi-Day Event';
+
+  final tipElevation = 10.0;
+  final tipPadding = EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0);
+  final tipOneDayText = 'Tap a date on the calendar.';
+  final tipMultiDayText = 'Hold and drag between two dates on the calendar.';
+  final tipCircleBorderColor = Colors.black54;
+  final tipCircleFillColor = Colors.grey;
+  TextStyle getTipStyle(BuildContext context) =>
+      Theme.of(context).textTheme.subtitle1;
 }
 
 class EditTextResources {

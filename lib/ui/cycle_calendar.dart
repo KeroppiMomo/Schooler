@@ -9,7 +9,9 @@ class CycleCalendar extends StatefulWidget {
   final CalendarController calendarController;
   final CycleConfig cycleConfig;
   final Map<DateTime, CalendarDayInfo> calendarInfo;
-  final void Function(DateTime) onSelected;
+  final Future<void> Function(DateTime dateTime, Offset tapPosition) onSelected;
+  final Future<void> Function(DateTimeRange dateTimeRange, Offset tapPosition)
+      onRangeSelected;
 
   CycleCalendar({
     Key key,
@@ -17,6 +19,7 @@ class CycleCalendar extends StatefulWidget {
     @required this.cycleConfig,
     @required this.calendarInfo,
     this.onSelected,
+    this.onRangeSelected,
   }) : super(key: key);
 
   @override
@@ -25,16 +28,40 @@ class CycleCalendar extends StatefulWidget {
 
 @visibleForTesting
 class CycleCalendarState extends State<CycleCalendar> {
+  /// Selected dates when it is pressed or dragged.
+  DateTime _selectedDateStart;
+  DateTime _selectedDateEnd;
+
+  Map<Rect, DateTime> _datePosition = {};
+
+  DateTime _getDateTimeFromPosition(Offset position) {
+    for (final entry in _datePosition.entries) {
+      if (position.dx >= entry.key.left &&
+          position.dx < entry.key.right &&
+          position.dy >= entry.key.top &&
+          position.dy < entry.key.bottom) {
+        return entry.value;
+      }
+    }
+    return null;
+  }
+
+  Rect _getPositionFromDateTime(DateTime dateTime) {
+    for (final entry in _datePosition.entries) {
+      if (removeTimeFrom(entry.value) == removeTimeFrom(dateTime)) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return TableCalendar(
       initialSelectedDay: widget.calendarController.focusedDay,
       initialCalendarFormat: CalendarFormat.month,
       availableCalendarFormats: {
-        // There is a bug in the package
-        CalendarFormat.month: 'Week',
-        CalendarFormat.twoWeeks: 'Month',
-        CalendarFormat.week: '2 Weeks',
+        CalendarFormat.month: '',
       },
       calendarController: widget.calendarController,
       builders: CalendarBuilders(
@@ -47,9 +74,6 @@ class CycleCalendarState extends State<CycleCalendar> {
             (BuildContext context, DateTime dateTime, List events) =>
                 dayBuilder(context, dateTime, true),
       ),
-      onDaySelected: (dateTime, events) {
-        widget.onSelected?.call(dateTime);
-      },
     );
   }
 
@@ -70,46 +94,75 @@ class CycleCalendarState extends State<CycleCalendar> {
         widget.calendarInfo[removeTimeFrom(dateTime)] ?? CalendarDayInfo();
     final contentWidget = () {
       if (calendarInfo.holidays != null) {
-        if ((calendarInfo.holidays ?? '') != '') {
-          return Column(
-            children: <Widget>[
-              Spacer(),
-              Text(
-                dateTime.day.toString(),
-                style: _R.getCalendarDayTextTheme(context).copyWith(
-                      color: _R.calendarHolidayColor,
-                      decoration: calendarInfo.occasions == null
-                          ? null
-                          : TextDecoration.underline,
-                    ),
-              ),
-              Text(
-                calendarInfo.holidays,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: _R
-                    .getCalendarDayInfoTextTheme(context)
-                    .copyWith(color: _R.calendarHolidayColor),
-              ),
-              Spacer(),
-            ],
+        if (calendarInfo.holidays.isNotEmpty) {
+          return Ink(
+            color: _R.calendarHolidayFillColor,
+            child: Column(
+              children: <Widget>[
+                Spacer(),
+                Text(
+                  dateTime.day.toString(),
+                  style: _R.getCalendarDayTextTheme(context).copyWith(
+                        color: _R.calendarHolidayTextColor,
+                        decoration: calendarInfo.occasions == null
+                            ? null
+                            : TextDecoration.underline,
+                      ),
+                ),
+                Text(
+                  calendarInfo.holidays.map((e) => e.name).join(', '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: _R
+                      .getCalendarDayInfoTextTheme(context)
+                      .copyWith(color: _R.calendarHolidayTextColor),
+                ),
+                Spacer(),
+              ],
+            ),
           );
         } else {
-          return Column(
+          return Ink(
+            color: calendarInfo.occasions == null ? null : _R.calendarOccasionFillColor,
+            child: Column(
+              children: <Widget>[
+                Spacer(),
+                Text(
+                  dateTime.day.toString(),
+                  style: _R.getCalendarDayTextTheme(context).copyWith(
+                        color: _R.calendarHolidayTextColor,
+                        decoration: calendarInfo.occasions == null
+                            ? null
+                            : TextDecoration.underline,
+                      ),
+                ),
+                Text(
+                  calendarInfo.occasions?.map((e) => e.name)?.join(', ') ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: changeColorIfOutside(
+                      _R.getCalendarDayInfoTextTheme(context)),
+                ),
+                Spacer(),
+              ],
+            ),
+          );
+        }
+      } else if (calendarInfo.occasions != null) {
+        return Ink(
+          color: _R.calendarOccasionFillColor,
+          child: Column(
             children: <Widget>[
               Spacer(),
               Text(
                 dateTime.day.toString(),
-                style: _R.getCalendarDayTextTheme(context).copyWith(
-                      color: _R.calendarHolidayColor,
-                      decoration: calendarInfo.occasions == null
-                          ? null
-                          : TextDecoration.underline,
-                    ),
+                style: changeColorIfOutside(_R.getCalendarDayTextTheme(context))
+                    .copyWith(decoration: TextDecoration.underline),
               ),
               Text(
-                (calendarInfo.occasions ?? '').toString(),
+                calendarInfo.occasions?.map((e) => e.name)?.join(', ') ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -118,27 +171,7 @@ class CycleCalendarState extends State<CycleCalendar> {
               ),
               Spacer(),
             ],
-          );
-        }
-      } else if (calendarInfo.occasions != null) {
-        return Column(
-          children: <Widget>[
-            Spacer(),
-            Text(
-              dateTime.day.toString(),
-              style: changeColorIfOutside(_R.getCalendarDayTextTheme(context))
-                  .copyWith(decoration: TextDecoration.underline),
-            ),
-            Text(
-              (calendarInfo.occasions ?? '').toString(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style:
-                  changeColorIfOutside(_R.getCalendarDayInfoTextTheme(context)),
-            ),
-            Spacer(),
-          ],
+          ),
         );
       } else {
         return Column(
@@ -161,23 +194,123 @@ class CycleCalendarState extends State<CycleCalendar> {
       }
     }();
 
-    if (calendarInfo.isStartSchoolYear || calendarInfo.isEndSchoolYear) {
-      return Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-              color: calendarInfo.isStartSchoolYear
-                  ? _R.calendarStartColor
-                  : _R.calendarEndColor,
-              shape: BoxShape.circle,
+    final key = GlobalKey();
+
+    final contentWithCircle = () {
+      if (calendarInfo.isStartSchoolYear || calendarInfo.isEndSchoolYear) {
+        return Stack(
+          key: key,
+          alignment: Alignment.center,
+          children: <Widget>[
+            Container(
+              decoration: BoxDecoration(
+                color: calendarInfo.isStartSchoolYear
+                    ? _R.calendarStartColor
+                    : _R.calendarEndColor,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          contentWidget,
-        ],
-      );
-    } else {
-      return contentWidget;
-    }
+            contentWidget,
+          ],
+        );
+      } else {
+        return Container(
+          key: key,
+          child: contentWidget,
+        );
+      }
+    }();
+
+    final isSelected = () {
+      if (_selectedDateStart == null || _selectedDateEnd == null) return false;
+      if (_selectedDateStart.isAfter(_selectedDateEnd)) {
+        return !removeTimeFrom(dateTime).isBefore(_selectedDateEnd) &&
+            !removeTimeFrom(dateTime).isAfter(_selectedDateStart);
+      } else {
+        return !removeTimeFrom(dateTime).isBefore(_selectedDateStart) &&
+            !removeTimeFrom(dateTime).isAfter(_selectedDateEnd);
+      }
+    }();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final RenderBox box = key.currentContext.findRenderObject();
+      _datePosition[box.localToGlobal(Offset.zero) & box.size] =
+          removeTimeFrom(dateTime);
+    });
+
+    return GestureDetector(
+      child: Container(
+        color: isSelected ? _R.calendarSelectedColor : Colors.transparent,
+        child: contentWithCircle,
+      ),
+      onTapDown: (_) => setState(() {
+        _selectedDateStart = removeTimeFrom(dateTime);
+        _selectedDateEnd = removeTimeFrom(dateTime);
+      }),
+      onTapUp: (_) {
+        widget
+            .onSelected(dateTime, _getPositionFromDateTime(dateTime).bottomLeft)
+            .then((_) {
+          setState(() {
+            _selectedDateStart = null;
+            _selectedDateEnd = null;
+          });
+        });
+      },
+      onTapCancel: () => setState(() {
+        _selectedDateStart = null;
+        _selectedDateEnd = null;
+      }),
+      onLongPressStart: widget.onRangeSelected == null
+          ? null
+          : (_) => setState(() {
+                _selectedDateStart = removeTimeFrom(dateTime);
+                _selectedDateEnd = removeTimeFrom(dateTime);
+              }),
+      onLongPressMoveUpdate: widget.onRangeSelected == null
+          ? null
+          : (details) => setState(() {
+                final dateTime =
+                    _getDateTimeFromPosition(details.globalPosition);
+                if (dateTime == null) return;
+                _selectedDateEnd = removeTimeFrom(dateTime);
+              }),
+      onLongPressEnd: widget.onRangeSelected == null
+          ? null
+          : (_) {
+              if (removeTimeFrom(_selectedDateStart) ==
+                  removeTimeFrom(_selectedDateEnd)) {
+                widget
+                    .onSelected(_selectedDateStart,
+                        _getPositionFromDateTime(_selectedDateStart).bottomLeft)
+                    .then((_) {
+                  setState(() {
+                    _selectedDateStart = null;
+                    _selectedDateEnd = null;
+                  });
+                });
+              } else {
+                final range = () {
+                  if (_selectedDateStart.isAfter(_selectedDateEnd)) {
+                    return DateTimeRange(
+                        start: _selectedDateEnd, end: _selectedDateStart);
+                  } else {
+                    return DateTimeRange(
+                        start: _selectedDateStart, end: _selectedDateEnd);
+                  }
+                }();
+
+                widget
+                    .onRangeSelected(
+                        range, _getPositionFromDateTime(range.end).bottomLeft)
+                    .then((_) {
+                  setState(() {
+                    _selectedDateStart = null;
+                    _selectedDateEnd = null;
+                  });
+                });
+              }
+            },
+    );
   }
 }

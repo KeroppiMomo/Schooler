@@ -93,6 +93,7 @@ class CyclesEditorScreenState extends State<CyclesEditorScreen>
           ),
           body: SafeArea(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildCalendar(
                     onSelected: _dateSelected,

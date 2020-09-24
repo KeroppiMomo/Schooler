@@ -72,6 +72,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
         ),
         body: SafeArea(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
                 child: Stack(

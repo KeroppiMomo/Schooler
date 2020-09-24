@@ -194,7 +194,7 @@ class RegionPickerState extends State<RegionPicker> {
                 TextInputType.numberWithOptions(signed: false, decimal: false),
             textAlign: TextAlign.right,
             inputFormatters: [
-              WhitelistingTextInputFormatter.digitsOnly,
+              FilteringTextInputFormatter.digitsOnly,
             ],
           ),
         ),

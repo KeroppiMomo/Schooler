@@ -28,7 +28,7 @@ class MainScreenState extends State<MainScreen> {
         items: _R.tabsInfo
             .map(
               (info) => BottomNavigationBarItem(
-                title: Text(info.name),
+                label: info.name,
                 icon: Icon(info.icon),
               ),
             )

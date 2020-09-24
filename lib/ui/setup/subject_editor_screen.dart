@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/lib/settings.dart';
+import 'package:schooler/ui/setup/timetable_editor_screen.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
-import 'package:schooler/ui/setup/setup_completed_screen.dart';
 import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/res/resources.dart';
 
@@ -24,6 +24,12 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
   @override
   void initState() {
     super.initState();
+    if (Settings().timetable != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _onDonePressed(context);
+      });
+    }
+
     if (Settings().subjects == null) {
       Settings().subjects = [];
       Settings().saveSettings();
@@ -278,7 +284,8 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
             curValue: subject.name,
             suggestionCallback: (pattern) {
               Set<String> suggestionList = Set();
-              for (final sessions in Settings().timetable.timetable.values) {
+              for (final sessions
+                  in Settings().timetable?.timetable?.values ?? []) {
                 for (final session in sessions) {
                   if (session.name == '') continue;
                   if (session.name.length < pattern.length) continue;
@@ -288,7 +295,7 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
                   }
                 }
               }
-              for (final subject in Settings().subjects) {
+              for (final subject in Settings().subjects ?? []) {
                 suggestionList.remove(subject.name);
               }
               return suggestionList.toList();
@@ -315,7 +322,10 @@ class SubjectEditorScreenState extends State<SubjectEditorScreen> {
   }
 
   void _onDonePressed(BuildContext context) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => SetupCompletedScreen()));
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => TimetableEditorScreen(onPop: () {
+              Settings().timetable = null;
+              Settings().saveSettings();
+            })));
   }
 }

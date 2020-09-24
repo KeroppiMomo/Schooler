@@ -38,7 +38,7 @@ class Settings {
   CycleConfig cycleConfig;
   WeekConfig weekConfig;
   Timetable timetable;
-  List<Subject> subjects = [];
+  List<Subject> subjects;
   bool isSetupCompleted = false;
 
   Map<LocationReminderLocation, String> savedLocations = {};

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 import 'package:schooler/ui/edit_text_screen.dart';
 import 'package:schooler/ui/setup/calendar_tip_animation.dart';
-import 'package:schooler/ui/setup/timetable_editor_screen.dart';
+import 'package:schooler/ui/setup/subject_editor_screen.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:schooler/ui/week_calendar.dart';
@@ -53,7 +53,7 @@ class WeeksEditorScreenState extends State<WeeksEditorScreen>
   void initState() {
     super.initState();
 
-    if (Settings().timetable != null) {
+    if (Settings().subjects != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _donePressed();
       });
@@ -714,8 +714,8 @@ class WeeksEditorScreenState extends State<WeeksEditorScreen>
   /// When "Done" button is pressed, navigate to `timetableEditorScreen`.
   void _donePressed() {
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => TimetableEditorScreen(onPop: () {
-              Settings().timetable = null;
+        builder: (_) => SubjectEditorScreen(onPop: () {
+              Settings().subjects = null;
               Settings().saveSettings();
             })));
   }

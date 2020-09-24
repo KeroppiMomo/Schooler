@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:schooler/lib/subject.dart';
+import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/ui/time_picker.dart';
 import 'package:schooler/ui/suggestion_text_field.dart';
 import 'package:schooler/lib/timetable.dart';
@@ -154,6 +156,11 @@ class TimetableEditorState extends State<TimetableEditor> {
       );
     }
 
+    final subject = Settings().subjects.firstWhere(
+          (subject) => subject.name == session.name,
+          orElse: () => null,
+        );
+
     final sessionWidget = Padding(
       padding: _R.sessionPadding,
       child: Row(
@@ -204,12 +211,17 @@ class TimetableEditorState extends State<TimetableEditor> {
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         )
-                      : Text(
-                          session.name,
-                          style: R.sessionTextStyle,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
+                      : (subject == null
+                          ? Text(
+                              session.name,
+                              style: R.sessionTextStyle,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            )
+                          : SubjectBlock(
+                              name: subject.name,
+                              color: subject.color,
+                            )),
                 ),
                 SizedBox(width: _R.sessionEditRegionWidgetsSpacing),
                 _buildEditIcon(),
@@ -277,20 +289,43 @@ class TimetableEditorState extends State<TimetableEditor> {
                 curValue: session.name,
                 suggestionCallback: (pattern) {
                   Set<String> suggestionList = Set();
+                  bool isMatch(String candidate) =>
+                      (candidate != '') &&
+                      (candidate.length >= pattern.length) &&
+                      (candidate.substring(0, pattern.length).toLowerCase() ==
+                          pattern.toLowerCase());
+
                   for (final sessions
-                      in Settings().timetable.timetable.values) {
+                      in Settings().timetable?.timetable?.values ??
+                          <List<TimetableSession>>[]) {
                     for (final session in sessions) {
-                      if (session.name == '') continue;
-                      if (session.name.length < pattern.length) continue;
-                      if (session.name
-                              .substring(0, pattern.length)
-                              .toLowerCase() ==
-                          pattern.toLowerCase()) {
+                      if (isMatch(session.name)) {
                         suggestionList.add(session.name);
                       }
                     }
                   }
+
+                  for (final subject in Settings().subjects ?? <Subject>[]) {
+                    if (isMatch(subject.name)) {
+                      suggestionList.add(subject.name);
+                    }
+                  }
+
                   return suggestionList.toList();
+                },
+                suggestionBuilder: (context, suggestion, onSubmit) {
+                  final subject = Settings().subjects.firstWhere(
+                      (subject) => subject.name == suggestion,
+                      orElse: () => null);
+                  return ListTile(
+                    title: subject == null
+                        ? Text(suggestion)
+                        : SubjectBlock(
+                            name: subject.name,
+                            color: subject.color,
+                          ),
+                    onTap: onSubmit,
+                  );
                 },
                 onDone: (newName) {
                   setState(() {

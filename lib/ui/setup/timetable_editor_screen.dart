@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/settings.dart';
 import 'package:schooler/res/resources.dart';
+import 'package:schooler/ui/setup/setup_completed_screen.dart';
 import 'package:schooler/ui/setup/timetable_editor.dart';
-import 'package:schooler/ui/setup/subject_editor_screen.dart';
 
 TimetableEditorScreenResources _R = R.timetableEditorScreen;
 
@@ -25,14 +25,6 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   @override
   void initState() {
     super.initState();
-
-    if (widget.isSetup) {
-      if (Settings().timetable != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _donePressed();
-        });
-      }
-    }
 
     if (Settings().timetable == null) {
       if (Settings().calendarType == CalendarType.cycle) {
@@ -337,12 +329,7 @@ class TimetableEditorScreenState extends State<TimetableEditorScreen> {
   void _donePressed() {
     if (widget.isSetup) {
       Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectEditorScreen(
-          onPop: () {
-            Settings().subjects = null;
-            Settings().saveSettings();
-          },
-        ),
+        builder: (context) => SetupCompletedScreen(),
       ));
     } else {
       widget.onDone?.call();

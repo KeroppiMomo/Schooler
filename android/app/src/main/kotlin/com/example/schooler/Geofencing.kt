@@ -179,7 +179,7 @@ object Geofencing {
         activity.startActivity(intent)
     }
 
-    private fun getMaximumRadius() = Double.POSITIVE_INFINITY
+    private fun getMaximumRadius() = Int.MAX_VALUE.toDouble()
 
     private fun startMonitoring(@NonNull activity: Activity, arguments: Any, completion: (FlutterException?)->Unit) {
         try {
@@ -197,7 +197,8 @@ object Geofencing {
             val longitude = argDict["longitude"] as? Double
                     ?: throw FlutterException.badArgument("longitude", Double::class)
             val radius = argDict["radius"] as? Int
-                    ?: throw FlutterException.badArgument("radius", Int::class)
+                    ?: if (argDict["radius"] is Long) throw FlutterException.maximumRadiusReached("Radius is larger than ${getMaximumRadius()} meters.") // When the radius is too large, it is converted to Long
+                       else throw FlutterException.badArgument("radius", Int::class)
 
             val geofence = Geofence.Builder()
                     .setRequestId(id)

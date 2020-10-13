@@ -263,8 +263,7 @@ class CycleConfig {
             .toList()
             .cast<Event>(),
         skippedDays: skippedDays
-            .map((epochMS) =>
-                removeTimeFrom(nullableUnixEpochToDateTime(epochMS)))
+            .map((epochMS) => nullableUnixEpochToDateTime(epochMS))
             .toList()
             .cast<DateTime>(),
       );

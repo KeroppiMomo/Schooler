@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:quiver/core.dart';
+import 'package:schooler/lib/cycle_week_config.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:schooler/lib/geocoder_results.dart';
@@ -8,6 +11,7 @@ import 'package:schooler/lib/settings.dart';
 import 'package:schooler/lib/subject.dart';
 import 'package:schooler/lib/timetable.dart';
 import 'package:schooler/lib/geofencing.dart';
+import 'package:workmanager/workmanager.dart';
 
 abstract class ReminderTrigger {
   Future<void> register(
@@ -293,6 +297,43 @@ class TimeReminderRepeat {
   TimetableDay getTimetableDay() =>
       _value == 2 ? (_data as TimetableDay) : null;
 
+  /// Returns whether a date matches the repeat with a specific start date.
+  bool isDateMatched(DateTime date, DateTime oriDate,
+      Map<DateTime, CalendarDayInfo> calendar) {
+    date = removeTimeFrom(date);
+    oriDate = removeTimeFrom(oriDate);
+    switch (_value) {
+      case 0:
+        return true;
+      case 1:
+        return date.weekday == getWeekDay();
+      case 2:
+        final dayInfo = calendar[date];
+        if (getTimetableDay() is TimetableWeekDay) {
+          return date.weekday ==
+              (getTimetableDay() as TimetableWeekDay).dayOfWeek;
+        } else if (getTimetableDay() is TimetableCycleDay) {
+          return dayInfo.cycleDay ==
+              (getTimetableDay() as TimetableCycleDay).dayOfCycle.toString();
+        } else if (getTimetableDay() is TimetableOccasionDay) {
+          return [...(dayInfo.holidays ?? []), ...(dayInfo.occasions ?? [])]
+              .any((event) =>
+                  event.name ==
+                  (getTimetableDay() as TimetableOccasionDay).occasionName);
+        } else {
+          assert(false, 'Unknown TimetableDay subtype');
+        }
+        return false;
+      case 3:
+        return date.day == oriDate.day;
+      case 4:
+        return date.month == oriDate.month && date.day == oriDate.day;
+      default:
+        assert(false, 'Unknown TimeReminderRepeat value');
+        return false;
+    }
+  }
+
   // Serilization -------------------------------------
   Map<String, Object> toJSON() {
     return {
@@ -382,36 +423,7 @@ class TimeReminderTrigger implements ReminderTrigger {
       {@required int id,
       @required bool enabled,
       @required String title}) async {
-    // iOS imposes restrictions which only allow 64 scheduled notifications.
-    // So, only schedule 64 notifications per reminder and let iOS filter the earlier ones.
-
-    unregister(id: id);
-
-    if (!enabled) return;
-
-    if (repeat == null) {
-      FlutterLocalNotificationsPlugin().schedule(
-        id % (1 << 16) * 64,
-        title,
-        'Schooler Reminder',
-        dateTime,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            'reminders',
-            'Reminders',
-            null,
-            priority: Priority.high,
-            importance: Importance.high,
-            visibility: NotificationVisibility.private,
-            category: 'reminder',
-          ),
-          iOS: IOSNotificationDetails(),
-        ),
-      );
-    } else {
-      throw UnimplementedError(
-          'Not yet implemented TimeReminderTrigger.register with repeat');
-    }
+    TimeReminderCenter().registerAll();
   }
 
   Future<void> unregister({@required int id}) async {
@@ -575,6 +587,182 @@ class Reminder {
   int get hashCode => hashObjects([id, name, enabled, subject, trigger, notes]);
 }
 
+class _TimeReminderCenterScheduleInfo {
+  final DateTime dateTime;
+  final String title;
+  final int id;
+
+  const _TimeReminderCenterScheduleInfo({
+    this.dateTime,
+    this.title,
+    this.id,
+  });
+}
+
+class TimeReminderCenter {
+  static TimeReminderCenter instance = TimeReminderCenter._();
+  TimeReminderCenter._();
+  factory TimeReminderCenter() => TimeReminderCenter.instance;
+
+  /// Register all time-based reminders. Set [editOldDates] to true to
+  /// edit reminder dates that are older than now to its next trigger date.
+  Future<void> registerAll({bool editOldDates = false}) async {
+    await unregisterAll();
+
+    final Map<DateTime, CalendarDayInfo> calendar = () {
+      if (Settings().calendarType == CalendarType.week)
+        return Settings().weekConfig.getCalendar();
+      else if (Settings().calendarType == CalendarType.cycle)
+        return Settings().cycleConfig.getCalendar();
+      else {
+        assert(false, 'Unexpected calendar type');
+        return null;
+      }
+    }();
+
+    final scheduleInfos = <_TimeReminderCenterScheduleInfo>[];
+    for (final reminder in Settings().reminders) {
+      if (reminder.trigger is! TimeReminderTrigger) continue;
+      if (!reminder.enabled) continue;
+
+      final trigger = reminder.trigger as TimeReminderTrigger;
+      int idCount = 0;
+
+      /// Original DateTime of the trigger.
+      final oriDateTime = (reminder.trigger as TimeReminderTrigger).dateTime;
+
+      /// Current date for checking the matched dates.
+      DateTime curDate;
+
+      /// First matched date for editing old dates.
+      DateTime firstMatchedDate;
+      if (oriDateTime.isAfter(DateTime.now())) {
+        scheduleInfos.add(_TimeReminderCenterScheduleInfo(
+          id: reminder.id % (1 << 16) * 64,
+          dateTime: oriDateTime,
+          title: reminder.name,
+        ));
+        idCount++;
+        curDate = removeTimeFrom(oriDateTime).add(Duration(days: 1));
+        firstMatchedDate = oriDateTime;
+      } else {
+        curDate = removeTimeFrom(DateTime.now());
+      }
+
+      /// Should the date be edited?
+      final shouldEditDate =
+          (editOldDates && !oriDateTime.isAfter(DateTime.now()));
+
+      if (trigger.repeat == null) {
+        if (shouldEditDate) {
+          // Similar to reminders that cannot find its next matched dates, no repeat reminders
+          // have no next dates, so it is set to be disabled.
+          reminder.enabled = false;
+        }
+        continue;
+      }
+
+      // Restrict mix 64 notifications per reminder and only schedule notifications within one month (30 days)
+      while (
+          idCount < 64 && curDate.difference(trigger.dateTime).inDays <= 30) {
+        if (trigger.repeat.isDateMatched(curDate, trigger.dateTime, calendar)) {
+          final date = DateTime(curDate.year, curDate.month, curDate.day,
+              oriDateTime.hour, oriDateTime.minute, oriDateTime.second);
+
+          if (!date.isAfter(DateTime.now())) {
+            curDate = curDate.add(Duration(days: 1));
+            continue;
+          }
+
+          if (firstMatchedDate == null) firstMatchedDate = date;
+
+          scheduleInfos.add(_TimeReminderCenterScheduleInfo(
+            id: (reminder.id % (1 << 16) * 64) + idCount,
+            dateTime: date,
+            title: reminder.name,
+          ));
+          idCount++;
+        }
+        curDate = curDate.add(Duration(days: 1));
+      }
+
+      if (shouldEditDate) {
+        // Find the first matched date for editing old dates. Assume there are no more matched dates after one year (370 days)
+        while (shouldEditDate &&
+            firstMatchedDate == null &&
+            curDate.difference(trigger.dateTime).inDays <= 370) {
+          if (trigger.repeat
+              .isDateMatched(curDate, trigger.dateTime, calendar)) {
+            firstMatchedDate = curDate;
+            break;
+          }
+          curDate = curDate.add(Duration(days: 1));
+        }
+
+        if (firstMatchedDate == null) {
+          // Similar to no repeat reminders, the reminder are disabled if we can't find the next matched date
+          reminder.enabled = false;
+        } else {
+          // Set the dateTime to the first matched date.
+          trigger.dateTime = DateTime(
+              firstMatchedDate.year,
+              firstMatchedDate.month,
+              firstMatchedDate.day,
+              oriDateTime.hour,
+              oriDateTime.minute,
+              oriDateTime.second);
+        }
+      }
+    }
+
+    scheduleInfos.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    final maxNotificationCount = () {
+      if (Platform.isIOS)
+        return 64;
+      else if (Platform.isAndroid)
+        return 50;
+      else {
+        assert(false,
+            "Unknown platform. Future me must have to much time to implement this.");
+        return 64;
+      }
+    }();
+    final takenSchedules = scheduleInfos.take(maxNotificationCount);
+
+    final futures = <Future>[];
+    for (final scheduleInfo in takenSchedules) {
+      futures.add(FlutterLocalNotificationsPlugin().schedule(
+        scheduleInfo.id,
+        scheduleInfo.title,
+        'Schooler Reminder',
+        scheduleInfo.dateTime,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'reminders',
+            'Reminders',
+            null,
+            priority: Priority.high,
+            importance: Importance.high,
+            visibility: NotificationVisibility.private,
+            category: 'reminder',
+          ),
+          iOS: IOSNotificationDetails(),
+        ),
+      ));
+    }
+
+    await Future.wait(futures);
+  }
+
+  Future<void> unregisterAll() async {
+    for (final reminder in Settings().reminders) {
+      if (reminder.trigger is TimeReminderTrigger) {
+        await reminder.unregister();
+      }
+    }
+  }
+}
+
 void initializeLocalNotifications() {
   final androidSettings = AndroidInitializationSettings('notification_icon');
   final iOSSettings = IOSInitializationSettings();
@@ -584,29 +772,14 @@ void initializeLocalNotifications() {
   ));
 }
 
-// Wait for https://github.com/fluttercommunity/flutter_workmanager/issues/189
-//
-// void reminderBackgroundCallback() {
-//   Workmanager.executeTask((_, __) => reminderBackgroundRegister());
-// }
-// Future<bool> reminderBackgroundRegister() {
-//   initializeLocalNotifications();
-//   FlutterLocalNotificationsPlugin().show(
-//     DateTime.now().millisecondsSinceEpoch,
-//     'Testing Title',
-//     'Testing Body',
-//     NotificationDetails(
-//       android: AndroidNotificationDetails(
-//         'reminders',
-//         'Reminders',
-//         null,
-//         priority: Priority.high,
-//         importance: Importance.high,
-//         visibility: NotificationVisibility.private,
-//         category: 'reminder',
-//       ),
-//       iOS: IOSNotificationDetails(),
-//     ),
-//   );
-//   return Future.value(true);
-// }
+void reminderBackgroundCallback() {
+  Workmanager.executeTask((_, __) => reminderBackgroundRegister());
+}
+
+Future<bool> reminderBackgroundRegister() async {
+  await Settings.loadSettings();
+  await TimeReminderCenter().registerAll(editOldDates: true);
+  await Settings().saveSettings();
+
+  return true;
+}

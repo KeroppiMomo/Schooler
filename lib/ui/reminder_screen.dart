@@ -69,7 +69,7 @@ class ReminderScreenState extends State<ReminderScreen> {
                   decoration: InputDecoration(
                     hintText: _R.nameHintText,
                   ),
-                  onChanged: _nameOnChanged,
+                  onSubmitted: _nameOnChanged,
                 ),
               ),
               SizedBox(height: _R.nameEnabledSpacing),
@@ -822,6 +822,8 @@ class ReminderScreenState extends State<ReminderScreen> {
   }
 
   void _onWillPop() {
+    widget.reminder.name = _nameController.text;
+
     bool isEmptyOrNull(String str) => str == null || str == '';
     if (isEmptyOrNull(widget.reminder.name) &&
         isEmptyOrNull(widget.reminder.notes) &&
@@ -830,6 +832,10 @@ class ReminderScreenState extends State<ReminderScreen> {
       // Reminder is considered empty. Remove it.
       Settings().reminders.remove(widget.reminder);
       widget.reminder.unregister();
+      Settings().reminderListener.notifyListeners();
+      Settings().saveSettings();
+    } else {
+      widget.reminder.register();
       Settings().reminderListener.notifyListeners();
       Settings().saveSettings();
     }

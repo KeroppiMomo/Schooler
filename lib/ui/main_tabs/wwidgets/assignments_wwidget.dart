@@ -124,7 +124,8 @@ class AssignmentsWWidgetState extends State<AssignmentsWWidget> {
                   icon: Icon(_R.viewAssignmentsIcon),
                   label: Text(_R.getViewAssignmentsText(
                       ((Settings().assignments ?? [])
-                          .where((a) => !a.isCompleted)).length)),
+                              .where((a) => !a.isCompleted))
+                          .length)),
                   onPressed: _viewAssignmentsPressed,
                 );
               } else {

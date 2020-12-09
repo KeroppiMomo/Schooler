@@ -615,10 +615,11 @@ class TimeReminderCenter {
       else if (Settings().calendarType == CalendarType.cycle)
         return Settings().cycleConfig.getCalendar();
       else {
-        assert(false, 'Unexpected calendar type');
         return null;
       }
     }();
+
+    if (calendar == null) return;
 
     final scheduleInfos = <_TimeReminderCenterScheduleInfo>[];
     for (final reminder in Settings().reminders) {

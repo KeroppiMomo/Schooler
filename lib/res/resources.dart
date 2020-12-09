@@ -10,7 +10,7 @@ import 'package:schooler/lib/subject.dart';
 import 'package:schooler/ui/main_tabs/assignments_tab.dart';
 import 'package:schooler/ui/main_tabs/today_tab.dart';
 import 'package:schooler/ui/main_tabs/calendar_tab.dart';
-import 'package:schooler/ui/assignments_list_screen.dart';
+import 'package:schooler/ui/list_screen.dart';
 
 final R = Resources();
 
@@ -38,11 +38,14 @@ class Resources {
   final assignmentWWidget = AssignmentWWidgetResources();
   final remindersWWidget = RemindersWWidgetReosurces();
 
+  final listScreen = ListScreenResources();
+
   final assignmentScreen = AssignmentScreenResources();
   final assignmentDayScreen = AssignmentDayScreenResources();
   final assignmentListScreen = AssignmentListScreenResources();
 
   final reminderScreen = ReminderScreenResources();
+  final remindersListScreen = RemindersListScreenResources();
 
   final timetableScreen = TimetableScreenResources();
 
@@ -560,6 +563,7 @@ class RemindersWWidgetReosurces {
   final viewIcon = Icons.remove_red_eye;
   String getViewText(int noOfReminders) => 'View All $noOfReminders Reminders';
 
+  // Referenced from R.remindersListScreen
   final timeReminderNullText = 'No Date Selected';
   final locationReminderNullText = 'No Location Selected';
   final reminderNoTriggerText = 'No Trigger';
@@ -592,6 +596,26 @@ class RemindersWWidgetReosurces {
   final reminderTriggerIconTextSpacing = 4.0;
   TextStyle reminderTriggerTextStyle(BuildContext context) =>
       Theme.of(context).textTheme.bodyText2.copyWith(color: Colors.grey);
+}
+
+class ListScreenResources {
+  final searchBarIcon = Icons.search;
+  final searchBarClearIcon = Icons.clear;
+  final searchBarClearTooltip = 'Clear Search';
+  final searchBarHintText = 'Search';
+
+  final listViewPadding = const EdgeInsets.fromLTRB(24.0, 24.0, 0.0, 24.0);
+
+  final sortText = 'Sort By';
+  final sortTextChipsSpacing = 8.0;
+  final sortRowHeight = 52.0;
+  Color getSortChipSelectedColor(BuildContext context) =>
+      Theme.of(context).primaryColor.withOpacity(0.3);
+  final sortChipsSpacing = 4.0;
+  final sortAscendingIcon = Icons.arrow_drop_up;
+  final sortDescendingIcon = Icons.arrow_drop_down;
+
+  final refreshDelay = const Duration(milliseconds: 500);
 }
 
 class AssignmentScreenResources {
@@ -748,22 +772,6 @@ class AssignmentListScreenResources {
   final addFABIcon = Icons.add;
   final addFABTooltip = 'Add Assignment';
 
-  final searchBarIcon = Icons.search;
-  final searchBarClearIcon = Icons.clear;
-  final searchBarClearTooltip = 'Clear Search';
-  final searchBarHintText = 'Search';
-
-  final listViewPadding = const EdgeInsets.fromLTRB(24.0, 24.0, 0.0, 24.0);
-
-  final sortText = 'Sort By';
-  final sortTextChipsSpacing = 8.0;
-  final sortRowHeight = 52.0;
-  Color getSortChipSelectedColor(BuildContext context) =>
-      Theme.of(context).primaryColor.withOpacity(0.3);
-  final sortChipsSpacing = 4.0;
-  final sortAscendingIcon = Icons.arrow_drop_up;
-  final sortDescendingIcon = Icons.arrow_drop_down;
-
   // From R.assignmentDayScreen
   EdgeInsets get assignmentPadding => R.assignmentDayScreen.assignmentPadding;
   double get assignmentCheckboxColumnWidth =>
@@ -784,8 +792,6 @@ class AssignmentListScreenResources {
   /// Each assignment is turned into a [String] when a search is performed.
   /// The due date is formated according to this format.
   final searchDueDateFormat = DateFormat('dd MMMM HH:mm');
-
-  final refreshDelay = const Duration(milliseconds: 500);
 }
 
 class ReminderScreenResources {
@@ -957,6 +963,53 @@ class ReminderScreenResources {
   final geofenceErrorGeofencesNoContent =
       'The number of location-based reminders has exceeded the limit of your device.\nTry disabling other location-based reminders.';
   final geofenceUnknownTitle = 'Unknown error occurred';
+}
+
+class RemindersListScreenResources {
+  final appBarTitle = 'Reminders';
+  final addFABTooltip = 'Add Reminder';
+  final addFABIcon = Icons.add;
+
+  final Map<String, Comparable Function(Reminder)> reminderSorts = {
+    'Enabled': (r) => r.enabled ? 1 : 0,
+    'Name': (r) => r.name,
+    'Subject': (r) => r.subject?.name ?? '',
+    'Trigger': (r) => (r.trigger is TimeReminderTrigger ? 'Time-based Trigger' : (r.trigger is LocationReminderTrigger ? 'Location-based Trigger' : '')),
+  };
+  MapEntry<String, Comparable Function(Reminder)> get defaultSorting =>
+      reminderSorts.entries.toList()[0];
+  final defaultSortDirection = SortDirection.ascending;
+
+  final noSortText = 'Creation Date';
+
+  String get timeReminderNullText => R.remindersWWidget.timeReminderNullText;
+  String get locationReminderNullText => R.remindersWWidget.locationReminderNullText;
+  String get reminderNoTriggerText => R.remindersWWidget.reminderNoTriggerText;
+  Map<GeofenceEvent, String> get reminderGeofenceEventString => R.remindersWWidget.reminderGeofenceEventString;
+  DateFormat get reminderDateFormat => R.remindersWWidget.reminderDateFormat;
+
+  Map<Type, IconData> get reminderTriggerIcon => R.remindersWWidget.reminderTriggerIcon;
+  double get reminderDisabledOpacity => R.remindersWWidget.reminderDisabledOpacity;
+  final reminderPadding = EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0);
+
+  double get reminderIconColumnWidth => R.remindersWWidget.reminderIconColumnWidth;
+  EdgeInsets get reminderIconPadding => R.remindersWWidget.reminderIconPadding;
+  IconData get reminderIconEnable => R.remindersWWidget.reminderIconEnable;
+  IconData get reminderIconDisabled => R.remindersWWidget.reminderIconDisabled;
+  double get reminderIconSize => R.remindersWWidget.reminderIconSize;
+
+  TextStyle reminderTitleTextStyle(BuildContext context) =>
+      R.remindersWWidget.reminderTitleTextStyle(context);
+  double get reminderSubjectTitleSpacing => R.remindersWWidget.reminderSubjectTitleSpacing;
+  MaterialColor get reminderTriggerIconColor => R.remindersWWidget.reminderTriggerIconColor;
+  double get reminderTriggerIconSize => R.remindersWWidget.reminderTriggerIconSize;
+  double get reminderTriggerIconTextSpacing => R.remindersWWidget.reminderTriggerIconTextSpacing;
+  TextStyle reminderTriggerTextStyle(BuildContext context) =>
+      R.remindersWWidget.reminderTriggerTextStyle(context);
+
+  /// Each reminder is turned into a [String] when a search is performed.
+  /// The time-based dateTime is formated according to this format.
+  final searchDateTimeFormat = DateFormat('dd MMMM HH:mm');
 }
 
 class TimetableScreenResources {

@@ -5,6 +5,7 @@ import 'package:schooler/ui/main_tabs/wwidgets/wwidget.dart';
 import 'package:schooler/lib/reminder.dart';
 import 'package:schooler/ui/subject_block.dart';
 import 'package:schooler/ui/reminder_screen.dart';
+import 'package:schooler/ui/reminders_list_screen.dart';
 
 final RemindersWWidgetReosurces _R = R.remindersWWidget;
 
@@ -44,6 +45,7 @@ class RemindersWWidgetState extends State<RemindersWWidget> {
   }
 
   Widget _buildReminder(Reminder reminder) {
+    // Copied to `RemindersListScreen._buildReminder`
     final String triggerString = () {
       if (reminder.trigger == null) {
         return _R.reminderNoTriggerText;
@@ -168,7 +170,9 @@ class RemindersWWidgetState extends State<RemindersWWidget> {
   }
 
   void _viewPressed() {
-    // TODO: Implement this
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => RemindersListScreen(),
+    ));
   }
 
   void _reminderPressed(Reminder reminder) {

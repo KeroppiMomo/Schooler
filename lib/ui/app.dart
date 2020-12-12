@@ -13,6 +13,9 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Schooler',
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+      ),
       home: (Settings().isSetupCompleted && !forceSetup)
           ? MainScreen()
           : SetupWelcomeScreen(),

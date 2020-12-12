@@ -59,6 +59,7 @@ flutter:
   assets:
     - lib/res/calendar_type_week_icon.png
     - lib/res/calendar_type_cycle_icon.png
+    - lib/res/today_bg.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

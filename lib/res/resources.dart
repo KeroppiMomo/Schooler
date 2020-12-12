@@ -428,6 +428,7 @@ class TodayTabResources {
 
   final descriptionWeekendText = 'Weekend';
 
+  final backgroundImage = AssetImage('lib/res/today_bg.jpg');
   final appBarTitle = 'Today';
 
   final listViewPadding =
@@ -449,6 +450,10 @@ class AssignmentsTabResources {
 }
 
 class WWidgetResources {
+  final padding = EdgeInsets.all(4.0);
+  final elevation = 3.0;
+  final backgroundBlur = 3.0;
+  final titleOpacity = 0.7;
   final titleItemsSpacing = 16.0;
   final titleIconSize = 20.0;
   TextStyle titleTextStyle(BuildContext context) =>
@@ -457,6 +462,7 @@ class WWidgetResources {
       EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   final settingsIcon = Icons.settings;
   final refreshIcon = Icons.refresh;
+  final contentBackgroundColor = Colors.white.withOpacity(0.87);
   final contentPadding = EdgeInsets.all(16.0);
 }
 
@@ -974,7 +980,11 @@ class RemindersListScreenResources {
     'Enabled': (r) => r.enabled ? 1 : 0,
     'Name': (r) => r.name,
     'Subject': (r) => r.subject?.name ?? '',
-    'Trigger': (r) => (r.trigger is TimeReminderTrigger ? 'Time-based Trigger' : (r.trigger is LocationReminderTrigger ? 'Location-based Trigger' : '')),
+    'Trigger': (r) => (r.trigger is TimeReminderTrigger
+        ? 'Time-based Trigger'
+        : (r.trigger is LocationReminderTrigger
+            ? 'Location-based Trigger'
+            : '')),
   };
   MapEntry<String, Comparable Function(Reminder)> get defaultSorting =>
       reminderSorts.entries.toList()[0];
@@ -983,16 +993,21 @@ class RemindersListScreenResources {
   final noSortText = 'Creation Date';
 
   String get timeReminderNullText => R.remindersWWidget.timeReminderNullText;
-  String get locationReminderNullText => R.remindersWWidget.locationReminderNullText;
+  String get locationReminderNullText =>
+      R.remindersWWidget.locationReminderNullText;
   String get reminderNoTriggerText => R.remindersWWidget.reminderNoTriggerText;
-  Map<GeofenceEvent, String> get reminderGeofenceEventString => R.remindersWWidget.reminderGeofenceEventString;
+  Map<GeofenceEvent, String> get reminderGeofenceEventString =>
+      R.remindersWWidget.reminderGeofenceEventString;
   DateFormat get reminderDateFormat => R.remindersWWidget.reminderDateFormat;
 
-  Map<Type, IconData> get reminderTriggerIcon => R.remindersWWidget.reminderTriggerIcon;
-  double get reminderDisabledOpacity => R.remindersWWidget.reminderDisabledOpacity;
+  Map<Type, IconData> get reminderTriggerIcon =>
+      R.remindersWWidget.reminderTriggerIcon;
+  double get reminderDisabledOpacity =>
+      R.remindersWWidget.reminderDisabledOpacity;
   final reminderPadding = EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0);
 
-  double get reminderIconColumnWidth => R.remindersWWidget.reminderIconColumnWidth;
+  double get reminderIconColumnWidth =>
+      R.remindersWWidget.reminderIconColumnWidth;
   EdgeInsets get reminderIconPadding => R.remindersWWidget.reminderIconPadding;
   IconData get reminderIconEnable => R.remindersWWidget.reminderIconEnable;
   IconData get reminderIconDisabled => R.remindersWWidget.reminderIconDisabled;
@@ -1000,10 +1015,14 @@ class RemindersListScreenResources {
 
   TextStyle reminderTitleTextStyle(BuildContext context) =>
       R.remindersWWidget.reminderTitleTextStyle(context);
-  double get reminderSubjectTitleSpacing => R.remindersWWidget.reminderSubjectTitleSpacing;
-  MaterialColor get reminderTriggerIconColor => R.remindersWWidget.reminderTriggerIconColor;
-  double get reminderTriggerIconSize => R.remindersWWidget.reminderTriggerIconSize;
-  double get reminderTriggerIconTextSpacing => R.remindersWWidget.reminderTriggerIconTextSpacing;
+  double get reminderSubjectTitleSpacing =>
+      R.remindersWWidget.reminderSubjectTitleSpacing;
+  MaterialColor get reminderTriggerIconColor =>
+      R.remindersWWidget.reminderTriggerIconColor;
+  double get reminderTriggerIconSize =>
+      R.remindersWWidget.reminderTriggerIconSize;
+  double get reminderTriggerIconTextSpacing =>
+      R.remindersWWidget.reminderTriggerIconTextSpacing;
   TextStyle reminderTriggerTextStyle(BuildContext context) =>
       R.remindersWWidget.reminderTriggerTextStyle(context);
 

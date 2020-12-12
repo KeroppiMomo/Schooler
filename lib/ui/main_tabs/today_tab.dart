@@ -64,28 +64,37 @@ class TodayTabState extends State<TodayTab> {
       }
     }();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_R.appBarTitle),
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: _R.backgroundImage,
+          fit: BoxFit.cover,
+        ),
       ),
-      body: ListView(
-        padding: _R.listViewPadding,
-        children: [
-          Text(
-            _R.dateFormat.format(now),
-            textAlign: TextAlign.right,
-            style: _R.getDateTextStyle(context),
-          ),
-          Text(
-            dayDescription,
-            textAlign: TextAlign.right,
-            style: _R.getDayDescriptionTextStyle(context),
-          ),
-          SizedBox(height: _R.dayWWidgetsSpacing),
-          TimetableWWidget(now: now, dayInfo: dayInfo),
-          AssignmentsWWidget(now: now),
-          RemindersWWidget(),
-        ],
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(_R.appBarTitle),
+        ),
+        body: ListView(
+          padding: _R.listViewPadding,
+          children: [
+            Text(
+              _R.dateFormat.format(now),
+              textAlign: TextAlign.right,
+              style: _R.getDateTextStyle(context),
+            ),
+            Text(
+              dayDescription,
+              textAlign: TextAlign.right,
+              style: _R.getDayDescriptionTextStyle(context),
+            ),
+            SizedBox(height: _R.dayWWidgetsSpacing),
+            TimetableWWidget(now: now, dayInfo: dayInfo),
+            AssignmentsWWidget(now: now),
+            RemindersWWidget(),
+          ],
+        ),
       ),
     );
   }

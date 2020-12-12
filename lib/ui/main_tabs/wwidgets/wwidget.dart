@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:schooler/res/resources.dart';
 
@@ -33,65 +34,87 @@ class WWidget extends StatelessWidget {
         Theme.of(context).primaryColorBrightness == Brightness.light
             ? Colors.black
             : Colors.white;
-    return Card(
-      child: Column(
-        children: [
-          Ink(
-            color: Theme.of(context).primaryColor,
-            child: Row(
-              children: [
-                SizedBox(width: _R.titleItemsSpacing),
-                Icon(
-                  icon,
-                  color: colorOnPrimaryColor,
-                  size: _R.titleIconSize,
-                ),
-                SizedBox(width: _R.titleItemsSpacing),
-                Text(
-                  title,
-                  style: _R
-                      .titleTextStyle(context)
-                      .copyWith(color: colorOnPrimaryColor),
-                ),
-                Expanded(child: Container()),
-                ...onRefreshPressed == null
-                    ? []
-                    : [
-                        InkWell(
-                          child: Padding(
-                            padding: _R.titleActionIconPadding,
-                            child: Icon(
-                              _R.refreshIcon,
-                              color: colorOnPrimaryColor,
-                              size: _R.titleIconSize,
-                            ),
-                          ),
-                          onTap: onRefreshPressed,
-                        )
+    return Padding(
+      padding: _R.padding,
+      child: Material(
+        elevation: _R.elevation,
+        color: Colors.transparent,
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+                sigmaX: _R.backgroundBlur, sigmaY: _R.backgroundBlur),
+            child: Card(
+              margin: EdgeInsets.zero,
+              color: Colors.transparent,
+              elevation: 0.0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Ink(
+                    color: Theme.of(context)
+                        .primaryColor
+                        .withOpacity(_R.titleOpacity),
+                    child: Row(
+                      children: [
+                        SizedBox(width: _R.titleItemsSpacing),
+                        Icon(
+                          icon,
+                          color: colorOnPrimaryColor,
+                          size: _R.titleIconSize,
+                        ),
+                        SizedBox(width: _R.titleItemsSpacing),
+                        Text(
+                          title,
+                          style: _R
+                              .titleTextStyle(context)
+                              .copyWith(color: colorOnPrimaryColor),
+                        ),
+                        Expanded(child: Container()),
+                        ...onRefreshPressed == null
+                            ? []
+                            : [
+                                InkWell(
+                                  child: Padding(
+                                    padding: _R.titleActionIconPadding,
+                                    child: Icon(
+                                      _R.refreshIcon,
+                                      color: colorOnPrimaryColor,
+                                      size: _R.titleIconSize,
+                                    ),
+                                  ),
+                                  onTap: onRefreshPressed,
+                                )
+                              ],
+                        ...onSettingsPressed == null
+                            ? []
+                            : [
+                                InkWell(
+                                  child: Padding(
+                                    padding: _R.titleActionIconPadding,
+                                    child: Icon(
+                                      _R.settingsIcon,
+                                      color: colorOnPrimaryColor,
+                                      size: _R.titleIconSize,
+                                    ),
+                                  ),
+                                  onTap: onSettingsPressed,
+                                )
+                              ],
                       ],
-                ...onSettingsPressed == null
-                    ? []
-                    : [
-                        InkWell(
-                          child: Padding(
-                            padding: _R.titleActionIconPadding,
-                            child: Icon(
-                              _R.settingsIcon,
-                              color: colorOnPrimaryColor,
-                              size: _R.titleIconSize,
-                            ),
-                          ),
-                          onTap: onSettingsPressed,
-                        )
-                      ],
-              ],
+                    ),
+                  ),
+                  Ink(
+                    color: _R.contentBackgroundColor,
+                    child: Padding(
+                      padding: contentPadding ?? _R.contentPadding,
+                      child: child,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: contentPadding ?? _R.contentPadding,
-            child: child,
-          ),
-        ],
+        ),
       ),
     );
   }

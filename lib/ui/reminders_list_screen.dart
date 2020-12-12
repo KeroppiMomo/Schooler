@@ -47,7 +47,8 @@ class RemindersListScreenState extends State<RemindersListScreen> {
       str += 'Time-based Trigger';
       str += '\n';
       if ((reminder.trigger as TimeReminderTrigger).dateTime != null) {
-        str += _R.searchDateTimeFormat.format((reminder.trigger as TimeReminderTrigger).dateTime);
+        str += _R.searchDateTimeFormat
+            .format((reminder.trigger as TimeReminderTrigger).dateTime);
         str += '\n';
       }
       // Maybe add repeat later?
@@ -55,9 +56,13 @@ class RemindersListScreenState extends State<RemindersListScreen> {
       str += 'Location-based Trigger';
       str += '\n';
       if ((reminder.trigger as LocationReminderTrigger).geofenceEvent != null) {
-        str += _R.reminderGeofenceEventString[(reminder.trigger as LocationReminderTrigger).geofenceEvent];
+        str += _R.reminderGeofenceEventString[
+            (reminder.trigger as LocationReminderTrigger).geofenceEvent];
         str += '\n';
-        str += (reminder.trigger as LocationReminderTrigger).region.location.getUserDescription();
+        str += (reminder.trigger as LocationReminderTrigger)
+            .region
+            .location
+            .getUserDescription();
         str += '\n';
       }
     }

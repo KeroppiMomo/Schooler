@@ -97,8 +97,7 @@ class ListScreenState<T> extends State<ListScreen<T>> {
   @override
   Widget build(BuildContext context) {
     _totalNoOfItems = widget.source().length;
-    List<T> items =
-        _sortItems(_filterSearchItems(widget.source() ?? []));
+    List<T> items = _sortItems(_filterSearchItems(widget.source() ?? []));
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.appBarTitle),
